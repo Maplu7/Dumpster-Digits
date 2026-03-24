@@ -1,20 +1,49 @@
-.wrapper {
-    width: 420px;
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, .2);
-    backdrop-filter: blur(30px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, .1);
-    color: white;
-    border-radius: 10px;
-    padding: 30px 40px;
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: none;
 }
 
-.wrapper h1 {
-    font-size: 42px;
+.login-wrapper {
+  width: 420px;
+  max-width: 90%;
+  background: rgba(255, 255, 255, 0.10);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(30px);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  color: white;
+  border-radius: 15px;
+  padding: 30px 40px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.login-wrapper h1 {
+    font-size: 40px;
+    font-family: Fjalla One, sans-serif;
     text-align: center;
+
+     background: linear-gradient(135deg, #00c2ff, #7cff00, #ff7a00, #ff003c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  animation: hueRotate 5s linear infinite;
+  margin: 0 0 18px;
 }
 
-.wrapper .input-box {
+@keyframes hueRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+
+.login-wrapper .input-box {
     position: relative;
     width: 100%;
     height: 50px;
@@ -31,7 +60,7 @@
     border-radius: 40px;
     font-size: 16px;
     color: white;
-    padding: 20px 45px 20px 20px;
+    padding: 20px 40px 20px 20px;
 }
 
 .input-box input::placeholder {
@@ -46,7 +75,7 @@
     font-size: 16px;
 }
 
-.wrapper button {
+.login-wrapper button {
     width: 100%;
     height: 45px;
     background: white;

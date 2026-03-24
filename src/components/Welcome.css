@@ -1,0 +1,125 @@
+.wrapper {
+  position: relative; 
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  gap: 20px;
+  font-family: "Fjalla One", sans-serif;
+}
+
+.welcome-bg {
+  background: url('/backgroundLogin8.png') no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+
+.wrapper h1 {
+  font-family: "Fjalla One", sans-serif;
+  font-size: 80px;
+  text-align: center;
+  background: linear-gradient(135deg, #00c2ff, #7cff00, #ff7a00, #ff003c);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: hueRotate 5s linear infinite;
+}
+
+@keyframes hueRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.wrapper p {
+   font-size: 36px;
+  text-align: center;
+  padding: 10px 20px;
+  color: white;
+  animation: floatText 2s ease-in-out infinite alternate;
+}
+
+@keyframes floatText {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-8px); }
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+}
+
+.buttons button {
+  font-family: "Fjalla One", sans-serif;
+  width: 200px;
+  height: 200px;
+  padding: 18px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 30px;
+  color: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.buttons button:nth-child(1) {
+  background: linear-gradient(135deg, #00c2ff, #0066ff);
+}
+
+.buttons button:nth-child(2) {
+  background: linear-gradient(135deg, #7cff00, #2ecc71);
+}
+
+.buttons button:nth-child(3) {
+  background: linear-gradient(135deg, #ff7a00, #ff003c);
+}
+
+.buttons button:nth-child(4) {
+  background: linear-gradient(135deg, #ff003c, #c70039);
+}
+
+.buttons button:hover {
+  transform: translateY(-6px) scale(1.08);
+  filter: brightness(1.1);
+}
+
+.buttons button:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.profile-circle {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+
+  width: 120px;
+  height: 120px;
+
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+  border: 4px solid #00c2ff;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+
+  z-index: 10;
+}
+
+.profile-circle img {
+  width: 75%;
+  height: auto;
+  object-fit: cover;
+}

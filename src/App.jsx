@@ -1,35 +1,40 @@
+// src/App.jsx
 import { useState } from "react";
 import Login from "./components/Login.jsx";
-import TestFirebase from "./TestFirebase";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import Welcome from "./components/Welcome.jsx";
+import GamePage from "./components/GamePage.jsx";
 import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0);
+export default function App() {
+  const [student, setStudent] = useState(null);
+  const [screen, setScreen] = useState("login"); // login | welcome | game
 
+  function handleLogin(s) {
+    setStudent(s);
+    setScreen("welcome");
+  }
+
+  function handleLogout() {
+    setStudent(null);
+    setScreen("login");
+  }
+
+  // not logged in yet
+  if (!student) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  // logged in, playing the game
+  if (screen === "game") {
+    return <GamePage onBack={() => setScreen("welcome")} />;
+  }
+
+  // logged in, on welcome screen
   return (
-    <>
-      <Login />
-
-      <div>
-        <a href="https://vite.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <h1>Vite + React</h1>
-
-      <div className="card">
-        <button onClick={() => setCount((c) => c + 1)}>count is {count}</button>
-      </div>
-
-      <TestFirebase />
-    </>
+    <Welcome
+      student={student}
+      onPlayGame={() => setScreen("game")}
+      onLogout={handleLogout}
+    />
   );
 }
-
-export default App;

@@ -1,0 +1,16 @@
+.gamePage {
+  min-height: 100vh;
+  position: relative;
+  padding: 16px;
+
+  background-image: url("/backgroundLogin.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+#game-container {
+  width: 800px;
+  height: 600px;
+  margin: 0 auto;
+}

@@ -1,0 +1,66 @@
+{
+  "hash": "4099f047",
+  "configHash": "3e9cf416",
+  "lockfileHash": "0ebe3d36",
+  "browserHash": "d770b7b9",
+  "optimized": {
+    "firebase/app": {
+      "src": "../../node_modules/firebase/app/dist/esm/index.esm.js",
+      "file": "firebase_app.js",
+      "fileHash": "1c0ad9dd",
+      "needsInterop": false
+    },
+    "firebase/auth": {
+      "src": "../../node_modules/firebase/auth/dist/esm/index.esm.js",
+      "file": "firebase_auth.js",
+      "fileHash": "364d99e0",
+      "needsInterop": false
+    },
+    "firebase/firestore": {
+      "src": "../../node_modules/firebase/firestore/dist/esm/index.esm.js",
+      "file": "firebase_firestore.js",
+      "fileHash": "e1dbdaeb",
+      "needsInterop": false
+    },
+    "phaser": {
+      "src": "../../node_modules/phaser/dist/phaser.js",
+      "file": "phaser.js",
+      "fileHash": "f61dc016",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "baae57cb",
+      "needsInterop": true
+    },
+    "react-icons/fa": {
+      "src": "../../node_modules/react-icons/fa/index.mjs",
+      "file": "react-icons_fa.js",
+      "fileHash": "866659eb",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "36c9b34f",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "c267e074",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-C2OICHYQ": {
+      "file": "chunk-C2OICHYQ.js",
+      "isDynamicEntry": false
+    },
+    "index.esm--Njlfl21": {
+      "file": "index.esm--Njlfl21.js",
+      "isDynamicEntry": false
+    }
+  }
+}
