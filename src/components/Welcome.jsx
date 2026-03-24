@@ -1,13 +1,14 @@
 import React from "react";
 import "./Welcome.css";
+import raccacoonie from "./images/raccacoonie.jpeg";
 
 const Welcome = ({ student, onPlayGame,onOpenShop, onLogout }) => {
   const name = student?.name;
 
   return (
         <div className='wrapper welcome-bg'>
-          <div className="profile-icon">
-            <img src="/raccacconie-icon.png" alt="Raccacoonie Profile" />
+          <div className="profile-circle">
+            <img src={raccacoonie} alt="Raccacoonie Profile" />
           </div>
 
           <h1>WELCOME{name ? `, ${name}` : ""}:</h1>
