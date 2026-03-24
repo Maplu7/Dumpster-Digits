@@ -3,7 +3,8 @@
   position: relative;
   padding: 16px;
 
-  background-image: url("/backgroundLogin.png") no-repeat;
+  background-image: url("/backgroundLogin.png");
+  background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
 }

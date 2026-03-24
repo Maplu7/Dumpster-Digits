@@ -81,6 +81,10 @@
   background: linear-gradient(135deg, #ff7a00, #ff003c);
 }
 
+.buttons button:nth-child(4) {
+  background: linear-gradient(135deg, #ff003c, #c70039);
+}
+
 .buttons button:hover {
   transform: translateY(-6px) scale(1.08);
   filter: brightness(1.1);
