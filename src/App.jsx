@@ -3,9 +3,14 @@ import { useState } from "react";
 import Login from "./components/Login.jsx";
 import Welcome from "./components/Welcome.jsx";
 import GamePage from "./components/GamePage.jsx";
-import "./App.css";
+//import "./App.css";
+import TeacherDash from "./components/TeacherDash.jsx";
 
 export default function App() {
+  return <TeacherDash />;
+}
+
+/* export default function App() {
   const [student, setStudent] = useState(null);
   const [screen, setScreen] = useState("login"); // login | welcome | game
 
@@ -37,4 +42,4 @@ export default function App() {
       onLogout={handleLogout}
     />
   );
-}
+} */
