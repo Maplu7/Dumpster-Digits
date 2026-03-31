@@ -1,0 +1,173 @@
+/* BASE */
+.tdash {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f4f6;
+  font-family: Arial, sans-serif;
+}
+
+/* SIDEBAR */
+.tdash__sidebar {
+  width: 200px;
+  background: white;
+  padding: 20px;
+  border-right: 1px solid #ddd;
+}
+
+.tdash__brand {
+  margin-bottom: 20px;
+}
+
+.tdash__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tdash__nav-btn {
+  padding: 10px;
+  border: none;
+  background: #f5f5f5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tdash__nav-btn--active {
+  background: #e5d3a3;
+}
+
+/* MAIN */
+.tdash__main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* HEADER */
+.tdash__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tdash__title {
+  font-size: 28px;
+}
+
+.tdash__class-box {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* STATS */
+.tdash__stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tdash__stat {
+  flex: 1;
+  padding: 15px;
+  color: white;
+}
+
+.tdash__stat--orange {
+  background: orange;
+}
+
+.tdash__stat--blue {
+  background: #2196f3;
+}
+
+.tdash__stat--green {
+  background: #4caf50;
+}
+
+/* GRID */
+.tdash__grid {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* CARD */
+.tdash__card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  flex: 1;
+}
+
+/* TABLE STYLE */
+.tdash__table-head {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+.tdash__row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+/* STATUS */
+.tdash__status {
+  border: none;
+  padding: 5px;
+}
+
+.tdash__status--locked {
+  background: #fdd;
+}
+
+.tdash__status--unlocked {
+  background: #dfd;
+}
+
+/* STUDENTS LIST (FIX PRINCIPAL) */
+.tdash__student-list {
+  display: flex;
+  flex-direction: column; 
+  gap: 10px;
+}
+
+.tdash__student-btn {
+  padding: 10px;
+  border: none;
+  background: #f5f5f5;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* DETAILS */
+.tdash__detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tdash__pill {
+  background: #eee;
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+
+/* Hide Button */
+.tdash__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tdash__ghost-btn {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
