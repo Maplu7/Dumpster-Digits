@@ -1,10 +1,9 @@
-// src/App.jsx
 import { useState } from "react";
 import Login from "./components/Login.jsx";
 import Welcome from "./components/Welcome.jsx";
 import GamePage from "./components/GamePage.jsx";
-//import "./App.css";
 import TeacherDash from "./components/TeacherDash.jsx";
+import "./App.css";
 
 export default function App() {
   return <TeacherDash />;
@@ -12,29 +11,44 @@ export default function App() {
 
 /* export default function App() {
   const [student, setStudent] = useState(null);
-  const [screen, setScreen] = useState("login"); // login | welcome | game
+  const [teacher, setTeacher] = useState(null);
+  const [screen, setScreen] = useState("login");
 
-  function handleLogin(s) {
-    setStudent(s);
+  function handleStudentLogin(studentData) {
+    setStudent(studentData);
+    setTeacher(null);
     setScreen("welcome");
+  }
+
+  function handleTeacherLogin(teacherData) {
+    setTeacher(teacherData);
+    setStudent(null);
+    setScreen("teacher");
   }
 
   function handleLogout() {
     setStudent(null);
+    setTeacher(null);
     setScreen("login");
   }
 
-  // not logged in yet
-  if (!student) {
-    return <Login onLogin={handleLogin} />;
+  if (!student && !teacher) {
+    return (
+      <Login
+        onLogin={handleStudentLogin}
+        onTeacherLogin={handleTeacherLogin}
+      />
+    );
   }
 
-  // logged in, playing the game
+  if (teacher) {
+    return <TeacherDash teacher={teacher} onLogout={handleLogout} />;
+  }
+
   if (screen === "game") {
     return <GamePage onBack={() => setScreen("welcome")} />;
   }
 
-  // logged in, on welcome screen
   return (
     <Welcome
       student={student}
@@ -42,4 +56,4 @@ export default function App() {
       onLogout={handleLogout}
     />
   );
-} */
+}

@@ -132,7 +132,7 @@
 /* STUDENTS LIST (FIX PRINCIPAL) */
 .tdash__student-list {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -155,4 +155,19 @@
   background: #eee;
   padding: 5px 10px;
   border-radius: 10px;
+}
+
+/* Hide Button */
+.tdash__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tdash__ghost-btn {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
 }
