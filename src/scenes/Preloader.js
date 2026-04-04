@@ -1,10 +1,3 @@
-import sky from "../assets/sky.png";
-import space from "../assets/space.png";
-import dump from "../assets/dump.png";
-import trashCanImg from "../assets/trashCan.png";
-import can from "../assets/can.png";
-import dirt from "../assets/dirt.png";
-
 export class Preloader extends Phaser.Scene {
     constructor() {
         super('Preloader');
@@ -28,15 +21,25 @@ export class Preloader extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("sky", sky);
-        this.load.image("space", space);
-        this.load.image("dump", dump);
-        this.load.image("trashCan", trashCanImg);
-        this.load.image("trash", can);
-        this.load.image("dirt", dirt);
+        //  Load the assets for the game(assets are images added into the folder on computer)
+        this.load.setPath('assets')
+        this.load.image('sky', 'sky.png');
+        this.load.image('space', 'space.png');
+        this.load.image('dump', 'dump.png');
 
-            //dude is a sprite sheet instead of image because it contains the animation frames
-            // 4 for left, 1 for looking forward, 4 for right
+
+        this.load.image('trashCan', 'trashCan.png');
+        /*this.load.spritesheet('trashCan', 'assets/Garden_Planters/Garden_Planters_OilBarrel.png',
+        {frameWidth: 16,
+         frameHeight: 16
+        });*/
+        
+        
+        this.load.image('trash', 'can.png');
+        this.load.image('camp', 'campGround.png');
+
+        //this.load.spritesheet('campground', 'Camping_Tileset.png', {frameWidth: 1536, frameHeight: 793})
+      
     }
 
     create() {

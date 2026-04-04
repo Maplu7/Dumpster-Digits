@@ -17,6 +17,7 @@ export default function TeacherDash({ teacher, onLogout }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [assignmentsHidden, setAssignmentsHidden] = useState(false);
   const [assignments, setAssignments] = useState([]);
+  const [studentResults, setStudentResults] = useState([]);
 
   useEffect(() => {
     async function loadTeacherData() {
@@ -24,7 +25,6 @@ export default function TeacherDash({ teacher, onLogout }) {
         let classData = null;
         let classDocId = null;
 
-        // 1) Try teacher.classId first
         if (teacher?.classId) {
           const classRef = doc(db, "classrooms", teacher.classId);
           const classSnap = await getDoc(classRef);
@@ -35,7 +35,6 @@ export default function TeacherDash({ teacher, onLogout }) {
           }
         }
 
-        // 2) Fallback: query by teacherID
         if (!classData && teacher?.id) {
           const q = query(
             collection(db, "classrooms"),
@@ -51,7 +50,6 @@ export default function TeacherDash({ teacher, onLogout }) {
           }
         }
 
-        // 3) If no class found
         if (!classData) {
           setClassroom(null);
           setStudents([]);
@@ -65,7 +63,6 @@ export default function TeacherDash({ teacher, onLogout }) {
           ...classData,
         });
 
-        // 4) Load assignments from the classroom doc
         const assignmentMap = classData.assignments || {};
 
         const loadedAssignments = [
@@ -81,7 +78,6 @@ export default function TeacherDash({ teacher, onLogout }) {
 
         setAssignments(loadedAssignments);
 
-        // 5) Load students from studentID array
         const studentIds = classData.studentID || classData.studentIDs || [];
 
         if (!studentIds.length) {
@@ -126,6 +122,38 @@ export default function TeacherDash({ teacher, onLogout }) {
       loadTeacherData();
     }
   }, [teacher]);
+
+  useEffect(() => {
+    async function loadSelectedStudentResults() {
+      if (!selectedStudent?.id) {
+        setStudentResults([]);
+        return;
+      }
+
+      try {
+        const resultsRef = collection(
+          db,
+          "students",
+          String(selectedStudent.id),
+          "assignmentResults"
+        );
+
+        const snap = await getDocs(resultsRef);
+
+        const results = snap.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+
+        setStudentResults(results);
+      } catch (error) {
+        console.error("Error loading student assignment results:", error);
+        setStudentResults([]);
+      }
+    }
+
+    loadSelectedStudentResults();
+  }, [selectedStudent]);
 
   async function toggleAssignmentLock(assignmentId) {
     try {
@@ -203,8 +231,8 @@ export default function TeacherDash({ teacher, onLogout }) {
           </div>
 
           <div className="tdash__stat tdash__stat--green">
-            <div className="tdash__stat-number">0%</div>
-            <div className="tdash__stat-label">Class Overall Score</div>
+            <div className="tdash__stat-number">{studentResults.length}</div>
+            <div className="tdash__stat-label">Completed Games</div>
           </div>
         </section>
 
@@ -247,9 +275,7 @@ export default function TeacherDash({ teacher, onLogout }) {
                         {assignment.locked ? "Locked 🔒" : "Unlocked 🔓"}
                       </button>
 
-                      <span className="tdash__score">
-                        {assignment.score}%
-                      </span>
+                      <span className="tdash__score">{assignment.score}%</span>
                     </div>
                   ))}
                 </div>
@@ -317,6 +343,48 @@ export default function TeacherDash({ teacher, onLogout }) {
                 <div className="tdash__pill">
                   {selectedStudent.birthday ?? "—"}
                 </div>
+              </div>
+
+              <div style={{ marginTop: "18px" }}>
+                <h3 style={{ marginBottom: "10px" }}>Assignment Results</h3>
+
+                {studentResults.length > 0 ? (
+                  studentResults.map((result) => (
+                    <div
+                      key={result.id}
+                      style={{
+                        border: "1px solid #ddd",
+                        borderRadius: "12px",
+                        padding: "12px",
+                        marginBottom: "12px",
+                        background: "#fff",
+                      }}
+                    >
+                      <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
+                        {result.assignmentTitle || result.gameKey}
+                      </div>
+
+                      <div style={{ marginBottom: "8px" }}>
+                        Total Wrong Tries:{" "}
+                        <strong>{result.totalWrongGuesses ?? 0}</strong>
+                      </div>
+
+                      {result.problemBreakdown && (
+                        <div>
+                          {Object.entries(result.problemBreakdown).map(
+                            ([problem, tries]) => (
+                              <div key={problem} style={{ fontSize: "14px" }}>
+                                {problem}: {tries} wrong tries
+                              </div>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p>No completed assignments yet.</p>
+                )}
               </div>
             </div>
           ) : (

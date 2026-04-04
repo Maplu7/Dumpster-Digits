@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Login from "./components/Login.jsx";
 import Welcome from "./components/Welcome.jsx";
+import Assignments from "./components/Assignments.jsx";
 import GamePage from "./components/GamePage.jsx";
 import TeacherDash from "./components/TeacherDash.jsx";
 import "./App.css";
@@ -9,23 +10,36 @@ export default function App() {
   const [student, setStudent] = useState(null);
   const [teacher, setTeacher] = useState(null);
   const [screen, setScreen] = useState("login");
+  const [currentGameKey, setCurrentGameKey] = useState(null);
 
   function handleStudentLogin(studentData) {
     setStudent(studentData);
     setTeacher(null);
     setScreen("welcome");
+    setCurrentGameKey(null);
   }
 
   function handleTeacherLogin(teacherData) {
     setTeacher(teacherData);
     setStudent(null);
     setScreen("teacher");
+    setCurrentGameKey(null);
   }
 
   function handleLogout() {
     setStudent(null);
     setTeacher(null);
     setScreen("login");
+    setCurrentGameKey(null);
+  }
+
+  function handleOpenAssignments() {
+    setScreen("assignments");
+  }
+
+  function handleOpenGame(gameKey) {
+    setCurrentGameKey(gameKey);
+    setScreen("game");
   }
 
   if (!student && !teacher) {
@@ -42,13 +56,29 @@ export default function App() {
   }
 
   if (screen === "game") {
-    return <GamePage onBack={() => setScreen("welcome")} />;
+    return (
+      <GamePage
+        gameKey={currentGameKey}
+        onBack={() => setScreen("assignments")}
+      />
+    );
+  }
+
+  if (screen === "assignments") {
+    return (
+      <Assignments
+        student={student}
+        onBack={() => setScreen("welcome")}
+        onOpenGame={handleOpenGame}
+      />
+    );
   }
 
   return (
     <Welcome
       student={student}
-      onPlayGame={() => setScreen("game")}
+      onPlayGame={() => handleOpenGame("1st_addition")}
+      onOpenAssignments={handleOpenAssignments}
       onLogout={handleLogout}
     />
   );

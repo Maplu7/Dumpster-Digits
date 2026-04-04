@@ -9,15 +9,14 @@ export class Trash extends Phaser.GameObjects.Container
         //needs to be replaced and instead
         //be for a container
 
-        this.trashMath = scene.add.sprite(0, 0, 'trash').setScale(2);
-        this.text = scene.add.text(this.trashMath.x - 50, this.trashMath.y + 20, problem.question, {
-          fontSize: '40px', fill: '#ffffff'
+        this.trashMath = scene.add.sprite(0, 0, 'trash').setScale(0.8);
+        this.text = scene.add.text(this.trashMath.x - 30, this.trashMath.y, problem.question, {
+          fontSize: '25px', fill: '#ffffff'
         });
 
         this.add([this.trashMath, this.text]) // Adds trash and text to the container
 
-        this.answer = problem.answer;
-        this.question = problem.question;
+        this.correctAnswer = problem.answer;
 
           scene.add.existing(this);
           scene.physics.add.existing(this);
