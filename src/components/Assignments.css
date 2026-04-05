@@ -1,0 +1,102 @@
+.assignments-page {
+  min-height: 100vh;
+  padding: 32px;
+  box-sizing: border-box;
+  font-family: "Fjalla One", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 230, 240, 0.9), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(220, 245, 255, 0.9), transparent 30%),
+    linear-gradient(180deg, #fff6ef 0%, #ffeef8 100%);
+}
+
+.assignments-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.assignments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 20px;
+}
+
+.assignments-title {
+  margin: 0;
+  font-size: 56px;
+  background: linear-gradient(135deg, #00c2ff, #7cff00, #ff7a00, #ff003c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.assignments-subtitle {
+  margin: 10px 0 0;
+  font-size: 24px;
+  color: #5f4d52;
+}
+
+.assignments-back-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, #ff7a00, #ff003c);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.assignment-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+}
+
+.assignment-card h2 {
+  margin: 14px 0 10px;
+  font-size: 30px;
+  color: #3a2c32;
+}
+
+.assignment-card p {
+  margin: 0 0 18px;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #67575d;
+}
+
+.assignment-badge {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #ffe3ef;
+  color: #8b5568;
+  font-size: 16px;
+}
+
+.assignment-play-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #00c2ff, #0066ff);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.assignments-empty {
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 24px;
+  padding: 30px;
+  font-size: 24px;
+  color: #5f4d52;
+}

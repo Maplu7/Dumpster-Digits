@@ -11,7 +11,6 @@ export async function loginStudent(studentIdRaw, birthdayRaw) {
     throw new Error("Birthday must be MMDD (4 digits), like 0224.");
   }
 
-  // Sign in first so Firestore rules can require auth
   const cred = await signInAnonymously(auth);
 
   try {
@@ -24,13 +23,45 @@ export async function loginStudent(studentIdRaw, birthdayRaw) {
       throw new Error("Birthday password is incorrect.");
     }
 
-    // Return student info (includes name) so you can display it later
     return {
       user: cred.user,
       student: {
         id: studentId,
         name: data.name ?? "Student",
         grade: data.grade ?? null,
+      },
+    };
+  } catch (err) {
+    await signOut(auth);
+    throw err;
+  }
+}
+
+export async function loginTeacher(teacherIdRaw, passwordRaw) {
+  const teacherId = String(teacherIdRaw).trim();
+  const password = String(passwordRaw).trim();
+
+  if (!teacherId) throw new Error("Teacher ID is required.");
+  if (!password) throw new Error("Teacher password is required.");
+
+  const cred = await signInAnonymously(auth);
+
+  try {
+    const snap = await getDoc(doc(db, "teachers", teacherId));
+    if (!snap.exists()) throw new Error("Teacher ID not found.");
+
+    const data = snap.data();
+
+    if (data.password !== password) {
+      throw new Error("Teacher password is incorrect.");
+    }
+
+    return {
+      user: cred.user,
+      teacher: {
+        id: teacherId,
+        name: data.name ?? "Teacher",
+        classId: data.classId ?? null,
       },
     };
   } catch (err) {

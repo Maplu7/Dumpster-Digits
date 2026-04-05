@@ -113,7 +113,8 @@
 
   overflow: hidden;
   border: 4px solid #00c2ff;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 15px rgba(0, 194, 255, 0.6),
+              0 6px 15px rgba(0, 0, 0, 0.25);
 
   z-index: 10;
 }
