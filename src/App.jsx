@@ -6,10 +6,6 @@ import TeacherDash from "./components/TeacherDash.jsx";
 import "./App.css";
 
 export default function App() {
-  return <TeacherDash />;
-}
-
-/* export default function App() {
   const [student, setStudent] = useState(null);
   const [teacher, setTeacher] = useState(null);
   const [screen, setScreen] = useState("login");
