@@ -4,6 +4,7 @@ import Welcome from "./components/Welcome.jsx";
 import Assignments from "./components/Assignments.jsx";
 import GamePage from "./components/GamePage.jsx";
 import TeacherDash from "./components/TeacherDash.jsx";
+import Shop from "./components/Shop.jsx";
 import "./App.css";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
     setTeacher(null);
     setScreen("welcome");
     setCurrentGameKey(null);
+    sessionStorage.setItem("studentId", studentData.id);
   }
 
   function handleTeacherLogin(teacherData) {
@@ -31,6 +33,7 @@ export default function App() {
     setTeacher(null);
     setScreen("login");
     setCurrentGameKey(null);
+    sessionStorage.removeItem("studentId");
   }
 
   function handleOpenAssignments() {
@@ -40,6 +43,10 @@ export default function App() {
   function handleOpenGame(gameKey) {
     setCurrentGameKey(gameKey);
     setScreen("game");
+  }
+
+  function handleOpenShop() {
+    setScreen("shop");
   }
 
   if (!student && !teacher) {
@@ -74,11 +81,16 @@ export default function App() {
     );
   }
 
+  if (screen === "shop") {
+    return <Shop onBack={() => setScreen("welcome")} />;
+  }
+
   return (
     <Welcome
       student={student}
       onPlayGame={() => handleOpenGame("1st_addition")}
       onOpenAssignments={handleOpenAssignments}
+      onOpenShop={handleOpenShop}
       onLogout={handleLogout}
     />
   );

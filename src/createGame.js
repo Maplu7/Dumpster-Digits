@@ -4,9 +4,9 @@ window.Phaser = Phaser;
 import { Boot } from "./scenes/Boot";
 import { Preloader } from "./scenes/Preloader";
 import { Game } from "./scenes/Game";
-import { GameOver } from "./scenes/GameOver";
 import { Game_1st_grade_subtraction } from "./scenes/Game_1st_grade_subtraction";
 import { Game_2nd_grade_multiplication } from "./scenes/Game_2nd_grade_multiplication";
+import { GameOver } from "./scenes/GameOver";
 
 function getSelectedScene(gameKey) {
   switch (gameKey) {

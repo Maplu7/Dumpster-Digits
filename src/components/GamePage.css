@@ -3,7 +3,7 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #000;
+  background: #111;
 }
 
 .game-canvas-wrap {
@@ -30,4 +30,21 @@
   font-size: 18px;
   font-family: "Fjalla One", sans-serif;
   cursor: pointer;
+}
+
+.game-finish-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  z-index: 25;
+  border: none;
+  border-radius: 999px;
+  padding: 16px 26px;
+  background: linear-gradient(135deg, #00c2ff, #0066ff);
+  color: white;
+  font-size: 22px;
+  font-family: "Fjalla One", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
 }

@@ -1,0 +1,170 @@
+.shop-page {
+  min-height: 100vh;
+  padding: 28px;
+  box-sizing: border-box;
+  font-family: "Fjalla One", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 220, 235, 0.9), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(225, 245, 255, 0.9), transparent 30%),
+    linear-gradient(180deg, #fff8f2 0%, #ffeef8 100%);
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.shop-header h1 {
+  margin: 0;
+  font-size: 56px;
+}
+
+.shop-header p {
+  margin: 8px 0 0;
+  font-size: 22px;
+}
+
+.shop-back-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #ff7a00, #ff003c);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.shop-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 18px;
+}
+
+.shop-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 22px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+}
+
+.shop-card h3 {
+  margin: 10px 0 6px;
+  font-size: 20px;
+}
+
+.shop-card p {
+  margin: 0 0 12px;
+  color: #6b5560;
+}
+
+.shop-card button {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #00c2ff, #0066ff);
+  color: white;
+  cursor: pointer;
+}
+
+.shop-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shop-item-art {
+  height: 90px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #ffe4ef;
+  color: #9b4d6c;
+  font-size: 18px;
+}
+
+.shop-right {
+  display: flex;
+  justify-content: center;
+}
+
+.mirror-frame {
+  width: 100%;
+  min-height: 620px;
+  border-radius: 32px;
+  padding: 24px;
+  background: linear-gradient(180deg, #f8dfe8, #dcefff);
+  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.65);
+  position: relative;
+}
+
+.mirror-glow {
+  position: absolute;
+  inset: 18px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.15));
+}
+
+.stand-area {
+  position: relative;
+  height: 100%;
+  min-height: 560px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 2;
+}
+
+.preview-character {
+  position: absolute;
+  bottom: 80px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.preview-character img {
+  max-width: 260px;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 24px;
+}
+
+.stand-base {
+  width: 220px;
+  height: 24px;
+  background: #c7a98d;
+  border-radius: 999px;
+  position: absolute;
+  bottom: 32px;
+}
+
+.equipped-label {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.9);
+  text-align: center;
+  font-size: 18px;
+}
+
+@media (max-width: 1100px) {
+  .shop-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./TeacherDash.css";
 import { db } from "../firebase";
 import {
@@ -9,33 +9,36 @@ import {
   doc,
   getDoc,
   updateDoc,
+  onSnapshot,
 } from "firebase/firestore";
+
+const assignmentCatalog = [
+  { gameKey: "1st_addition", title: "1st Grade Addition", grade: 1 },
+  { gameKey: "1st_subtraction", title: "1st Grade Subtraction", grade: 1 },
+  { gameKey: "2nd_multiplication", title: "2nd Grade Multiplication", grade: 2 },
+];
 
 export default function TeacherDash({ teacher, onLogout }) {
   const [classroom, setClassroom] = useState(null);
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [assignmentsHidden, setAssignmentsHidden] = useState(false);
-  const [assignments, setAssignments] = useState([]);
   const [studentResults, setStudentResults] = useState([]);
 
+  const selectedStudent = useMemo(() => {
+    return students.find((student) => student.id === selectedStudentId) || null;
+  }, [students, selectedStudentId]);
+
   useEffect(() => {
-    async function loadTeacherData() {
+    let unsubscribeClassroom = null;
+
+    async function setupTeacherData() {
       try {
-        let classData = null;
         let classDocId = null;
 
         if (teacher?.classId) {
-          const classRef = doc(db, "classrooms", teacher.classId);
-          const classSnap = await getDoc(classRef);
-
-          if (classSnap.exists()) {
-            classData = classSnap.data();
-            classDocId = classSnap.id;
-          }
-        }
-
-        if (!classData && teacher?.id) {
+          classDocId = teacher.classId;
+        } else if (teacher?.id) {
           const q = query(
             collection(db, "classrooms"),
             where("teacherID", "==", teacher.id)
@@ -44,137 +47,173 @@ export default function TeacherDash({ teacher, onLogout }) {
           const snapshot = await getDocs(q);
 
           if (!snapshot.empty) {
-            const classDoc = snapshot.docs[0];
-            classData = classDoc.data();
-            classDocId = classDoc.id;
+            classDocId = snapshot.docs[0].id;
           }
         }
 
-        if (!classData) {
+        if (!classDocId) {
           setClassroom(null);
           setStudents([]);
-          setSelectedStudent(null);
-          setAssignments([]);
+          setSelectedStudentId(null);
           return;
         }
 
-        setClassroom({
-          id: classDocId,
-          ...classData,
-        });
+        const classRef = doc(db, "classrooms", classDocId);
 
-        const assignmentMap = classData.assignments || {};
-
-        const loadedAssignments = [
-          { id: "assignment1", title: "Assignment 1" },
-          { id: "assignment2", title: "Assignment 2" },
-          { id: "assignment3", title: "Assignment 3" },
-          { id: "assignment4", title: "Assignment 4" },
-        ].map((assignment) => ({
-          ...assignment,
-          locked: assignmentMap[assignment.id] ?? false,
-          score: 0,
-        }));
-
-        setAssignments(loadedAssignments);
-
-        const studentIds = classData.studentID || classData.studentIDs || [];
-
-        if (!studentIds.length) {
-          setStudents([]);
-          setSelectedStudent(null);
-          return;
-        }
-
-        const loadedStudents = await Promise.all(
-          studentIds.map(async (id) => {
-            const cleanId = String(id).trim();
-            const studentRef = doc(db, "students", cleanId);
-            const studentSnap = await getDoc(studentRef);
-
-            if (studentSnap.exists()) {
-              return {
-                id: cleanId,
-                ...studentSnap.data(),
-              };
+        unsubscribeClassroom = onSnapshot(
+          classRef,
+          async (classSnap) => {
+            if (!classSnap.exists()) {
+              setClassroom(null);
+              setStudents([]);
+              setSelectedStudentId(null);
+              return;
             }
 
-            return {
-              id: cleanId,
-              name: `Student ${cleanId}`,
-              grade: null,
-              birthday: null,
-            };
-          })
-        );
+            const classData = classSnap.data();
 
-        setStudents(loadedStudents);
-        setSelectedStudent(loadedStudents[0] || null);
+            setClassroom({
+              id: classSnap.id,
+              ...classData,
+            });
+
+            const studentIds = classData.studentID || classData.studentIDs || [];
+
+            if (!studentIds.length) {
+              setStudents([]);
+              setSelectedStudentId(null);
+              return;
+            }
+
+            const loadedStudents = await Promise.all(
+              studentIds.map(async (id) => {
+                const cleanId = String(id).trim();
+                const studentRef = doc(db, "students", cleanId);
+                const studentSnap = await getDoc(studentRef);
+
+                if (studentSnap.exists()) {
+                  return {
+                    id: cleanId,
+                    ...studentSnap.data(),
+                  };
+                }
+
+                return {
+                  id: cleanId,
+                  name: `Student ${cleanId}`,
+                  grade: null,
+                  birthday: null,
+                };
+              })
+            );
+
+            setStudents(loadedStudents);
+
+            setSelectedStudentId((prevId) => {
+              const stillExists = loadedStudents.some(
+                (student) => student.id === prevId
+              );
+
+              if (stillExists) return prevId;
+              return loadedStudents[0]?.id || null;
+            });
+          },
+          (error) => {
+            console.error("Error watching classroom:", error);
+          }
+        );
       } catch (error) {
         console.error("Error loading teacher dashboard data:", error);
+        setClassroom(null);
         setStudents([]);
-        setSelectedStudent(null);
-        setAssignments([]);
+        setSelectedStudentId(null);
       }
     }
 
     if (teacher) {
-      loadTeacherData();
+      setupTeacherData();
     }
+
+    return () => {
+      if (unsubscribeClassroom) unsubscribeClassroom();
+    };
   }, [teacher]);
 
   useEffect(() => {
-    async function loadSelectedStudentResults() {
-      if (!selectedStudent?.id) {
-        setStudentResults([]);
-        return;
-      }
+    let unsubscribeResults = null;
 
-      try {
-        const resultsRef = collection(
-          db,
-          "students",
-          String(selectedStudent.id),
-          "assignmentResults"
-        );
+    if (!selectedStudentId) {
+      setStudentResults([]);
+      return;
+    }
 
-        const snap = await getDocs(resultsRef);
+    const resultsRef = collection(
+      db,
+      "students",
+      String(selectedStudentId),
+      "assignmentResults"
+    );
 
+    unsubscribeResults = onSnapshot(
+      resultsRef,
+      (snap) => {
         const results = snap.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data(),
         }));
-
         setStudentResults(results);
-      } catch (error) {
-        console.error("Error loading student assignment results:", error);
+      },
+      (error) => {
+        console.error("Error watching student assignment results:", error);
         setStudentResults([]);
       }
-    }
+    );
 
-    loadSelectedStudentResults();
-  }, [selectedStudent]);
+    return () => {
+      if (unsubscribeResults) unsubscribeResults();
+    };
+  }, [selectedStudentId]);
+
+  const assignments = useMemo(() => {
+    if (!selectedStudent) return [];
+
+    return assignmentCatalog
+      .filter(
+        (assignment) => assignment.grade === Number(selectedStudent.grade)
+      )
+      .map((assignment) => {
+        const locked =
+          classroom?.studentAssignments?.[selectedStudent.id]?.[
+            assignment.gameKey
+          ] ?? false;
+
+        const matchingResult = studentResults.find(
+          (result) => result.gameKey === assignment.gameKey
+        );
+
+        return {
+          id: assignment.gameKey,
+          title: assignment.title,
+          locked,
+          score: matchingResult ? "Completed ✅" : "Not started",
+        };
+      });
+  }, [classroom, selectedStudent, studentResults]);
 
   async function toggleAssignmentLock(assignmentId) {
     try {
-      if (!classroom?.id) return;
+      if (!classroom?.id || !selectedStudent?.id) return;
 
-      const newAssignments = assignments.map((assignment) =>
-        assignment.id === assignmentId
-          ? { ...assignment, locked: !assignment.locked }
-          : assignment
-      );
+      const currentLocked =
+        classroom?.studentAssignments?.[selectedStudent.id]?.[assignmentId] ??
+        false;
 
-      setAssignments(newAssignments);
-
-      const updatedAssignment = newAssignments.find(
-        (assignment) => assignment.id === assignmentId
-      );
+      const newLocked = !currentLocked;
 
       const classRef = doc(db, "classrooms", classroom.id);
 
       await updateDoc(classRef, {
-        [`assignments.${assignmentId}`]: updatedAssignment.locked,
+        [`studentAssignments.${selectedStudent.id}.${assignmentId}`]: newLocked,
       });
     } catch (error) {
       console.error("Error updating assignment lock:", error);
@@ -185,7 +224,7 @@ export default function TeacherDash({ teacher, onLogout }) {
     <div className="tdash">
       <main className="tdash__main">
         <header className="tdash__header">
-          <div>
+          <div className="tdash__header-copy">
             <h1 className="tdash__title">
               Welcome, {teacher?.name || "Teacher"}
             </h1>
@@ -194,7 +233,7 @@ export default function TeacherDash({ teacher, onLogout }) {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div className="tdash__header-actions">
             <div className="tdash__class-box">
               <span className="tdash__class-label">Class</span>
               <strong className="tdash__class-name">
@@ -202,18 +241,7 @@ export default function TeacherDash({ teacher, onLogout }) {
               </strong>
             </div>
 
-            <button
-              onClick={onLogout}
-              style={{
-                padding: "10px 14px",
-                border: "none",
-                borderRadius: "10px",
-                cursor: "pointer",
-                background: "#ff5a5a",
-                color: "white",
-                fontWeight: "bold",
-              }}
-            >
+            <button className="tdash__logout-btn" onClick={onLogout}>
               Logout
             </button>
           </div>
@@ -239,7 +267,11 @@ export default function TeacherDash({ teacher, onLogout }) {
         <section className="tdash__grid">
           <div className="tdash__card tdash__card--wide">
             <div className="tdash__card-head">
-              <h2 className="tdash__section-title">Assignments</h2>
+              <h2 className="tdash__section-title">
+                {selectedStudent
+                  ? `${selectedStudent.name}'s Assignments`
+                  : "Assignments"}
+              </h2>
 
               <button
                 className="tdash__ghost-btn"
@@ -254,30 +286,36 @@ export default function TeacherDash({ teacher, onLogout }) {
                 <div className="tdash__table-head">
                   <span>Assignment</span>
                   <span>Status</span>
-                  <span>Class Score</span>
+                  <span>Progress</span>
                 </div>
 
                 <div className="tdash__table-body">
-                  {assignments.map((assignment) => (
-                    <div className="tdash__row" key={assignment.id}>
-                      <span className="tdash__row-title">
-                        {assignment.title}
-                      </span>
+                  {assignments.length > 0 ? (
+                    assignments.map((assignment) => (
+                      <div className="tdash__row" key={assignment.id}>
+                        <span className="tdash__row-title">
+                          {assignment.title}
+                        </span>
 
-                      <button
-                        className={
-                          assignment.locked
-                            ? "tdash__status tdash__status--locked"
-                            : "tdash__status tdash__status--unlocked"
-                        }
-                        onClick={() => toggleAssignmentLock(assignment.id)}
-                      >
-                        {assignment.locked ? "Locked 🔒" : "Unlocked 🔓"}
-                      </button>
+                        <button
+                          className={`tdash__status ${
+                            assignment.locked
+                              ? "tdash__status--locked"
+                              : "tdash__status--unlocked"
+                          }`}
+                          onClick={() => toggleAssignmentLock(assignment.id)}
+                        >
+                          {assignment.locked ? "Locked 🔒" : "Unlocked 🔓"}
+                        </button>
 
-                      <span className="tdash__score">{assignment.score}%</span>
-                    </div>
-                  ))}
+                        <span className="tdash__score">{assignment.score}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="tdash__empty-text">
+                      No assignments for this student’s grade yet.
+                    </p>
+                  )}
                 </div>
               </>
             )}
@@ -292,21 +330,25 @@ export default function TeacherDash({ teacher, onLogout }) {
               {students.length > 0 ? (
                 students.map((student) => (
                   <button
-                    className="tdash__student-btn"
+                    className={`tdash__student-btn ${
+                      selectedStudentId === student.id
+                        ? "tdash__student-btn--active"
+                        : ""
+                    }`}
                     key={student.id}
-                    onClick={() => setSelectedStudent(student)}
-                    style={{
-                      background:
-                        selectedStudent?.id === student.id ? "#e5d3a3" : "#f5f5f5",
-                      fontWeight:
-                        selectedStudent?.id === student.id ? "bold" : "normal",
-                    }}
+                    onClick={() => setSelectedStudentId(student.id)}
+                    type="button"
                   >
-                    {student.name || `Student ${student.id}`} ({student.id})
+                    <span className="tdash__student-name">
+                      {student.name || `Student ${student.id}`}
+                    </span>
+                    <span className="tdash__student-id">({student.id})</span>
                   </button>
                 ))
               ) : (
-                <p>No students found for this class yet.</p>
+                <p className="tdash__empty-text">
+                  No students found for this class yet.
+                </p>
               )}
             </div>
           </div>
@@ -318,77 +360,78 @@ export default function TeacherDash({ teacher, onLogout }) {
           </div>
 
           {selectedStudent ? (
-            <div className="tdash__details-list">
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Name</div>
-                <div className="tdash__pill">
-                  {selectedStudent.name || "Unknown Student"}
+            <>
+              <div className="tdash__details-grid">
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Name</span>
+                  <span className="tdash__pill">
+                    {selectedStudent.name || "Unknown Student"}
+                  </span>
+                </div>
+
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Student ID</span>
+                  <span className="tdash__pill">{selectedStudent.id}</span>
+                </div>
+
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Grade</span>
+                  <span className="tdash__pill">
+                    {selectedStudent.grade ?? "—"}
+                  </span>
+                </div>
+
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Birthday</span>
+                  <span className="tdash__pill">
+                    {selectedStudent.birthday ?? "—"}
+                  </span>
                 </div>
               </div>
 
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Student ID</div>
-                <div className="tdash__pill">{selectedStudent.id}</div>
-              </div>
-
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Grade</div>
-                <div className="tdash__pill">
-                  {selectedStudent.grade ?? "—"}
-                </div>
-              </div>
-
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Birthday</div>
-                <div className="tdash__pill">
-                  {selectedStudent.birthday ?? "—"}
-                </div>
-              </div>
-
-              <div style={{ marginTop: "18px" }}>
-                <h3 style={{ marginBottom: "10px" }}>Assignment Results</h3>
+              <div className="tdash__results">
+                <h3 className="tdash__results-title">Assignment Results</h3>
 
                 {studentResults.length > 0 ? (
-                  studentResults.map((result) => (
-                    <div
-                      key={result.id}
-                      style={{
-                        border: "1px solid #ddd",
-                        borderRadius: "12px",
-                        padding: "12px",
-                        marginBottom: "12px",
-                        background: "#fff",
-                      }}
-                    >
-                      <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-                        {result.assignmentTitle || result.gameKey}
-                      </div>
-
-                      <div style={{ marginBottom: "8px" }}>
-                        Total Wrong Tries:{" "}
-                        <strong>{result.totalWrongGuesses ?? 0}</strong>
-                      </div>
-
-                      {result.problemBreakdown && (
-                        <div>
-                          {Object.entries(result.problemBreakdown).map(
-                            ([problem, tries]) => (
-                              <div key={problem} style={{ fontSize: "14px" }}>
-                                {problem}: {tries} wrong tries
-                              </div>
-                            )
-                          )}
+                  <div className="tdash__results-list">
+                    {studentResults.map((result) => (
+                      <div className="tdash__result-card" key={result.id}>
+                        <div className="tdash__result-title">
+                          {result.assignmentTitle || result.gameKey}
                         </div>
-                      )}
-                    </div>
-                  ))
+
+                        <div className="tdash__result-meta">
+                          Total Wrong Tries:{" "}
+                          <strong>{result.totalWrongGuesses ?? 0}</strong>
+                        </div>
+
+                        {result.problemBreakdown && (
+                          <div className="tdash__result-breakdown">
+                            {Object.entries(result.problemBreakdown).map(
+                              ([problem, tries]) => (
+                                <div
+                                  key={problem}
+                                  className="tdash__result-line"
+                                >
+                                  <span>{problem}</span>
+                                  <span>{tries} wrong tries</span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <p>No completed assignments yet.</p>
+                  <p className="tdash__empty-text">
+                    No completed assignments yet.
+                  </p>
                 )}
               </div>
-            </div>
+            </>
           ) : (
-            <p>No student selected yet.</p>
+            <p className="tdash__empty-text">No student selected yet.</p>
           )}
         </section>
       </main>

@@ -6,6 +6,7 @@ const Welcome = ({
   student,
   onPlayGame,
   onOpenAssignments,
+  onOpenShop,
   onLogout,
 }) => {
   const name = student?.name;
@@ -22,7 +23,7 @@ const Welcome = ({
       <div className="buttons">
         <button onClick={onPlayGame}>PLAY GAME</button>
         <button onClick={onOpenAssignments}>ASSIGNMENTS</button>
-        <button>SHOP</button>
+        <button onClick={onOpenShop}>SHOP</button>
         <button onClick={onLogout}>LOGOUT</button>
       </div>
     </div>
