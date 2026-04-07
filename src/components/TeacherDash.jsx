@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./TeacherDash.css";
 import { db } from "../firebase";
 import {
@@ -14,10 +14,14 @@ import {
 export default function TeacherDash({ teacher, onLogout }) {
   const [classroom, setClassroom] = useState(null);
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [assignmentsHidden, setAssignmentsHidden] = useState(false);
   const [assignments, setAssignments] = useState([]);
   const [studentResults, setStudentResults] = useState([]);
+
+  const selectedStudent = useMemo(() => {
+    return students.find((student) => student.id === selectedStudentId) || null;
+  }, [students, selectedStudentId]);
 
   useEffect(() => {
     async function loadTeacherData() {
@@ -53,7 +57,7 @@ export default function TeacherDash({ teacher, onLogout }) {
         if (!classData) {
           setClassroom(null);
           setStudents([]);
-          setSelectedStudent(null);
+          setSelectedStudentId(null);
           setAssignments([]);
           return;
         }
@@ -82,7 +86,7 @@ export default function TeacherDash({ teacher, onLogout }) {
 
         if (!studentIds.length) {
           setStudents([]);
-          setSelectedStudent(null);
+          setSelectedStudentId(null);
           return;
         }
 
@@ -109,11 +113,11 @@ export default function TeacherDash({ teacher, onLogout }) {
         );
 
         setStudents(loadedStudents);
-        setSelectedStudent(loadedStudents[0] || null);
+        setSelectedStudentId(loadedStudents[0]?.id || null);
       } catch (error) {
         console.error("Error loading teacher dashboard data:", error);
         setStudents([]);
-        setSelectedStudent(null);
+        setSelectedStudentId(null);
         setAssignments([]);
       }
     }
@@ -125,7 +129,7 @@ export default function TeacherDash({ teacher, onLogout }) {
 
   useEffect(() => {
     async function loadSelectedStudentResults() {
-      if (!selectedStudent?.id) {
+      if (!selectedStudentId) {
         setStudentResults([]);
         return;
       }
@@ -134,7 +138,7 @@ export default function TeacherDash({ teacher, onLogout }) {
         const resultsRef = collection(
           db,
           "students",
-          String(selectedStudent.id),
+          String(selectedStudentId),
           "assignmentResults"
         );
 
@@ -153,7 +157,7 @@ export default function TeacherDash({ teacher, onLogout }) {
     }
 
     loadSelectedStudentResults();
-  }, [selectedStudent]);
+  }, [selectedStudentId]);
 
   async function toggleAssignmentLock(assignmentId) {
     try {
@@ -185,7 +189,7 @@ export default function TeacherDash({ teacher, onLogout }) {
     <div className="tdash">
       <main className="tdash__main">
         <header className="tdash__header">
-          <div>
+          <div className="tdash__header-copy">
             <h1 className="tdash__title">
               Welcome, {teacher?.name || "Teacher"}
             </h1>
@@ -194,7 +198,7 @@ export default function TeacherDash({ teacher, onLogout }) {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div className="tdash__header-actions">
             <div className="tdash__class-box">
               <span className="tdash__class-label">Class</span>
               <strong className="tdash__class-name">
@@ -202,18 +206,7 @@ export default function TeacherDash({ teacher, onLogout }) {
               </strong>
             </div>
 
-            <button
-              onClick={onLogout}
-              style={{
-                padding: "10px 14px",
-                border: "none",
-                borderRadius: "10px",
-                cursor: "pointer",
-                background: "#ff5a5a",
-                color: "white",
-                fontWeight: "bold",
-              }}
-            >
+            <button className="tdash__logout-btn" onClick={onLogout}>
               Logout
             </button>
           </div>
@@ -265,11 +258,11 @@ export default function TeacherDash({ teacher, onLogout }) {
                       </span>
 
                       <button
-                        className={
+                        className={`tdash__status ${
                           assignment.locked
-                            ? "tdash__status tdash__status--locked"
-                            : "tdash__status tdash__status--unlocked"
-                        }
+                            ? "tdash__status--locked"
+                            : "tdash__status--unlocked"
+                        }`}
                         onClick={() => toggleAssignmentLock(assignment.id)}
                       >
                         {assignment.locked ? "Locked 🔒" : "Unlocked 🔓"}
@@ -292,21 +285,25 @@ export default function TeacherDash({ teacher, onLogout }) {
               {students.length > 0 ? (
                 students.map((student) => (
                   <button
-                    className="tdash__student-btn"
+                    className={`tdash__student-btn ${
+                      selectedStudentId === student.id
+                        ? "tdash__student-btn--active"
+                        : ""
+                    }`}
                     key={student.id}
-                    onClick={() => setSelectedStudent(student)}
-                    style={{
-                      background:
-                        selectedStudent?.id === student.id ? "#e5d3a3" : "#f5f5f5",
-                      fontWeight:
-                        selectedStudent?.id === student.id ? "bold" : "normal",
-                    }}
+                    onClick={() => setSelectedStudentId(student.id)}
+                    type="button"
                   >
-                    {student.name || `Student ${student.id}`} ({student.id})
+                    <span className="tdash__student-name">
+                      {student.name || `Student ${student.id}`}
+                    </span>
+                    <span className="tdash__student-id">({student.id})</span>
                   </button>
                 ))
               ) : (
-                <p>No students found for this class yet.</p>
+                <p className="tdash__empty-text">
+                  No students found for this class yet.
+                </p>
               )}
             </div>
           </div>
@@ -318,77 +315,78 @@ export default function TeacherDash({ teacher, onLogout }) {
           </div>
 
           {selectedStudent ? (
-            <div className="tdash__details-list">
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Name</div>
-                <div className="tdash__pill">
-                  {selectedStudent.name || "Unknown Student"}
+            <>
+              <div className="tdash__details-grid">
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Name</span>
+                  <span className="tdash__pill">
+                    {selectedStudent.name || "Unknown Student"}
+                  </span>
+                </div>
+
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Student ID</span>
+                  <span className="tdash__pill">{selectedStudent.id}</span>
+                </div>
+
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Grade</span>
+                  <span className="tdash__pill">
+                    {selectedStudent.grade ?? "—"}
+                  </span>
+                </div>
+
+                <div className="tdash__detail-item">
+                  <span className="tdash__detail-title">Birthday</span>
+                  <span className="tdash__pill">
+                    {selectedStudent.birthday ?? "—"}
+                  </span>
                 </div>
               </div>
 
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Student ID</div>
-                <div className="tdash__pill">{selectedStudent.id}</div>
-              </div>
-
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Grade</div>
-                <div className="tdash__pill">
-                  {selectedStudent.grade ?? "—"}
-                </div>
-              </div>
-
-              <div className="tdash__detail-item">
-                <div className="tdash__detail-title">Birthday</div>
-                <div className="tdash__pill">
-                  {selectedStudent.birthday ?? "—"}
-                </div>
-              </div>
-
-              <div style={{ marginTop: "18px" }}>
-                <h3 style={{ marginBottom: "10px" }}>Assignment Results</h3>
+              <div className="tdash__results">
+                <h3 className="tdash__results-title">Assignment Results</h3>
 
                 {studentResults.length > 0 ? (
-                  studentResults.map((result) => (
-                    <div
-                      key={result.id}
-                      style={{
-                        border: "1px solid #ddd",
-                        borderRadius: "12px",
-                        padding: "12px",
-                        marginBottom: "12px",
-                        background: "#fff",
-                      }}
-                    >
-                      <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-                        {result.assignmentTitle || result.gameKey}
-                      </div>
-
-                      <div style={{ marginBottom: "8px" }}>
-                        Total Wrong Tries:{" "}
-                        <strong>{result.totalWrongGuesses ?? 0}</strong>
-                      </div>
-
-                      {result.problemBreakdown && (
-                        <div>
-                          {Object.entries(result.problemBreakdown).map(
-                            ([problem, tries]) => (
-                              <div key={problem} style={{ fontSize: "14px" }}>
-                                {problem}: {tries} wrong tries
-                              </div>
-                            )
-                          )}
+                  <div className="tdash__results-list">
+                    {studentResults.map((result) => (
+                      <div className="tdash__result-card" key={result.id}>
+                        <div className="tdash__result-title">
+                          {result.assignmentTitle || result.gameKey}
                         </div>
-                      )}
-                    </div>
-                  ))
+
+                        <div className="tdash__result-meta">
+                          Total Wrong Tries:{" "}
+                          <strong>{result.totalWrongGuesses ?? 0}</strong>
+                        </div>
+
+                        {result.problemBreakdown && (
+                          <div className="tdash__result-breakdown">
+                            {Object.entries(result.problemBreakdown).map(
+                              ([problem, tries]) => (
+                                <div
+                                  key={problem}
+                                  className="tdash__result-line"
+                                >
+                                  <span>{problem}</span>
+                                  <span>{tries} wrong tries</span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <p>No completed assignments yet.</p>
+                  <p className="tdash__empty-text">
+                    No completed assignments yet.
+                  </p>
                 )}
               </div>
-            </div>
+            </>
           ) : (
-            <p>No student selected yet.</p>
+            <p className="tdash__empty-text">No student selected yet.</p>
           )}
         </section>
       </main>
