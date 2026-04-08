@@ -1,30 +1,47 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Welcome.css";
 import raccacoonie from "./images/raccacoonie.jpeg";
+import CampfireScene from "../components/CampfireScene";
 
 const Welcome = ({
   student,
-  onPlayGame,
   onOpenAssignments,
   onOpenShop,
   onLogout,
 }) => {
   const name = student?.name;
+  const [fireBoost, setFireBoost] = useState(0);
+
+  function pulseFire(action) {
+    setFireBoost((n) => n + 1);
+    action?.();
+  }
 
   return (
-    <div className="wrapper welcome-bg">
-      <div className="profile-circle">
-        <img src={raccacoonie} alt="Raccacoonie Profile" />
-      </div>
+    <div className="wrapper">
+      <CampfireScene boost={fireBoost} />
 
-      <h1>WELCOME{name ? `, ${name}` : ""}:</h1>
-      <p>Let's get started!</p>
+      <div className="welcome-content">
+        <div className="profile-circle">
+          <img src={raccacoonie} alt="Raccacoonie Profile" />
+        </div>
 
-      <div className="buttons">
-        <button onClick={onPlayGame}>PLAY GAME</button>
-        <button onClick={onOpenAssignments}>ASSIGNMENTS</button>
-        <button onClick={onOpenShop}>SHOP</button>
-        <button onClick={onLogout}>LOGOUT</button>
+        <h1>WELCOME{name ? `, ${name}` : ""}:</h1>
+        <p>Let's get started!</p>
+
+        <div className="buttons">
+          <button onClick={() => pulseFire(onOpenAssignments)}>
+            ASSIGNMENTS
+          </button>
+
+          <button onClick={() => pulseFire(onOpenShop)}>
+            SHOP
+          </button>
+
+          <button onClick={() => pulseFire(onLogout)}>
+            LOGOUT
+          </button>
+        </div>
       </div>
     </div>
   );

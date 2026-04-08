@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export async function saveAssignmentResult({
   studentId,
@@ -11,32 +11,46 @@ export async function saveAssignmentResult({
   if (!studentId || !gameKey) return;
 
   const problemBreakdown = {};
+  const answers = [];
 
   for (const item of numGuessesPerAnswer || []) {
-    const trash = item.guessedAnswer;
-    if (!trash) continue;
+    const problemData = item?.guessedAnswer;
+    if (!problemData) continue;
 
-    const label = `${trash.question}=${trash.answer}`;
-    problemBreakdown[label] = item.numGuess ?? 0;
+    const problem = problemData.question ?? "";
+    const correctAnswer = problemData.answer ?? "";
+
+    const studentAnswer =
+      item?.studentAnswer ??
+      item?.finalAnswer ??
+      item?.selectedAnswer ??
+      item?.droppedAnswer ??
+      item?.answerChosen ??
+      correctAnswer;
+
+    const wrongTries = Number(item?.numGuess ?? 0);
+    const isCorrect = String(studentAnswer) === String(correctAnswer);
+
+    problemBreakdown[`${problem}=${correctAnswer}`] = wrongTries;
+
+    answers.push({
+      problem,
+      correctAnswer,
+      studentAnswer,
+      isCorrect,
+      wrongTries,
+    });
   }
 
-  const resultRef = doc(
-    db,
-    "students",
-    String(studentId),
-    "assignmentResults",
-    gameKey
-  );
-
-  await setDoc(
-    resultRef,
+  await addDoc(
+    collection(db, "students", String(studentId), "assignmentResults"),
     {
-      assignmentTitle,
+      assignmentTitle: assignmentTitle || gameKey,
       gameKey,
       totalWrongGuesses: totalWrongGuesses ?? 0,
       completedAt: serverTimestamp(),
       problemBreakdown,
-    },
-    { merge: true }
+      answers,
+    }
   );
 }

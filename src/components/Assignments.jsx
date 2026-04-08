@@ -9,13 +9,29 @@ import {
 import { db } from "../firebase";
 import { getAssignmentsForGrade } from "../assignmentService";
 
-export default function Assignments({ student, onBack, onOpenGame }) {
+export default function Assignments({
+  student,
+  onBack,
+  onOpenGame,
+  externalAssignments,
+  externalCompletedMap,
+  externalLockMap,
+}) {
+  const usingExternalData = Array.isArray(externalAssignments);
   const [assignments, setAssignments] = useState([]);
   const [completedMap, setCompletedMap] = useState({});
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (usingExternalData) {
+      setAssignments(externalAssignments || []);
+      setCompletedMap(externalCompletedMap || {});
+      setLockMap(externalLockMap || {});
+      setLoading(false);
+      return;
+    }
+
     let unsubscribeResults = null;
     let unsubscribeClassroom = null;
 
@@ -83,7 +99,7 @@ export default function Assignments({ student, onBack, onOpenGame }) {
       if (unsubscribeResults) unsubscribeResults();
       if (unsubscribeClassroom) unsubscribeClassroom();
     };
-  }, [student]);
+  }, [student, usingExternalData, externalAssignments, externalCompletedMap, externalLockMap]);
 
   return (
     <div className="assignments-page">

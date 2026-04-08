@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./GamePage.css";
 import { createGame } from "../createGame";
 
-export default function GamePage({ gameKey, onBack }) {
+export default function GamePage({ gameKey, onFinishReturn }) {
   const gameContainerRef = useRef(null);
   const gameRef = useRef(null);
   const [gameFinished, setGameFinished] = useState(false);
@@ -30,15 +30,9 @@ export default function GamePage({ gameKey, onBack }) {
 
   return (
     <div className="game-page">
-      {!gameFinished && (
-        <button className="game-back-btn" onClick={onBack}>
-          Back
-        </button>
-      )}
-
       {gameFinished && (
-        <button className="game-finish-btn" onClick={onBack}>
-          Return to Assignments
+        <button className="game-finish-btn" onClick={onFinishReturn}>
+          Return to Welcome
         </button>
       )}
 

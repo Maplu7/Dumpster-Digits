@@ -2,14 +2,21 @@ import React, { useState } from "react";
 import "./Login.css";
 import { FaUser, FaLock } from "react-icons/fa";
 import { loginStudent, loginTeacher } from "../authService";
+import CampfireScene from "../components/CampfireScene";
 
 const Login = ({ onLogin, onTeacherLogin }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [fireBoost, setFireBoost] = useState(0);
+
+  function pulseFire() {
+    setFireBoost((n) => n + 1);
+  }
 
   async function handleStudentSubmit(e) {
     e.preventDefault();
+    pulseFire();
     setMsg("Logging in as student...");
 
     try {
@@ -23,6 +30,7 @@ const Login = ({ onLogin, onTeacherLogin }) => {
   }
 
   async function handleTeacherSubmit() {
+    pulseFire();
     setMsg("Logging in as teacher...");
 
     try {
@@ -37,6 +45,8 @@ const Login = ({ onLogin, onTeacherLogin }) => {
 
   return (
     <div className="login-page">
+      <CampfireScene boost={fireBoost} />
+
       <div className="login-wrapper">
         <form onSubmit={handleStudentSubmit}>
           <h1 className="login-title">Login</h1>
