@@ -1,30 +1,34 @@
 export class Preloader extends Phaser.Scene {
-  constructor() {
-    super("Preloader");
-  }
+    constructor() {
+        super('Preloader');
+    }
 
-  init() {
-    this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
-    const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
+    init() {
+        this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
 
-    this.load.on("progress", (progress) => {
-      bar.width = 4 + 460 * progress;
-    });
-  }
+        const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
 
-  preload() {
-    this.load.setPath("assets");
+        this.load.on('progress', (progress) => {
+            bar.width = 4 + (460 * progress);
+        });
+    }
 
-    this.load.image("sky", "sky.png");
-    this.load.image("space", "space.png");
-    this.load.image("dump", "dump.png");
-    this.load.image("dirt", "dirt.png");
-    this.load.image("trashCan", "trashCan.png");
-    this.load.image("trash", "can.png");
-    this.load.image("camp", "campGround.png");
-  }
+    preload() {
+        this.load.setPath('assets');
 
-  create() {
-    this.scene.start("Game");
-  }
+        this.load.image('trashCan', 'trashCan.png');
+        this.load.image('trash', 'can.png');   // ← put this back
+        this.load.image('camp', 'campGround.png');
+
+        this.load.image('emptyCan', 'used_can.png');
+
+        this.load.spritesheet('usedItems', 'used_items.png', {
+            frameWidth: 32,
+            frameHeight: 50
+        });
+    }
+
+    create() {
+        this.scene.start('Game');
+    }
 }

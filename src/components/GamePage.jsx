@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./GamePage.css";
-import { createGame } from "../createGame";
+import createGame from "../createGame";
 
 export default function GamePage({ gameKey, onFinishReturn }) {
   const gameContainerRef = useRef(null);
@@ -16,7 +16,7 @@ export default function GamePage({ gameKey, onFinishReturn }) {
       setGameFinished(true);
     };
 
-    gameRef.current = createGame(gameContainerRef.current, gameKey);
+    gameRef.current = createGame(gameKey, gameContainerRef.current);
 
     return () => {
       window.onPhaserGameFinished = null;
@@ -30,13 +30,15 @@ export default function GamePage({ gameKey, onFinishReturn }) {
 
   return (
     <div className="game-page">
-      {gameFinished && (
-        <button className="game-finish-btn" onClick={onFinishReturn}>
-          Return to Welcome
-        </button>
-      )}
-
       <div ref={gameContainerRef} className="game-canvas-wrap" />
+
+      {gameFinished && (
+        <div className="game-finish-overlay">
+          <button className="game-finish-btn" onClick={onFinishReturn}>
+            Return to Welcome
+          </button>
+        </div>
+      )}
     </div>
   );
 }

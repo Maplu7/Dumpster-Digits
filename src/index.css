@@ -1,20 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Fjalla+One&family=Gravitas+One&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fjalla+One&family=Gravitas+One&display=swap");
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
 }
 
 body {
   font-family: "Fjalla One", sans-serif;
   font-weight: 400;
   font-style: normal;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
-  background: url('components/images/background8.png') no-repeat;
-  background-size: cover;
-  background-position: center;
+  background: #05081a;
 }

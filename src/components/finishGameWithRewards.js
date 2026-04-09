@@ -1,7 +1,7 @@
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
-import { saveAssignmentResult } from "./saveAssignmentResult";
-import { getRandomCoinReward, rewardStudentCoins } from "./studentRewards";
+import { db } from "../firebase";
+import { saveAssignmentResult } from "../saveAssignmentResult";
+import { getCoinRewardForWrongGuesses, rewardStudentCoins } from "./studentRewards";
 
 export async function finishGameWithRewards({
   studentId,
@@ -34,7 +34,7 @@ export async function finishGameWithRewards({
   let reward = 0;
 
   if (!alreadyCompleted) {
-    reward = getRandomCoinReward(8, 20);
+    reward = getCoinRewardForWrongGuesses(totalWrongGuesses);
     await rewardStudentCoins(studentId, reward);
   }
 

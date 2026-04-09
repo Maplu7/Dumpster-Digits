@@ -1,18 +1,19 @@
 import { Trash } from '../GameObjects/Trash.js'; //can copy the path
 import { TrashCan } from '../GameObjects/TrashCan.js';
+import { showFinishScreen } from "./utils/showFinishScreen";
 import { saveAssignmentResult } from "../saveAssignmentResult";
-import { showFinishScreen } from './utils/showFinishScreen';
 
-export class Game_1st_grade_subtraction extends Phaser.Scene {
+export class Game_2nd_grade_fillInTheBlank extends Phaser.Scene {
   constructor() {
     super('Game');
+
   }
+  /*Frame Dimensions: width: 1536,
+                      height: 793*/
 
   create() {
-
-    this.gameKey = "1st_subtraction";
-    this.assignmentTitle = "1st Grade Subtraction";
-
+    this.gameKey = "2nd_fill_blank";
+    this.assignmentTitle = "2nd Grade Fill in the Blank";
     this.saveResults = async () => {
       const studentId = this.studentId || this.registry.get("studentId");
 
@@ -25,19 +26,23 @@ export class Game_1st_grade_subtraction extends Phaser.Scene {
       });
     };
 
-    this.problems = [
-      { question: "10-1", answer: 9 },
-      { question: "10-2", answer: 8 },
-      { question: "10-3", answer: 7 },
-      { question: "10-4", answer: 6 },
-      { question: "10-5", answer: 5 },
-      { question: "10-6", answer: 4 },
-      { question: "10-7", answer: 3 },
-      { question: "10-8", answer: 2 },
-      { question: "10-9", answer: 1 },
-      { question: "10-10", answer: 0 }
+
+    this.problems1 = [
+      { question: "1+_=1", answer: 0 },
+      { question: "1+_=2", answer: 1 },
+      { question: "1+_=3", answer: 2 },
+      { question: "1+_=4", answer: 3 },
+      { question: "1+_=5", answer: 4 },
+      { question: "1+_=6", answer: 5 },
+      { question: "1+_=7", answer: 6 },
+      { question: "1+_=8", answer: 7 },
+      { question: "1+_=9", answer: 8 },
+      { question: "1+_=10", answer: 9 },
+      { question: "1+_=11", answer: 10 }
     ]; //2D array for questions and their respective answers
 
+
+    // this.add.image(90, 50, 'camp').setScale(3);
     this.campGroundR1 = this.add.group({
       key: 'camp',
       repeat: 11,
@@ -94,20 +99,20 @@ export class Game_1st_grade_subtraction extends Phaser.Scene {
       //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
     });
 
-    this.problem1 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem1);
+    this.problem1 = Phaser.Utils.Array.GetRandom(this.problems1);
+    Phaser.Utils.Array.Remove(this.problems1, this.problem1);
 
-    this.problem2 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem2);
+    this.problem2 = Phaser.Utils.Array.GetRandom(this.problems1);
+    Phaser.Utils.Array.Remove(this.problems1, this.problem2);
 
-    this.problem3 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem3);
+    this.problem3 = Phaser.Utils.Array.GetRandom(this.problems1);
+    Phaser.Utils.Array.Remove(this.problems1, this.problem3);
 
-    this.problem4 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem4);
+    this.problem4 = Phaser.Utils.Array.GetRandom(this.problems1);
+    Phaser.Utils.Array.Remove(this.problems1, this.problem4);
 
-    this.problem5 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem5);
+    this.problem5 = Phaser.Utils.Array.GetRandom(this.problems1);
+    Phaser.Utils.Array.Remove(this.problems1, this.problem5);
 
     //createes and array of randomized problems
     this.possibleQuestions = [
@@ -169,11 +174,11 @@ export class Game_1st_grade_subtraction extends Phaser.Scene {
 
 
     // Createse trash and their individual questions
-    this.trash1 = new Trash(this, 100, 280, this.question1).setScale(0.6);
-    this.trash2 = new Trash(this, 440, 340, this.question2).setScale(0.6);
-    this.trash3 = new Trash(this, 740, 280, this.question3).setScale(0.6);
-    this.trash4 = new Trash(this, 1040, 340, this.question4).setScale(0.6);
-    this.trash5 = new Trash(this, 1340, 280, this.question5).setScale(0.6);
+    this.trash1 = new Trash(this, 100, 280, this.question1).setScale(1);
+    this.trash2 = new Trash(this, 440, 340, this.question2).setScale(1);
+    this.trash3 = new Trash(this, 740, 280, this.question3).setScale(1);
+    this.trash4 = new Trash(this, 1040, 340, this.question4).setScale(1);
+    this.trash5 = new Trash(this, 1340, 280, this.question5).setScale(1);
     //this.replacementTrash = new Trash;
 
     this.numGuessesPerAnswer = [
@@ -353,8 +358,16 @@ export class Game_1st_grade_subtraction extends Phaser.Scene {
   };
 
 
-  async onFinish() {
-    await this.saveResults();
-    showFinishScreen(this);
+   async onFinish(){
+      await this.saveResults();
+      showFinishScreen(this, {
+        formatLine: (trash, guessCount) =>
+          "Wrong guesses for " +
+          trash.question +
+          " has " +
+          trash.answer +
+          ": " +
+          guessCount,
+      });
+    }
   }
-}

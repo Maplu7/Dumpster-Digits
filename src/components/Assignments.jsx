@@ -8,6 +8,64 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { getAssignmentsForGrade } from "../assignmentService";
+import { getAssignmentTheme } from "./appTheme";
+import StarTwinkleOverlay from "./StarTwinkleOverlay";
+import LayeredSkyScene from "../components/LayeredSkyScene";
+import useAmbience from "../hooks/useAmbience";
+
+
+function getPreviewProblem(gameKey) {
+  switch (gameKey) {
+    case "1st_addition":
+      return "1 + 5";
+    case "1st_subtraction":
+      return "5 - 1";
+    case "2nd_addition":
+      return "8 + 7";
+    case "2nd_subtraction":
+      return "15 - 6";
+    case "2nd_fill_blank":
+      return "4 + _ = 10";
+    case "2nd_place_value":
+      return "42 → 4 tens";
+    case "2nd_multiplication":
+      return "2 × 3";
+    default:
+      return "1 + 5";
+  }
+}
+
+function getAssignmentOrder(gameKey) {
+  if (gameKey === "1st_addition") return 0;
+  if (gameKey === "1st_subtraction") return 1;
+  if (gameKey === "2nd_addition") return 2;
+  if (gameKey === "2nd_subtraction") return 3;
+  if (gameKey === "2nd_fill_blank") return 4;
+  if (gameKey === "2nd_place_value") return 5;
+  if (gameKey === "2nd_multiplication") return 6;
+  return 99;
+}
+
+function getGameLabel(gameKey) {
+  switch (gameKey) {
+    case "1st_addition":
+      return "Addition";
+    case "1st_subtraction":
+      return "Subtraction";
+    case "2nd_addition":
+      return "2nd Grade Addition";
+    case "2nd_subtraction":
+      return "2nd Grade Subtraction";
+    case "2nd_fill_blank":
+      return "Fill in the Blank";
+    case "2nd_place_value":
+      return "Place Value";
+    case "2nd_multiplication":
+      return "Multiplication";
+    default:
+      return "Game";
+  }
+}
 
 export default function Assignments({
   student,
@@ -23,9 +81,18 @@ export default function Assignments({
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
 
+  useAmbience("/sounds/camp-ambience.mp3", 0.15);
+
   useEffect(() => {
     if (usingExternalData) {
-      setAssignments(externalAssignments || []);
+      const safeAssignments = Array.isArray(externalAssignments)
+        ? [...externalAssignments].sort(
+            (a, b) =>
+              getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
+          )
+        : [];
+
+      setAssignments(safeAssignments);
       setCompletedMap(externalCompletedMap || {});
       setLockMap(externalLockMap || {});
       setLoading(false);
@@ -39,7 +106,15 @@ export default function Assignments({
       setLoading(true);
 
       const items = await getAssignmentsForGrade(student?.grade);
-      setAssignments(items);
+
+      const sortedItems = Array.isArray(items)
+        ? [...items].sort(
+            (a, b) =>
+              getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
+          )
+        : [];
+
+      setAssignments(sortedItems);
 
       if (!student?.id) {
         setLoading(false);
@@ -53,44 +128,32 @@ export default function Assignments({
         "assignmentResults"
       );
 
-      unsubscribeResults = onSnapshot(
-        resultsRef,
-        (snapshot) => {
-          const completed = {};
-          snapshot.forEach((docSnap) => {
-            completed[docSnap.id] = true;
-          });
-          setCompletedMap(completed);
-        },
-        (error) => {
-          console.error("Error watching completed assignments:", error);
-        }
-      );
+      unsubscribeResults = onSnapshot(resultsRef, (snapshot) => {
+        const completed = {};
+        snapshot.forEach((docSnap) => {
+          const gameKey = docSnap.data()?.gameKey;
+          if (gameKey) completed[gameKey] = true;
+        });
+        setCompletedMap(completed);
+      });
 
       const classQ = query(
         collection(db, "classrooms"),
         where("studentID", "array-contains", String(student.id))
       );
 
-      unsubscribeClassroom = onSnapshot(
-        classQ,
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const classData = snapshot.docs[0].data();
-            const studentLocks =
-              classData?.studentAssignments?.[String(student.id)] || {};
-            setLockMap(studentLocks);
-          } else {
-            setLockMap({});
-          }
-
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Error watching classroom locks:", error);
-          setLoading(false);
+      unsubscribeClassroom = onSnapshot(classQ, (snapshot) => {
+        if (!snapshot.empty) {
+          const classData = snapshot.docs[0].data();
+          const studentLocks =
+            classData?.studentAssignments?.[String(student.id)] || {};
+          setLockMap(studentLocks);
+        } else {
+          setLockMap({});
         }
-      );
+
+        setLoading(false);
+      });
     }
 
     loadAssignmentsAndWatch();
@@ -99,14 +162,22 @@ export default function Assignments({
       if (unsubscribeResults) unsubscribeResults();
       if (unsubscribeClassroom) unsubscribeClassroom();
     };
-  }, [student, usingExternalData, externalAssignments, externalCompletedMap, externalLockMap]);
+  }, [
+    student,
+    usingExternalData,
+    externalAssignments,
+    externalCompletedMap,
+    externalLockMap,
+  ]);
 
   return (
     <div className="assignments-page">
+      <LayeredSkyScene variant="assignments" />
+
       <div className="assignments-shell">
         <div className="assignments-header">
           <div>
-            <h1 className="assignments-title">Assignments</h1>
+            <h1 className="assignments-title">Games</h1>
             <p className="assignments-subtitle">
               {student?.name || "Student"} — Grade {student?.grade ?? "?"}
             </p>
@@ -125,54 +196,72 @@ export default function Assignments({
           </div>
         ) : (
           <div className="assignments-grid">
-            {assignments.map((assignment) => {
-              const isCompleted = completedMap[assignment.gameKey] === true;
-              const isLocked = lockMap[assignment.gameKey] === true;
+            {assignments.map((assignment, index) => {
+              const isCompleted = completedMap[assignment?.gameKey] === true;
+              const isLocked = lockMap[assignment?.gameKey] === true;
+              const theme = getAssignmentTheme(assignment?.gameKey);
+              const previewProblem = getPreviewProblem(assignment?.gameKey);
 
               return (
-                <div className="assignment-card" key={assignment.id}>
-                  <div className="assignment-badge">
-                    Grade {assignment.grade}
+                <div
+                  className={`assignment-polaroid ${
+                    index % 2 === 0 ? "tilt-left" : "tilt-right"
+                  }`}
+                  key={assignment?.id || index}
+                  onClick={() => {
+                    if (!isLocked && assignment?.gameKey) {
+                      onOpenGame(assignment.gameKey);
+                    }
+                  }}
+                >
+                  <div className="assignment-grade-pill">
+                    Grade {assignment?.grade ?? "?"}
                   </div>
 
-                  <h2>{assignment.title}</h2>
-                  <p>{assignment.description}</p>
-
-                  <div
-                    style={{
-                      marginBottom: "8px",
-                      fontWeight: "bold",
-                      color: isCompleted ? "#2e7d32" : "#8a5a5a",
-                    }}
-                  >
-                    {isCompleted ? "Completed ✅" : "Not completed yet"}
+                  <div className="assignment-polaroid-photo">
+                    <StarTwinkleOverlay
+                      image={theme.preview}
+                      alt="preview"
+                      problem={previewProblem}
+                    />
                   </div>
 
-                  <div
-                    style={{
-                      marginBottom: "14px",
-                      fontWeight: "bold",
-                      color: isLocked ? "#b23a48" : "#2b6cb0",
-                    }}
-                  >
-                    {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
-                  </div>
+                  <div className="assignment-polaroid-caption">
+                    <h2>{getGameLabel(assignment?.gameKey)}</h2>
 
-                  <button
-                    className="assignment-play-btn"
-                    onClick={() => onOpenGame(assignment.gameKey)}
-                    disabled={isLocked}
-                    style={{
-                      opacity: isLocked ? 0.6 : 1,
-                      cursor: isLocked ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {isLocked
-                      ? "Locked"
-                      : isCompleted
-                      ? "Play Again"
-                      : "Start Game"}
-                  </button>
+                    <p className="assignment-description">
+                      {assignment?.description || ""}
+                    </p>
+
+                    <div className="assignment-status-wrap">
+                      <div
+                        className={`assignment-status ${
+                          isCompleted ? "done" : "todo"
+                        }`}
+                      >
+                        {isCompleted ? "Completed ✅" : "Not completed yet"}
+                      </div>
+
+                      <div
+                        className={`assignment-status ${
+                          isLocked ? "locked" : "unlocked"
+                        }`}
+                      >
+                        {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
+                      </div>
+                    </div>
+
+                    <button
+                      className="assignment-play-btn"
+                      disabled={isLocked}
+                      style={{
+                        background: theme.accent,
+                        "--btn-glow": `${theme.accent}99`,
+                      }}
+                    >
+                      {isCompleted ? "Play Again" : "Start Game"}
+                    </button>
+                  </div>
                 </div>
               );
             })}

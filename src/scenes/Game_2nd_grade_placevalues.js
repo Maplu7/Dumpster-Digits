@@ -1,54 +1,142 @@
-import {Trash} from  '../GameObjects/Trash2.js'; //can copy the path
-import {TrashCan} from '../GameObjects/TrashCan2.js';
+import {Trash} from  '../GameObjects/Trash.js'; //can copy the path
+import {TrashCan} from '../GameObjects/TrashCan.js';
+import { showFinishScreen } from "./utils/showFinishScreen";
+import { saveAssignmentResult } from "../saveAssignmentResult";
 
-export class Game extends Phaser.Scene {
+export class Game_2nd_grade_placevalues extends Phaser.Scene {
     constructor() {
         super('Game');
 
     }
+/*Frame Dimensions: width: 1536,
+                    height: 793*/
 
     create() {
-        this.problems = [
-          {question: "3+4", answer: 7},
-          {question: "5+2", answer: 7},
-          {question: "10+10", answer: 20},
-          {question: "12+6", answer: 18},
-          {question: "11+5", answer: 16},
-          {question: "4+4", answer: 8},
-          {question: "5+5", answer: 10},
-          {question: "3+3", answer: 6}
-        ]; //2D array for questions and their respective answers
+        this.gameKey = "2nd_place_value";
+        this.assignmentTitle = "2nd Grade Place Value";
+        this.saveResults = async () => {
+          const studentId = this.studentId || this.registry.get("studentId");
 
-      this.add.image(400, 300, 'space');
-      this.add.image(400, 0, 'dump').setScale(0.60);
-      this.add.image(400, 650, 'dirt').setScale(0.40);
+          await saveAssignmentResult({
+            studentId,
+            gameKey: this.gameKey,
+            assignmentTitle: this.assignmentTitle,
+            totalWrongGuesses: this.numWrong || 0,
+            numGuessesPerAnswer: this.numGuessesPerAnswer || [],
+          });
+        };
 
-      //this.add.image(5, 350,'trash').setScale(4).setOrigin(0, 0);
-            //an added image DOES NOT HAVE a physics body!!!
-    
-    /*let i = 0
-    this.trashCans.children.iterate(child =>{
-      child.setScale(3);
-      child.setInteractive();   
 
-      child.setSize(40, 20); //changes hit box size(width, height)
-      child.setOffset(15,15); // changes hit box position around sptire
-      child.refreshBody(); // required for static bodies so they know its being changed
-   })*/
-      this.problem1 = Phaser.Utils.Array.GetRandom(this.problems);
-          Phaser.Utils.Array.Remove(this.problems, this.problem1);
 
-      this.problem2 = Phaser.Utils.Array.GetRandom(this.problems);
-          Phaser.Utils.Array.Remove(this.problems, this.problem2);
+ // this.add.image(90, 50, 'camp').setScale(3);
+      this.campGroundR1 = this.add.group({
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 50, stepX: 180},
+            setScale: { x: 3, y: 4},  
+        });
 
-      this.problem3 = Phaser.Utils.Array.GetRandom(this.problems);
-          Phaser.Utils.Array.Remove(this.problems, this.problem3);
+        this.campGroundR2 = this.add.group({ //a DYNAMIC physics group
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 200, stepX: 180},
+            setScale: { x: 3, y: 4}
+        });
 
-      this.problem4 = Phaser.Utils.Array.GetRandom(this.problems);
-          Phaser.Utils.Array.Remove(this.problems, this.problem4);
+        this.campGroundR3 = this.add.group({ //a DYNAMIC physics group
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 300, stepX: 180},
+            setScale: { x: 3, y: 4}
+        });
 
-      this.problem5 = Phaser.Utils.Array.GetRandom(this.problems);
-          Phaser.Utils.Array.Remove(this.problems, this.problem5);
+        this.campGroundR4 = this.add.group({ //a DYNAMIC physics group
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 400, stepX: 180},
+            setScale: { x: 3, y: 4}
+        });
+
+        this.campGroundR5 = this.add.group({ //a DYNAMIC physics group
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 500, stepX: 180},
+            setScale: { x: 3, y: 4}
+        });
+
+        this.campGroundR6 = this.add.group({ //a DYNAMIC physics group
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 600, stepX: 180},
+            setScale: { x: 3, y: 4}
+        });
+
+        this.campGroundR7 = this.add.group({ //a DYNAMIC physics group
+            key: 'camp',
+            repeat: 11,
+            setXY: {x: 90, y: 720, stepX: 180},
+            setScale: { x: 3, y: 4}
+        });
+
+
+    function placeValueProblems() {
+      const onesProblems = [];
+      const tensProblems = [];
+      const hundredsProblems = [];
+      const allProblems = [];
+
+      for(let n = 1; n <= 999; n++){
+        const ones = n % 10;
+        const tens = Math.floor(n/10) % 10;
+        const hundreds = Math.floor(n/100);
+
+        onesProblems.push({
+          question: `${n}`,
+          answer: `${ones} in the \n1s place`
+        });
+
+        tensProblems.push({
+          question:`${n}`,
+          answer: `${tens} in the \n10s place`
+        });
+
+        if(hundreds !== 0){
+        hundredsProblems.push({
+          question: `${n}`,
+          answer: `${hundreds} in the \n100s place`
+        });
+        };
+      }
+      for(let n = 1; n <= 100; n++)
+      {
+        allProblems.push(onesProblems[n]);
+      }
+      for(let n = 1; n <= 100; n++)
+      {
+        allProblems.push(tensProblems[n]);
+      }
+      for(let n = 1; n <= 100; n++)
+      {
+        allProblems.push(hundredsProblems[n]);
+      }
+
+      return allProblems;
+    }
+
+
+    this.problemsPlaceValues = placeValueProblems();
+   
+      this.problem1 = Phaser.Utils.Array.GetRandom(this.problemsPlaceValues);
+          Phaser.Utils.Array.Remove(this.problemsPlaceValues, this.problem1);
+      this.problem2 = Phaser.Utils.Array.GetRandom(this.problemsPlaceValues);
+          Phaser.Utils.Array.Remove(this.problemsPlaceValues, this.problem2);
+      this.problem3 = Phaser.Utils.Array.GetRandom(this.problemsPlaceValues);
+          Phaser.Utils.Array.Remove(this.problemsPlaceValues, this.problem3);
+      this.problem4 = Phaser.Utils.Array.GetRandom(this.problemsPlaceValues);
+          Phaser.Utils.Array.Remove(this.problemsPlaceValues, this.problem4);
+      this.problem5 = Phaser.Utils.Array.GetRandom(this.problemsPlaceValues);
+          Phaser.Utils.Array.Remove(this.problemsPlaceValues, this.problem5);
+
 
       //createes and array of randomized problems
       this.possibleQuestions = [
@@ -102,31 +190,37 @@ export class Game extends Phaser.Scene {
       
 
 // creates trashcans and their individual answers
-      this.trashCan1 = new TrashCan(this, 50, 500, this.answer1);
-      this.trashCan2 = new TrashCan(this, 210, 500, this.answer2);
-      this.trashCan3 = new TrashCan(this, 390, 500, this.answer3);
-      this.trashCan4 = new TrashCan(this, 570, 500, this.answer4);
-      this.trashCan5 = new TrashCan(this, 750, 500, this.answer5);
+      this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
+      this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
+      this.trashCan3 = new TrashCan(this, 740, 700, this.answer3).setScale(1);
+      this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
+      this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
 
 
 // Createse trash and their individual questions
       this.trash1 = new Trash(this, 100, 280, this.question1).setScale(0.6);
-      this.trash2 = new Trash(this, 250, 340, this.question2).setScale(0.6);
-      this.trash3 = new Trash(this, 400, 280, this.question3).setScale(0.6);
-      this.trash4 = new Trash(this, 550, 340, this.question4).setScale(0.6);
-      this.trash5 = new Trash(this, 700, 280, this.question5).setScale(0.6);
+      this.trash2 = new Trash(this, 440, 340, this.question2).setScale(0.6);
+      this.trash3 = new Trash(this,740, 280, this.question3).setScale(0.6);
+      this.trash4 = new Trash(this, 1040, 340, this.question4).setScale(0.6);
+      this.trash5 = new Trash(this, 1340, 280, this.question5).setScale(0.6);
+      //this.replacementTrash = new Trash;
 
-
-
+        this.numGuessesPerAnswer = [
+          {guessedAnswer: this.trash1, numGuess: 0},
+          {guessedAnswer: this.trash2, numGuess: 0},
+          {guessedAnswer: this.trash3, numGuess: 0},
+          {guessedAnswer: this.trash4, numGuess: 0},
+          {guessedAnswer: this.trash5, numGuess: 0}
+        ];
+        
+ //////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
       this.numCorrect = 0; //Will keep track of number of right guesses
-      this.numWrong = 0;
+      this.numWrong = 0; //Will keep track of number of wrong guesses
+      //this.triesUsed = 0;
+      //this.numTries1 = 0;
+      //this.numTriesUsed = this.add.text(20, 20, 'Num Tries: 3', {fontSize: '40px', fill: "#ffffff"});
 
-this.numWrongGuesses = this.add.text(20, 20, 'Num Wrong: 0', {
-  fontSize: '40px',
-  fill: '#ffffff'
-});
-
-this.numWrongGuesses.setVisible(false); // hides it during the game
 
       //March 3
       // Will trigger when a piece of trash is over a garbage can
@@ -195,7 +289,7 @@ this.numWrongGuesses.setVisible(false); // hides it during the game
     
     }
 
-    
+
 putInTrash(trash, trashCan) {
   // if this can is already solved, ignore
   if (trashCan && trashCan._disabled) return;
@@ -203,9 +297,6 @@ putInTrash(trash, trashCan) {
   // stop overlap-per-frame spam
   if (trash._lockedOnCan) return;
   trash._lockedOnCan = true;
-
-  // ✅ tint the TRASH SPRITE (not the container)
-  if (trash.trashMath) trash.trashMath.setTint(0xffff66);
 
   // unlock only after leaving all cans
   const unlockWhenLeaving = () => {
@@ -227,7 +318,7 @@ putInTrash(trash, trashCan) {
   };
 
   // Check if the trash can is the correct one
-  if (trash.correctAnswer === trashCan.answer) {
+  if (trash.answer === trashCan.answer) {
     this.correct?.destroy();
     this.correct = this.add.text(30, 200, "That is Correct!", {
       fontSize: "80px",
@@ -246,8 +337,7 @@ putInTrash(trash, trashCan) {
 
     if (this.numCorrect === 5) {
       // keep hidden during play; toast shows final number
-      this.numWrongGuesses.setVisible(false);
-      this.time.delayedCall(1000, this.onFinish, [], this);
+      this.time.delayedCall(550, this.onFinish, [], this);
     }
 
     return;
@@ -257,15 +347,31 @@ putInTrash(trash, trashCan) {
   this.numWrong += 1;
 
   // keep hidden, but update stored number for toast
-  this.numWrongGuesses.setText("Num Wrong: " + this.numWrong);
-  this.numWrongGuesses.setVisible(false);
+
+  if(trash === this.trash1){
+    this.numGuessesPerAnswer[0].numGuess++;
+  }
+  else if(trash === this.trash2){
+    this.numGuessesPerAnswer[1].numGuess++;
+  }
+  else if(trash === this.trash3){
+    this.numGuessesPerAnswer[2].numGuess++;
+  }
+  else if(trash == this.trash4){
+    this.numGuessesPerAnswer[3].numGuess++;
+  }
+  else if(trash == this.trash5){
+    this.numGuessesPerAnswer[4].numGuess++;
+  };
 
   this.wrongText?.destroy();
   this.wrongText = this.add.text(30, 200, "Try again!", {
     fontSize: "80px",
     fill: "#ffffff",
   });
+
   this.time.delayedCall(550, () => this.wrongText?.destroy());
+  this.triesUsed += 1;
 
   // allow another wrong count only after leaving cans
   unlockWhenLeaving();
@@ -276,50 +382,17 @@ putInTrash(trash, trashCan) {
       this.correct.destroy();
     };
 
-    onWrong()
-    {
-      //this.wrong.destroy();
-    };
 
-    /*onFinish()
-    {
-      this.endGame = this.add.text(30, 200, 'Congradulations! You Finished!', {fontSize: '40px', fill: '#ffffff'});
-      this.correctGuesses = this.add.text(40, 300, 'Number of Correct Guesses: ' + this.numCorrect, {fontSize: '40px', fill: '#ffffff'});
-      this.wrongGuesses = this.add.text(40, 400, 'Number of Wrong Guesses: ' + this.numWrong, {fontSize: '40px', fill: '#ffffff'});*/
-    onFinish() { 
-      window.dispatchEvent(
-        new CustomEvent('toast', {
-          detail: {
-            type: "finish",
-            text:"Congratulations! You Finished!\n" +
-            "Correct Guesses: " + this.numCorrect + "\n" +
-            "Wrong Guesses: " + this.numWrong,
-            correct: this.numCorrect,
-            wrong: this.numWrong
-          },
-        })
-      );
-    };
+   async onFinish(){
+    await this.saveResults();
+    showFinishScreen(this, {
+      formatLine: (trash, guessCount) =>
+        "Wrong guesses for " +
+        trash.question +
+        " has " +
+        trash.answer +
+        ": " +
+        guessCount,
+    });
+  }
 }
-
-
-
-/*
-
-possible solution for randomiztation
-
-  const problems = [
-    { question: "3+4", answer: 7 },
-    { question: "5+2", answer: 7 },
-    { question: "2+6", answer: 8 },
-    { question: "9-3", answer: 6 }
-];
-
-const random = Phaser.Utils.Array.GetRandom(problems);
-
-const trash = createTrash(this, 200, 300, "trashSprite", random.question);
-
-// Store the correct answer on the trash object
-trash.correctAnswer = random.answer;
-
-*/

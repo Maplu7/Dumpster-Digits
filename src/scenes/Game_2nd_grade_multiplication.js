@@ -1,5 +1,6 @@
 import { Trash } from "../GameObjects/Trash.js";
 import { TrashCan } from "../GameObjects/TrashCan.js";
+import { showFinishScreen } from "./utils/showFinishScreen";
 import { saveAssignmentResult } from "../saveAssignmentResult";
 
 export class Game_2nd_grade_multiplication extends Phaser.Scene {
@@ -8,205 +9,172 @@ export class Game_2nd_grade_multiplication extends Phaser.Scene {
   }
 
   create() {
-    const w = this.scale.width;
-    const h = this.scale.height;
+    // ✅ REQUIRED FOR FIREBASE SYNC
+    this.gameKey = "2nd_multiplication";
+    this.assignmentTitle = "2nd Grade Multiplication";
 
+    this.saveResults = async () => {
+      const studentId = this.studentId || this.registry.get("studentId");
+
+      await saveAssignmentResult({
+        studentId,
+        gameKey: this.gameKey,
+        assignmentTitle: this.assignmentTitle,
+        totalWrongGuesses: this.numWrong || 0,
+        numGuessesPerAnswer: this.numGuessesPerAnswer || [],
+      });
+    };
+
+    // ✅ SIMPLE MULTIPLICATION PROBLEMS
     this.problems = [
-      { question: "2x1", answer: 2 },
-      { question: "2x2", answer: 4 },
-      { question: "2x3", answer: 6 },
-      { question: "2x4", answer: 8 },
-      { question: "2x5", answer: 10 },
-      { question: "2x6", answer: 12 },
-      { question: "2x7", answer: 14 },
-      { question: "2x8", answer: 16 },
-      { question: "2x9", answer: 18 },
-      { question: "2x10", answer: 20 },
+      { question: "1×1", answer: 1 },
+      { question: "1×2", answer: 2 },
+      { question: "2×2", answer: 4 },
+      { question: "2×3", answer: 6 },
+      { question: "3×2", answer: 6 },
+      { question: "3×3", answer: 9 },
+      { question: "4×2", answer: 8 },
+      { question: "5×2", answer: 10 },
+      { question: "2×5", answer: 10 },
+      { question: "4×3", answer: 12 }
     ];
 
-    this.add.image(w / 2, h / 2, "camp").setDisplaySize(w, h);
+    // BACKGROUND GRID (same as your other games)
+    for (let y = 50; y <= 720; y += 100) {
+      this.add.group({
+        key: "camp",
+        repeat: 11,
+        setXY: { x: 90, y: y, stepX: 180 },
+        setScale: { x: 3, y: 4 }
+      });
+    }
 
-    const chosen = Phaser.Utils.Array.Shuffle([...this.problems]).slice(0, 5);
-    const questions = Phaser.Utils.Array.Shuffle([...chosen]);
-    const answers = Phaser.Utils.Array.Shuffle([...chosen]);
+    // PICK 5 RANDOM PROBLEMS
+    Phaser.Utils.Array.Shuffle(this.problems);
 
-    const canY = h * 0.72;
-    const trashY1 = h * 0.28;
-    const trashY2 = h * 0.36;
+    this.questions = this.problems.slice(0, 5);
+    this.answers = [...this.questions];
 
-    const x1 = w * 0.12;
-    const x2 = w * 0.30;
-    const x3 = w * 0.48;
-    const x4 = w * 0.66;
-    const x5 = w * 0.84;
+    Phaser.Utils.Array.Shuffle(this.answers);
 
-    this.trashCan1 = new TrashCan(this, x1, canY, answers[0]).setScale(1);
-    this.trashCan2 = new TrashCan(this, x2, canY, answers[1]).setScale(1);
-    this.trashCan3 = new TrashCan(this, x3, canY, answers[2]).setScale(1);
-    this.trashCan4 = new TrashCan(this, x4, canY, answers[3]).setScale(1);
-    this.trashCan5 = new TrashCan(this, x5, canY, answers[4]).setScale(1);
+    // CREATE TRASH CANS (answers)
+    this.trashCan1 = new TrashCan(this, 100, 700, this.answers[0]);
+    this.trashCan2 = new TrashCan(this, 440, 700, this.answers[1]);
+    this.trashCan3 = new TrashCan(this, 740, 700, this.answers[2]);
+    this.trashCan4 = new TrashCan(this, 1040, 700, this.answers[3]);
+    this.trashCan5 = new TrashCan(this, 1340, 700, this.answers[4]);
 
-    this.trash1 = new Trash(this, x1, trashY1, questions[0]).setScale(0.6);
-    this.trash2 = new Trash(this, x2, trashY2, questions[1]).setScale(0.6);
-    this.trash3 = new Trash(this, x3, trashY1, questions[2]).setScale(0.6);
-    this.trash4 = new Trash(this, x4, trashY2, questions[3]).setScale(0.6);
-    this.trash5 = new Trash(this, x5, trashY1, questions[4]).setScale(0.6);
+    // CREATE TRASH (questions)
+    this.trash1 = new Trash(this, 100, 280, this.questions[0]);
+    this.trash2 = new Trash(this, 440, 340, this.questions[1]);
+    this.trash3 = new Trash(this, 740, 280, this.questions[2]);
+    this.trash4 = new Trash(this, 1040, 340, this.questions[3]);
+    this.trash5 = new Trash(this, 1340, 280, this.questions[4]);
 
+    // TRACK GUESSES
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
       { guessedAnswer: this.trash2, numGuess: 0 },
       { guessedAnswer: this.trash3, numGuess: 0 },
       { guessedAnswer: this.trash4, numGuess: 0 },
-      { guessedAnswer: this.trash5, numGuess: 0 },
+      { guessedAnswer: this.trash5, numGuess: 0 }
     ];
 
     this.numCorrect = 0;
     this.numWrong = 0;
-    this.triesUsed = 0;
-    this.gameIsFinished = false;
 
-    const allTrash = [this.trash1, this.trash2, this.trash3, this.trash4, this.trash5];
-    const allCans = [this.trashCan1, this.trashCan2, this.trashCan3, this.trashCan4, this.trashCan5];
+    const cans = [
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5
+    ];
 
-    allTrash.forEach((trash) => {
-      allCans.forEach((can) => {
+    const trashItems = [
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5
+    ];
+
+    // ADD OVERLAP FOR ALL
+    trashItems.forEach((trash) => {
+      cans.forEach((can) => {
         this.physics.add.overlap(trash, can, this.putInTrash, null, this);
       });
     });
   }
 
   putInTrash(trash, trashCan) {
-    if (this.gameIsFinished) return;
-    if (trashCan && trashCan._disabled) return;
+    if (trashCan._disabled) return;
+
     if (trash._lockedOnCan) return;
     trash._lockedOnCan = true;
 
-    const unlockWhenLeaving = () => {
-      const cans = [
-        this.trashCan1,
-        this.trashCan2,
-        this.trashCan3,
-        this.trashCan4,
-        this.trashCan5,
-      ].filter((c) => c && c.active);
-
-      const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
-
-      if (!stillOverAny) {
-        trash._lockedOnCan = false;
-
-        if (trash && trash.active && trash.trashMath && !trash._dragging) {
-          trash.trashMath.clearTint();
-        }
-      } else {
-        this.time.delayedCall(100, unlockWhenLeaving);
-      }
+    const unlock = () => {
+      trash._lockedOnCan = false;
     };
 
     if (trash.answer === trashCan.answer) {
       this.correct?.destroy();
-      this.correct = this.add.text(30, 200, "That is Correct!", {
+      this.correct = this.add.text(30, 200, "Correct!", {
         fontSize: "80px",
-        fill: "#ffffff",
+        fill: "#ffffff"
       });
-
-      if (trashCan.markCorrect) trashCan.markCorrect();
 
       trash.destroy();
       trashCan.destroy();
 
-      this.numCorrect += 1;
-      this.time.delayedCall(550, this.onCorrect, [], this);
+      this.numCorrect++;
+
+      this.time.delayedCall(500, () => this.correct?.destroy());
 
       if (this.numCorrect === 5) {
-        this.gameIsFinished = true;
-        this.time.delayedCall(1000, this.onFinish, [], this);
+        this.time.delayedCall(800, this.onFinish, [], this);
       }
 
       return;
     }
 
-    this.numWrong += 1;
+    // WRONG
+    this.numWrong++;
 
-    if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess++;
-    else if (trash === this.trash2) this.numGuessesPerAnswer[1].numGuess++;
-    else if (trash === this.trash3) this.numGuessesPerAnswer[2].numGuess++;
-    else if (trash === this.trash4) this.numGuessesPerAnswer[3].numGuess++;
-    else if (trash === this.trash5) this.numGuessesPerAnswer[4].numGuess++;
+    const index = [
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5
+    ].indexOf(trash);
+
+    if (index !== -1) {
+      this.numGuessesPerAnswer[index].numGuess++;
+    }
 
     this.wrongText?.destroy();
     this.wrongText = this.add.text(30, 200, "Try again!", {
       fontSize: "80px",
-      fill: "#ffffff",
+      fill: "#ffffff"
     });
 
-    this.time.delayedCall(550, () => this.wrongText?.destroy());
-    this.triesUsed += 1;
+    this.time.delayedCall(500, () => this.wrongText?.destroy());
 
-    unlockWhenLeaving();
-  }
-
-  onCorrect() {
-    this.correct?.destroy();
+    this.time.delayedCall(200, unlock);
   }
 
   async onFinish() {
-    this.endGame = this.add.text(250, 150, "Congratulations! You Finished!", {
-      fontSize: "60px",
-      fill: "#ffffff",
+    await this.saveResults();
+
+    showFinishScreen(this, {
+      formatLine: (trash, guessCount) =>
+        "Wrong guesses for " +
+        trash.question +
+        " has " +
+        trash.answer +
+        ": " +
+        guessCount
     });
-
-    this.guessesQuestion1 = this.add.text(
-      300,
-      300,
-      `Wrong guesses for ${this.trash1.question}=${this.trash1.answer}: ${this.numGuessesPerAnswer[0].numGuess}`,
-      { fontSize: "32px", fill: "#ffffff" }
-    );
-
-    this.guessesQuestion2 = this.add.text(
-      300,
-      360,
-      `Wrong guesses for ${this.trash2.question}=${this.trash2.answer}: ${this.numGuessesPerAnswer[1].numGuess}`,
-      { fontSize: "32px", fill: "#ffffff" }
-    );
-
-    this.guessesQuestion3 = this.add.text(
-      300,
-      420,
-      `Wrong guesses for ${this.trash3.question}=${this.trash3.answer}: ${this.numGuessesPerAnswer[2].numGuess}`,
-      { fontSize: "32px", fill: "#ffffff" }
-    );
-
-    this.guessesQuestion4 = this.add.text(
-      300,
-      480,
-      `Wrong guesses for ${this.trash4.question}=${this.trash4.answer}: ${this.numGuessesPerAnswer[3].numGuess}`,
-      { fontSize: "32px", fill: "#ffffff" }
-    );
-
-    this.guessesQuestion5 = this.add.text(
-      300,
-      540,
-      `Wrong guesses for ${this.trash5.question}=${this.trash5.answer}: ${this.numGuessesPerAnswer[4].numGuess}`,
-      { fontSize: "32px", fill: "#ffffff" }
-    );
-
-    try {
-      const studentId = sessionStorage.getItem("studentId");
-
-      await saveAssignmentResult({
-        studentId,
-        gameKey: "2nd_multiplication",
-        assignmentTitle: "2nd Grade Multiplication",
-        totalWrongGuesses: this.numWrong,
-        numGuessesPerAnswer: this.numGuessesPerAnswer,
-      });
-    } catch (error) {
-      console.error("Failed to save multiplication result:", error);
-    }
-
-    if (window.onPhaserGameFinished) {
-      window.onPhaserGameFinished();
-    }
   }
 }

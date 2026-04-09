@@ -9,13 +9,14 @@ const Login = ({ onLogin, onTeacherLogin }) => {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [fireBoost, setFireBoost] = useState(0);
+  const [loginMode, setLoginMode] = useState("student"); // "student" | "teacher"
 
   function pulseFire() {
     setFireBoost((n) => n + 1);
   }
 
   async function handleStudentSubmit(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
     pulseFire();
     setMsg("Logging in as student...");
 
@@ -29,7 +30,8 @@ const Login = ({ onLogin, onTeacherLogin }) => {
     }
   }
 
-  async function handleTeacherSubmit() {
+  async function handleTeacherSubmit(e) {
+    e?.preventDefault?.();
     pulseFire();
     setMsg("Logging in as teacher...");
 
@@ -43,18 +45,60 @@ const Login = ({ onLogin, onTeacherLogin }) => {
     }
   }
 
+  async function handleFormSubmit(e) {
+    if (loginMode === "teacher") {
+      await handleTeacherSubmit(e);
+    } else {
+      await handleStudentSubmit(e);
+    }
+  }
+
   return (
     <div className="login-page">
       <CampfireScene boost={fireBoost} />
 
       <div className="login-wrapper">
-        <form onSubmit={handleStudentSubmit}>
+        <form onSubmit={handleFormSubmit}>
           <h1 className="login-title">Login</h1>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "18px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setLoginMode("student")}
+              style={{
+                flex: 1,
+                opacity: loginMode === "student" ? 1 : 0.7,
+                outline: loginMode === "student" ? "2px solid #ffe7b4" : "none",
+              }}
+            >
+              Student
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLoginMode("teacher")}
+              style={{
+                flex: 1,
+                opacity: loginMode === "teacher" ? 1 : 0.7,
+                outline: loginMode === "teacher" ? "2px solid #ffe7b4" : "none",
+              }}
+            >
+              Teacher
+            </button>
+          </div>
 
           <div className="input-box">
             <input
               type="text"
-              placeholder="Student ID or Teacher ID"
+              placeholder={
+                loginMode === "teacher" ? "Teacher ID" : "Student ID"
+              }
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               required
@@ -65,7 +109,11 @@ const Login = ({ onLogin, onTeacherLogin }) => {
           <div className="input-box">
             <input
               type="password"
-              placeholder="Birthday (MMDD) or Teacher Password"
+              placeholder={
+                loginMode === "teacher"
+                  ? "Teacher Password"
+                  : "Birthday (MMDD)"
+              }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -74,11 +122,7 @@ const Login = ({ onLogin, onTeacherLogin }) => {
           </div>
 
           <button type="submit" style={{ marginBottom: "12px" }}>
-            Student Login
-          </button>
-
-          <button type="button" onClick={handleTeacherSubmit}>
-            Teacher Login
+            {loginMode === "teacher" ? "Teacher Login" : "Student Login"}
           </button>
 
           {msg && <p style={{ marginTop: 12 }}>{msg}</p>}

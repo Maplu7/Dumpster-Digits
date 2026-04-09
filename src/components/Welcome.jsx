@@ -3,6 +3,8 @@ import "./Welcome.css";
 import raccacoonie from "./images/raccacoonie.jpeg";
 import CampfireScene from "../components/CampfireScene";
 
+const ASSIGNMENTS_TITLE_COLOR = "#ffe7b4";
+
 const Welcome = ({
   student,
   onOpenAssignments,
@@ -22,7 +24,13 @@ const Welcome = ({
       <CampfireScene boost={fireBoost} />
 
       <div className="welcome-content">
-        <div className="profile-circle">
+        <div
+          className="profile-circle"
+          style={{
+            border: `6px solid ${ASSIGNMENTS_TITLE_COLOR}`,
+            boxShadow: `0 0 22px ${ASSIGNMENTS_TITLE_COLOR}55`,
+          }}
+        >
           <img src={raccacoonie} alt="Raccacoonie Profile" />
         </div>
 
@@ -31,7 +39,7 @@ const Welcome = ({
 
         <div className="buttons">
           <button onClick={() => pulseFire(onOpenAssignments)}>
-            ASSIGNMENTS
+            GAMES
           </button>
 
           <button onClick={() => pulseFire(onOpenShop)}>

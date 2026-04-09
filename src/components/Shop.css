@@ -1,52 +1,25 @@
 .shop-page {
   position: relative;
+  width: 100%;
   min-height: 100vh;
+  height: auto;
   padding: 28px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   font-family: "Fjalla One", sans-serif;
   color: #f6efe6;
   background:
-    radial-gradient(circle at top left, rgba(255, 214, 168, 0.12), transparent 28%),
-    radial-gradient(circle at top right, rgba(146, 158, 255, 0.1), transparent 24%),
-    radial-gradient(circle at bottom center, rgba(255, 187, 120, 0.08), transparent 22%),
-    linear-gradient(180deg, #14162b 0%, #1a1f3c 38%, #202847 100%);
-}
-
-.shop-page-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    linear-gradient(to bottom, rgba(8, 10, 24, 0.1), rgba(8, 10, 24, 0.32)),
-    radial-gradient(circle at 50% 0%, rgba(255, 234, 192, 0.08), transparent 24%);
-}
-
-.shop-stars {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.shop-star {
-  position: absolute;
-  border-radius: 999px;
-  opacity: 0;
-  background: radial-gradient(
-    circle,
-    rgba(255, 246, 225, 0.98) 0%,
-    rgba(255, 224, 176, 0.88) 55%,
-    rgba(255, 224, 176, 0) 100%
-  );
-  box-shadow:
-    0 0 5px rgba(255, 246, 225, 0.55),
-    0 0 12px rgba(255, 213, 145, 0.35);
-  animation-name: shopStarTwinkle;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
+    linear-gradient(
+      180deg,
+      rgba(20, 22, 43, 0.34) 0%,
+      rgba(26, 31, 60, 0.46) 38%,
+      rgba(32, 40, 71, 0.54) 100%
+    ),
+    url("/background9.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .shop-header,
@@ -78,7 +51,13 @@
 .shop-header p {
   margin: 8px 0 0;
   font-size: 21px;
-  color: #aeb6ca;
+  color: #d7deec;
+}
+
+.shop-coin {
+  filter:
+    drop-shadow(0 0 4px rgba(255, 215, 120, 0.8))
+    drop-shadow(0 0 10px rgba(255, 180, 90, 0.5));
 }
 
 .shop-back-btn {
@@ -127,8 +106,8 @@
   background:
     linear-gradient(
       180deg,
-      rgba(49, 52, 89, 0.92) 0%,
-      rgba(37, 40, 72, 0.96) 100%
+      rgba(49, 52, 89, 0.76) 0%,
+      rgba(37, 40, 72, 0.84) 100%
     );
   border: 1px solid rgba(255, 229, 196, 0.12);
   border-radius: 22px;
@@ -157,7 +136,7 @@
 
 .shop-card p {
   margin: 0 0 12px;
-  color: #b7bfd2;
+  color: #d7deec;
 }
 
 .shop-card button {
@@ -210,8 +189,8 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 248, 236, 0.94) 0%,
-      rgba(232, 224, 252, 0.88) 100%
+      rgba(255, 248, 236, 0.92) 0%,
+      rgba(232, 224, 252, 0.84) 100%
     );
   margin-bottom: 10px;
   padding: 8px;
@@ -238,20 +217,25 @@
   background:
     linear-gradient(
       180deg,
-      rgba(76, 68, 130, 0.92) 0%,
-      rgba(53, 47, 104, 0.96) 100%
+      rgba(76, 68, 130, 0.78) 0%,
+      rgba(53, 47, 104, 0.84) 100%
     );
   box-shadow:
     0 16px 30px rgba(0, 0, 0, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 229, 196, 0.14);
+  backdrop-filter: blur(8px);
 }
 
 .mirror-glow {
   position: absolute;
   inset: 18px;
   border-radius: 26px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
 }
 
 .stand-area {
@@ -305,33 +289,10 @@
   right: 20px;
   padding: 12px 14px;
   border-radius: 16px;
-  background: rgba(255,255,255,0.88);
+  background: rgba(255, 255, 255, 0.82);
   color: #40375f;
   text-align: center;
   font-size: 18px;
-}
-
-@keyframes shopStarTwinkle {
-  0% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-  20% {
-    opacity: 0.95;
-    transform: scale(1);
-  }
-  45% {
-    opacity: 0.35;
-    transform: scale(0.85);
-  }
-  70% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.65);
-  }
 }
 
 @media (max-width: 1100px) {

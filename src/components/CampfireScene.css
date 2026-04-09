@@ -89,7 +89,6 @@
 }
 
 /* ---------------- LANTERN ---------------- */
-/* glow centered inside the lantern glass */
 
 .lantern-glow {
   position: absolute;
@@ -291,7 +290,6 @@
 .star-18 { top: 36%; left: 60%; }
 
 /* ---------------- SHOOTING STARS ---------------- */
-/* correct orientation + cleaner, realistic tail */
 
 .shooting-star {
   position: absolute;
@@ -299,20 +297,18 @@
   height: 2px;
   opacity: 0;
   pointer-events: none;
-  transform-origin: left center; /* THIS fixes direction */
+  transform-origin: left center;
 }
 
-/* ⭐ bright head (LEADS the motion now) */
 .shooting-star::before {
   content: "";
   position: absolute;
-  left: 0; /* <-- moved to LEFT (this was your problem) */
+  left: 0;
   top: 50%;
   width: 5px;
   height: 5px;
   transform: translateY(-50%);
   border-radius: 50%;
-
   background: radial-gradient(
     circle,
     rgba(255,255,255,1) 0%,
@@ -320,23 +316,20 @@
     rgba(255,220,160,0.6) 70%,
     transparent 100%
   );
-
   box-shadow:
     0 0 6px rgba(255,255,255,1),
     0 0 14px rgba(255,240,200,0.6);
 }
 
-/* ⭐ tail (trails BEHIND the head correctly now) */
 .shooting-star::after {
   content: "";
   position: absolute;
-  left: 5px; /* starts right after the head */
+  left: 5px;
   top: 50%;
   width: 140px;
   height: 2px;
   transform: translateY(-50%);
   border-radius: 999px;
-
   background: linear-gradient(
     to right,
     rgba(255,255,255,0.8) 0%,
@@ -345,11 +338,9 @@
     rgba(255,255,255,0.08) 70%,
     transparent 100%
   );
-
   filter: blur(0.2px);
 }
 
-/* subtle softness — not chunky, not magical overload */
 .shooting-star .trail-glow {
   position: absolute;
   left: 8px;
@@ -358,17 +349,18 @@
   height: 6px;
   transform: translateY(-50%);
   border-radius: 999px;
-
   background: linear-gradient(
     to right,
     rgba(255,255,255,0.12),
     transparent
   );
-
   filter: blur(4px);
 }
 
-/* positions */
+.trail-sparkles {
+  display: none;
+}
+
 .shooting-star-1 {
   top: 6%;
   left: 75%;
@@ -390,7 +382,6 @@
   animation-delay: 8s;
 }
 
-/* ⭐ IMPORTANT: motion direction matches visual direction now */
 @keyframes meteor1 {
   0%, 78% {
     opacity: 0;
@@ -434,7 +425,6 @@
 }
 
 /* ---------------- FIRE ---------------- */
-/* moved upward a bit */
 
 .fire-ground-glow {
   position: absolute;
@@ -944,10 +934,10 @@
 /* ---------------- SOUND BUTTON ---------------- */
 
 .sound-toggle {
-  position: absolute;
+  position: fixed;
   top: 22px;
   right: 24px;
-  z-index: 8;
+  z-index: 9999;
   pointer-events: auto;
   border: 1px solid rgba(255, 244, 220, 0.24);
   background: rgba(19, 16, 34, 0.56);

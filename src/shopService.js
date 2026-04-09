@@ -22,6 +22,7 @@ export async function buyShopItem(studentId, item) {
     if (ownedItems.includes(item.id)) {
       transaction.update(studentRef, {
         equippedItemId: item.id,
+        equippedItemImage: item.image,
         updatedAt: serverTimestamp(),
       });
       return;
@@ -35,12 +36,13 @@ export async function buyShopItem(studentId, item) {
       coins: currentCoins - item.price,
       ownedItems: [...ownedItems, item.id],
       equippedItemId: item.id,
+      equippedItemImage: item.image,
       updatedAt: serverTimestamp(),
     });
   });
 }
 
-export async function equipShopItem(studentId, itemId) {
+export async function equipShopItem(studentId, itemId, itemImage) {
   if (!studentId || !itemId) return;
 
   const studentRef = doc(db, "students", String(studentId));
@@ -61,6 +63,7 @@ export async function equipShopItem(studentId, itemId) {
 
     transaction.update(studentRef, {
       equippedItemId: itemId,
+      equippedItemImage: itemImage || data.equippedItemImage || null,
       updatedAt: serverTimestamp(),
     });
   });

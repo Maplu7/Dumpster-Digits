@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
 export async function saveAssignmentResult({
   studentId,
@@ -19,31 +19,21 @@ export async function saveAssignmentResult({
 
     const problem = problemData.question ?? "";
     const correctAnswer = problemData.answer ?? "";
-
-    const studentAnswer =
-      item?.studentAnswer ??
-      item?.finalAnswer ??
-      item?.selectedAnswer ??
-      item?.droppedAnswer ??
-      item?.answerChosen ??
-      correctAnswer;
-
     const wrongTries = Number(item?.numGuess ?? 0);
-    const isCorrect = String(studentAnswer) === String(correctAnswer);
 
     problemBreakdown[`${problem}=${correctAnswer}`] = wrongTries;
 
     answers.push({
       problem,
       correctAnswer,
-      studentAnswer,
-      isCorrect,
+      studentAnswer: correctAnswer,
+      isCorrect: true,
       wrongTries,
     });
   }
 
-  await addDoc(
-    collection(db, "students", String(studentId), "assignmentResults"),
+  await setDoc(
+    doc(db, "students", String(studentId), "assignmentResults", String(gameKey)),
     {
       assignmentTitle: assignmentTitle || gameKey,
       gameKey,
@@ -51,6 +41,8 @@ export async function saveAssignmentResult({
       completedAt: serverTimestamp(),
       problemBreakdown,
       answers,
-    }
+      completed: true,
+    },
+    { merge: true }
   );
 }
