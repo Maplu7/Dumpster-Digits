@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./GamePage.css";
 import createGame from "../createGame";
 
-export default function GamePage({ gameKey, onFinishReturn }) {
+export default function GamePage({ gameKey, onFinishReturn, student }) {
   const gameContainerRef = useRef(null);
   const gameRef = useRef(null);
   const [gameFinished, setGameFinished] = useState(false);
@@ -16,7 +16,11 @@ export default function GamePage({ gameKey, onFinishReturn }) {
       setGameFinished(true);
     };
 
-    gameRef.current = createGame(gameKey, gameContainerRef.current);
+    gameRef.current = createGame(
+      gameKey,
+      gameContainerRef.current,
+      student?.id || null
+    );
 
     return () => {
       window.onPhaserGameFinished = null;
@@ -26,7 +30,7 @@ export default function GamePage({ gameKey, onFinishReturn }) {
         gameRef.current = null;
       }
     };
-  }, [gameKey]);
+  }, [gameKey, student?.id]);
 
   return (
     <div className="game-page">
@@ -35,7 +39,7 @@ export default function GamePage({ gameKey, onFinishReturn }) {
       {gameFinished && (
         <div className="game-finish-overlay">
           <button className="game-finish-btn" onClick={onFinishReturn}>
-            Return to Welcome
+            Return to Games
           </button>
         </div>
       )}

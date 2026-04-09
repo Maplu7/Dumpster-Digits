@@ -204,9 +204,10 @@ export default function App() {
     return (
       <GamePage
         gameKey={currentGameKey}
+        student={student}
         onFinishReturn={() => {
           setCurrentGameKey(null);
-          setScreen("welcome");
+          setScreen("assignments");
         }}
       />
     );

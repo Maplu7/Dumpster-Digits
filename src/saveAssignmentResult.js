@@ -1,5 +1,19 @@
 import { db } from "./firebase";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+
+function getCoinRewardForPlay(playCount) {
+  if (playCount <= 1) return 60;
+  if (playCount === 2) return 35;
+  if (playCount === 3) return 20;
+  if (playCount === 4) return 10;
+  return 5;
+}
 
 export async function saveAssignmentResult({
   studentId,
@@ -8,7 +22,18 @@ export async function saveAssignmentResult({
   totalWrongGuesses,
   numGuessesPerAnswer,
 }) {
-  if (!studentId || !gameKey) return;
+  if (!studentId || !gameKey) {
+    return { coinReward: 0, playCount: 0, newCoinTotal: 0 };
+  }
+
+  const studentRef = doc(db, "students", String(studentId));
+  const resultRef = doc(
+    db,
+    "students",
+    String(studentId),
+    "assignmentResults",
+    String(gameKey)
+  );
 
   const problemBreakdown = {};
   const answers = [];
@@ -32,17 +57,62 @@ export async function saveAssignmentResult({
     });
   }
 
+  const [studentSnap, resultSnap] = await Promise.all([
+    getDoc(studentRef),
+    getDoc(resultRef),
+  ]);
+
+  const currentCoins = studentSnap.exists()
+    ? Number(studentSnap.data()?.coins || 0)
+    : 0;
+
+  const previousPlayCount = resultSnap.exists()
+    ? Number(resultSnap.data()?.playCount || 0)
+    : 0;
+
+  const previousTotalCoinsEarnedFromGame = resultSnap.exists()
+    ? Number(resultSnap.data()?.totalCoinsEarnedFromGame || 0)
+    : 0;
+
+  const nextPlayCount = previousPlayCount + 1;
+  const coinReward = getCoinRewardForPlay(nextPlayCount);
+  const newCoinTotal = currentCoins + coinReward;
+
   await setDoc(
-    doc(db, "students", String(studentId), "assignmentResults", String(gameKey)),
+    resultRef,
     {
       assignmentTitle: assignmentTitle || gameKey,
       gameKey,
-      totalWrongGuesses: totalWrongGuesses ?? 0,
+      totalWrongGuesses: Number(totalWrongGuesses ?? 0),
       completedAt: serverTimestamp(),
       problemBreakdown,
       answers,
       completed: true,
+      playCount: nextPlayCount,
+      lastCoinReward: coinReward,
+      totalCoinsEarnedFromGame:
+        previousTotalCoinsEarnedFromGame + coinReward,
     },
     { merge: true }
   );
+
+  if (studentSnap.exists()) {
+    await updateDoc(studentRef, {
+      coins: newCoinTotal,
+    });
+  } else {
+    await setDoc(
+      studentRef,
+      {
+        coins: newCoinTotal,
+      },
+      { merge: true }
+    );
+  }
+
+  return {
+    coinReward,
+    playCount: nextPlayCount,
+    newCoinTotal,
+  };
 }

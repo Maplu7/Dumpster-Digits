@@ -32,14 +32,7 @@ export class TrashCan extends Phaser.GameObjects.Container
             Phaser.Geom.Rectangle.Contains
         );
 
-        // tint logic added here
-        this.trashCanMath.on('pointerover', function () {
-            this.setTint(0x00e6e6);
-        });
-
-        this.trashCanMath.on('pointerout', function () {
-            this.clearTint();
-        });
+        // ❌ removed tint logic completely
 
         this.body.allowGravity = false;
     }

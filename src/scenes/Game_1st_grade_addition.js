@@ -1,27 +1,28 @@
-import { Trash } from '../GameObjects/Trash.js'; //can copy the path
-import { TrashCan } from '../GameObjects/TrashCan.js';
+import { Trash } from "../GameObjects/Trash.js";
+import { TrashCan } from "../GameObjects/TrashCan.js";
+import { showFinishScreen } from "./utils/showFinishScreen";
 import { saveAssignmentResult } from "../saveAssignmentResult";
-import { showFinishScreen } from './utils/showFinishScreen';
 
 export class Game_1st_grade_addition extends Phaser.Scene {
   constructor() {
-    super('Game');
-
+    super("Game");
   }
 
   /*Frame Dimensions: width: 1536,
                       height: 793*/
 
   create() {
+    this.gameKey = "1st_addition";
+    this.assignmentTitle = "1st Grade Addition";
 
     this.saveResults = async () => {
       const studentId = this.studentId || this.registry.get("studentId");
 
-      await saveAssignmentResult({
+      return await saveAssignmentResult({
         studentId,
         gameKey: this.gameKey,
         assignmentTitle: this.assignmentTitle,
-        totalWrongGuesses: this.totalWrongGuesses || 0,
+        totalWrongGuesses: this.numWrong || 0,
         numGuessesPerAnswer: this.numGuessesPerAnswer || [],
       });
     };
@@ -1746,7 +1747,26 @@ export class Game_1st_grade_addition extends Phaser.Scene {
 
 
   async onFinish() {
-    await this.saveResults();
-    showFinishScreen(this);
+    let coinsEarned = 0;
+
+    try {
+      const rewardResult = await this.saveResults();
+      console.log("rewardResult:", rewardResult); // 👈 keep this for testing
+      coinsEarned = rewardResult?.coinReward || 0;
+    } catch (error) {
+      console.error("Save failed:", error);
+    }
+
+    showFinishScreen(this, {
+      title: "Congratulations!",
+      subtitle: `You earned ${coinsEarned} coins!`,
+      formatLine: (trash, guessCount) =>
+        "Wrong guesses for " +
+        trash.question +
+        " has " +
+        trash.answer +
+        ": " +
+        guessCount,
+    });
   }
 }

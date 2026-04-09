@@ -15,16 +15,16 @@ export class Game_2nd_grade_placevalues extends Phaser.Scene {
         this.gameKey = "2nd_place_value";
         this.assignmentTitle = "2nd Grade Place Value";
         this.saveResults = async () => {
-          const studentId = this.studentId || this.registry.get("studentId");
+  const studentId = this.studentId || this.registry.get("studentId");
 
-          await saveAssignmentResult({
-            studentId,
-            gameKey: this.gameKey,
-            assignmentTitle: this.assignmentTitle,
-            totalWrongGuesses: this.numWrong || 0,
-            numGuessesPerAnswer: this.numGuessesPerAnswer || [],
-          });
-        };
+  return await saveAssignmentResult({
+    studentId,
+    gameKey: this.gameKey,
+    assignmentTitle: this.assignmentTitle,
+    totalWrongGuesses: this.numWrong || 0,
+    numGuessesPerAnswer: this.numGuessesPerAnswer || [],
+  });
+};
 
 
 
@@ -383,16 +383,27 @@ putInTrash(trash, trashCan) {
     };
 
 
-   async onFinish(){
-    await this.saveResults();
-    showFinishScreen(this, {
-      formatLine: (trash, guessCount) =>
-        "Wrong guesses for " +
-        trash.question +
-        " has " +
-        trash.answer +
-        ": " +
-        guessCount,
-    });
+   async onFinish() {
+  let coinsEarned = 0;
+
+  try {
+    const rewardResult = await this.saveResults();
+    console.log("rewardResult:", rewardResult); // 👈 keep this for testing
+    coinsEarned = rewardResult?.coinReward || 0;
+  } catch (error) {
+    console.error("Save failed:", error);
   }
+
+  showFinishScreen(this, {
+    title: "Congratulations!",
+    subtitle: `You earned ${coinsEarned} coins!`,
+    formatLine: (trash, guessCount) =>
+      "Wrong guesses for " +
+      trash.question +
+      " has " +
+      trash.answer +
+      ": " +
+      guessCount,
+  });
+}
 }

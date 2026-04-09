@@ -14,16 +14,16 @@ export class Game_1st_grade_subtraction extends Phaser.Scene {
     this.assignmentTitle = "1st Grade Subtraction";
 
     this.saveResults = async () => {
-      const studentId = this.studentId || this.registry.get("studentId");
+  const studentId = this.studentId || this.registry.get("studentId");
 
-      await saveAssignmentResult({
-        studentId,
-        gameKey: this.gameKey,
-        assignmentTitle: this.assignmentTitle,
-        totalWrongGuesses: this.numWrong || 0,
-        numGuessesPerAnswer: this.numGuessesPerAnswer || [],
-      });
-    };
+  return await saveAssignmentResult({
+    studentId,
+    gameKey: this.gameKey,
+    assignmentTitle: this.assignmentTitle,
+    totalWrongGuesses: this.numWrong || 0,
+    numGuessesPerAnswer: this.numGuessesPerAnswer || [],
+  });
+};
 
     this.problems = [
       { question: "10-1", answer: 9 },
@@ -354,7 +354,26 @@ export class Game_1st_grade_subtraction extends Phaser.Scene {
 
 
   async onFinish() {
-    await this.saveResults();
-    showFinishScreen(this);
+  let coinsEarned = 0;
+
+  try {
+    const rewardResult = await this.saveResults();
+    console.log("rewardResult:", rewardResult); // 👈 keep this for testing
+    coinsEarned = rewardResult?.coinReward || 0;
+  } catch (error) {
+    console.error("Save failed:", error);
   }
+
+  showFinishScreen(this, {
+    title: "Congratulations!",
+    subtitle: `You earned ${coinsEarned} coins!`,
+    formatLine: (trash, guessCount) =>
+      "Wrong guesses for " +
+      trash.question +
+      " has " +
+      trash.answer +
+      ": " +
+      guessCount,
+  });
+}
 }
