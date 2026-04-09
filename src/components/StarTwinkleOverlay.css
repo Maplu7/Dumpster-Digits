@@ -1,0 +1,237 @@
+.star-preview-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.star-preview-base {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.random-star-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.random-star {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  opacity: 0.12;
+  transform: scale(0.9);
+  animation-name: softRandomTwinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  background: rgba(255, 248, 225, 0.95);
+  box-shadow:
+    0 0 5px rgba(255, 230, 170, 0.28),
+    0 0 10px rgba(255, 210, 140, 0.14);
+}
+
+.random-star.tiny {
+  width: 3px;
+  height: 3px;
+}
+
+.random-star.small {
+  width: 5px;
+  height: 5px;
+}
+
+/* ---------------- SHOOTING STARS ---------------- */
+
+.shooting-star {
+  position: absolute;
+  width: 90px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: left center;
+  z-index: 1;
+}
+
+.shooting-star::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 245, 210, 0.85) 45%,
+    rgba(255, 220, 160, 0.45) 75%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.8),
+    0 0 10px rgba(255, 240, 200, 0.35);
+}
+
+.shooting-star::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 78px;
+  height: 2px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 245, 210, 0.38) 28%,
+    rgba(255, 225, 180, 0.16) 55%,
+    transparent 100%
+  );
+}
+
+.shooting-star .trail-glow {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 54px;
+  height: 5px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+  filter: blur(3px);
+}
+
+.shooting-star-1 {
+  top: 16%;
+  left: 78%;
+  animation: previewMeteor1 12s linear infinite;
+}
+
+.shooting-star-2 {
+  top: 28%;
+  left: 88%;
+  animation: previewMeteor2 15s linear infinite;
+  animation-delay: 5s;
+}
+
+/* ---------------- MATH TEXT ---------------- */
+
+.camp-math-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+  padding: 10px;
+}
+
+.camp-math-text {
+  font-family: "Fjalla One", sans-serif;
+  font-size: clamp(38px, 5vw, 70px);
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #fff8eb;
+  text-align: center;
+
+  text-shadow:
+    0 0 8px rgba(255, 238, 200, 0.95),
+    0 0 16px rgba(255, 181, 92, 0.8),
+    0 0 28px rgba(255, 130, 72, 0.55),
+    0 3px 10px rgba(0, 0, 0, 0.35);
+
+  filter: drop-shadow(0 0 6px rgba(255, 180, 90, 0.4));
+  animation: campMathFloat 3.8s ease-in-out infinite;
+}
+
+/* ---------------- ANIMATIONS ---------------- */
+
+@keyframes softRandomTwinkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  15% {
+    opacity: 0.24;
+    transform: scale(1.03);
+  }
+
+  30% {
+    opacity: 0.08;
+    transform: scale(0.9);
+  }
+
+  45% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  65% {
+    opacity: 0;
+  }
+
+  80% {
+    opacity: 0.18;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.84);
+  }
+}
+
+@keyframes previewMeteor1 {
+  0%,
+  82% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-30deg);
+  }
+  84% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-170px, 95px) rotate(-30deg);
+  }
+}
+
+@keyframes previewMeteor2 {
+  0%,
+  86% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-28deg);
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-150px, 82px) rotate(-28deg);
+  }
+}
+
+@keyframes campMathFloat {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
