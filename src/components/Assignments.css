@@ -1,102 +1,290 @@
 .assignments-page {
+  position: relative;
+  width: 100%;
   min-height: 100vh;
-  padding: 32px;
+  height: auto;
+  padding: 34px 22px 42px;
   box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: visible;
   font-family: "Fjalla One", sans-serif;
+  color: #fff7ec;
   background:
-    radial-gradient(circle at top left, rgba(255, 230, 240, 0.9), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(220, 245, 255, 0.9), transparent 30%),
-    linear-gradient(180deg, #fff6ef 0%, #ffeef8 100%);
+    linear-gradient(
+      to bottom,
+      rgba(24, 18, 58, 0.38),
+      rgba(17, 28, 56, 0.5)
+    ),
+    url("/background9.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .assignments-shell {
-  max-width: 1200px;
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
   margin: 0 auto;
+  padding-bottom: 40px;
 }
 
 .assignments-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
-  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .assignments-title {
   margin: 0;
-  font-size: 56px;
-  background: linear-gradient(135deg, #00c2ff, #7cff00, #ff7a00, #ff003c);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-size: clamp(42px, 6vw, 70px);
+  color: #ffe7b4;
+  text-shadow:
+    0 0 12px rgba(255, 200, 120, 0.25),
+    0 4px 16px rgba(0, 0, 0, 0.28);
 }
 
 .assignments-subtitle {
-  margin: 10px 0 0;
-  font-size: 24px;
-  color: #5f4d52;
+  margin-top: 8px;
+  font-size: 18px;
+  color: #d7deec;
 }
 
 .assignments-back-btn {
-  border: none;
+  height: 52px;
+  padding: 0 22px;
   border-radius: 999px;
-  padding: 14px 22px;
-  background: linear-gradient(135deg, #ff7a00, #ff003c);
-  color: white;
+  border: none;
   font-size: 18px;
   cursor: pointer;
+  font-family: "Fjalla One", sans-serif;
+  background: linear-gradient(
+    180deg,
+    rgba(110, 94, 181, 0.92),
+    rgba(74, 60, 135, 0.96)
+  );
+  color: #fff;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.assignments-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .assignments-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(2, minmax(320px, 420px));
+  justify-content: center;
+  gap: 30px;
 }
 
-.assignment-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 28px;
-  padding: 24px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-  border: 2px solid rgba(255, 255, 255, 0.95);
-}
-
-.assignment-card h2 {
-  margin: 14px 0 10px;
-  font-size: 30px;
-  color: #3a2c32;
-}
-
-.assignment-card p {
-  margin: 0 0 18px;
-  font-size: 18px;
-  line-height: 1.4;
-  color: #67575d;
-}
-
-.assignment-badge {
-  display: inline-block;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #ffe3ef;
-  color: #8b5568;
-  font-size: 16px;
-}
-
-.assignment-play-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 12px 18px;
-  background: linear-gradient(135deg, #00c2ff, #0066ff);
-  color: white;
-  font-size: 18px;
+.assignment-polaroid {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 18px 18px 26px;
+  color: #fff7ec;
+  background: rgba(32, 36, 78, 0.26);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 225, 170, 0.18);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    0 0 30px rgba(255, 210, 140, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
   cursor: pointer;
 }
 
+.assignment-polaroid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 230, 180, 0.12), transparent 20%),
+    radial-gradient(circle at 80% 25%, rgba(180, 200, 255, 0.1), transparent 22%),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.05),
+      transparent 30%,
+      rgba(255, 200, 140, 0.04)
+    );
+  z-index: 0;
+}
+
+.assignment-polaroid:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 24px 46px rgba(0, 0, 0, 0.34),
+    0 0 40px rgba(255, 210, 140, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.assignment-polaroid-photo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(16, 16, 16, 0.72);
+  border: 1px solid rgba(255, 224, 178, 0.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.assignment-polaroid-caption {
+  position: relative;
+  z-index: 1;
+  padding-top: 14px;
+  text-align: center;
+}
+
+.assignment-polaroid-caption h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  color: #ffe7b4;
+  text-shadow: 0 0 10px rgba(255, 200, 120, 0.25);
+}
+
+.assignment-description {
+  font-size: 14px;
+  color: #e3e8f2;
+  line-height: 1.45;
+}
+
+.assignment-grade-pill {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(255, 220, 170, 0.12);
+  border: 1px solid rgba(255, 220, 170, 0.22);
+  color: #ffe7b4;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.assignment-status-wrap {
+  margin: 12px 0;
+}
+
+.assignment-status {
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.assignment-status.done {
+  color: #8ee39a;
+}
+
+.assignment-status.todo {
+  color: #ffd5c4;
+}
+
+.assignment-status.locked {
+  color: #ff9aa2;
+}
+
+.assignment-status.unlocked {
+  color: #9bd1ff;
+}
+
+.assignment-play-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  font-size: 18px;
+  font-family: "Fjalla One", sans-serif;
+  color: white;
+  cursor: pointer;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.25),
+    0 0 0 rgba(0, 0, 0, 0),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.assignment-play-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.32),
+    0 0 18px var(--btn-glow),
+    0 0 30px var(--btn-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  filter: brightness(1.05);
+}
+
+.assignment-play-btn:active {
+  transform: scale(0.98);
+}
+
+.assignment-play-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .assignments-empty {
-  background: rgba(255, 255, 255, 0.88);
-  border-radius: 24px;
-  padding: 30px;
-  font-size: 24px;
-  color: #5f4d52;
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  margin: 40px auto 0;
+  padding: 24px 22px;
+  text-align: center;
+  border-radius: 22px;
+  background: rgba(32, 36, 78, 0.34);
+  border: 1px solid rgba(255, 225, 170, 0.14);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #fff7ec;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (max-width: 700px) {
+  .assignments-page {
+    padding: 24px 14px 32px;
+  }
+
+  .assignments-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assignments-title {
+    font-size: 42px;
+  }
+
+  .assignments-subtitle {
+    font-size: 16px;
+  }
+
+  .assignment-polaroid {
+    padding: 16px 16px 22px;
+  }
+
+  .assignment-polaroid-caption h2 {
+    font-size: 22px;
+  }
 }
