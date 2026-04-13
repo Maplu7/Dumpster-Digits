@@ -45,16 +45,6 @@ function formatAttemptTime(value) {
 export default function TeacherDash({ teacher, onLogout }) {
   const [classroom, setClassroom] = useState(null);
   const [students, setStudents] = useState([]);
-<<<<<<< HEAD
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [assignmentsHidden, setAssignmentsHidden] = useState(false);
-  const [assignments, setAssignments] = useState([]);
-  const [studentResults, setStudentResults] = useState([]);
-
-  const selectedStudent = useMemo(() => {
-    return students.find((student) => student.id === selectedStudentId) || null;
-  }, [students, selectedStudentId]);
-=======
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [studentResults, setStudentResults] = useState([]);
 
@@ -200,7 +190,6 @@ export default function TeacherDash({ teacher, onLogout }) {
       };
     });
   }, [assignmentsForClass, classroom, selectedStudent, studentResults]);
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
 
   useEffect(() => {
     let unsubscribeClassroom = null;
@@ -221,12 +210,7 @@ export default function TeacherDash({ teacher, onLogout }) {
         if (!classDocId) {
           setClassroom(null);
           setStudents([]);
-<<<<<<< HEAD
-          setSelectedStudentId(null);
-          setAssignments([]);
-=======
           setSelectedStudentId("");
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
           return;
         }
 
@@ -254,19 +238,11 @@ export default function TeacherDash({ teacher, onLogout }) {
             return;
           }
 
-<<<<<<< HEAD
-        if (!studentIds.length) {
-          setStudents([]);
-          setSelectedStudentId(null);
-          return;
-        }
-=======
           const loadedStudents = await Promise.all(
             studentIds.map(async (id) => {
               const cleanId = String(id).trim();
               const studentRef = doc(db, "students", cleanId);
               const studentSnap = await getDoc(studentRef);
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
 
               if (studentSnap.exists()) {
                 return {
@@ -290,10 +266,6 @@ export default function TeacherDash({ teacher, onLogout }) {
             teacher?.grade ??
             teacher?.classGrade;
 
-<<<<<<< HEAD
-        setStudents(loadedStudents);
-        setSelectedStudentId(loadedStudents[0]?.id || null);
-=======
           const parsedClassGrade = Number(rawClassGrade);
 
           const filtered = Number.isNaN(parsedClassGrade)
@@ -313,17 +285,11 @@ export default function TeacherDash({ teacher, onLogout }) {
             return filtered[0]?.id || "";
           });
         });
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
       } catch (error) {
         console.error("Error loading teacher dashboard:", error);
         setClassroom(null);
         setStudents([]);
-<<<<<<< HEAD
-        setSelectedStudentId(null);
-        setAssignments([]);
-=======
         setSelectedStudentId("");
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
       }
     }
 
@@ -335,28 +301,12 @@ export default function TeacherDash({ teacher, onLogout }) {
   }, [teacher]);
 
   useEffect(() => {
-<<<<<<< HEAD
-    async function loadSelectedStudentResults() {
-      if (!selectedStudentId) {
-        setStudentResults([]);
-        return;
-      }
-
-      try {
-        const resultsRef = collection(
-          db,
-          "students",
-          String(selectedStudentId),
-          "assignmentResults"
-        );
-=======
     let unsubscribeResults = null;
 
     if (!selectedStudentId) {
       setStudentResults([]);
       return;
     }
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
 
     const resultsRef = collection(
       db,
@@ -406,13 +356,8 @@ export default function TeacherDash({ teacher, onLogout }) {
       setShowScrollTop(window.scrollY > 220);
     }
 
-<<<<<<< HEAD
-    loadSelectedStudentResults();
-  }, [selectedStudentId]);
-=======
     window.addEventListener("scroll", onScroll);
     onScroll();
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
 
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -523,15 +468,8 @@ export default function TeacherDash({ teacher, onLogout }) {
     <div className="tdash">
       <main className="tdash__main">
         <header className="tdash__header">
-<<<<<<< HEAD
-          <div className="tdash__header-copy">
-            <h1 className="tdash__title">
-              Welcome, {teacher?.name || "Teacher"}
-            </h1>
-=======
           <div>
             <h1 className="tdash__title">Welcome, {teacher?.name || "Teacher"}</h1>
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
             <p className="tdash__subtitle">
               Manage your class activities and track student progress.
             </p>
@@ -545,9 +483,6 @@ export default function TeacherDash({ teacher, onLogout }) {
               </strong>
             </div>
 
-<<<<<<< HEAD
-            <button className="tdash__logout-btn" onClick={onLogout}>
-=======
             <button
               className="tdash__reset-btn"
               type="button"
@@ -557,7 +492,6 @@ export default function TeacherDash({ teacher, onLogout }) {
             </button>
 
             <button className="tdash__logout-btn" type="button" onClick={onLogout}>
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
               Logout
             </button>
           </div>
@@ -685,62 +619,6 @@ export default function TeacherDash({ teacher, onLogout }) {
                 </select>
               </div>
 
-<<<<<<< HEAD
-                <div className="tdash__table-body">
-                  {assignments.map((assignment) => (
-                    <div className="tdash__row" key={assignment.id}>
-                      <span className="tdash__row-title">
-                        {assignment.title}
-                      </span>
-
-                      <button
-                        className={`tdash__status ${
-                          assignment.locked
-                            ? "tdash__status--locked"
-                            : "tdash__status--unlocked"
-                        }`}
-                        onClick={() => toggleAssignmentLock(assignment.id)}
-                      >
-                        {assignment.locked ? "Locked 🔒" : "Unlocked 🔓"}
-                      </button>
-
-                      <span className="tdash__score">{assignment.score}%</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="tdash__card">
-            <div className="tdash__card-head">
-              <h2 className="tdash__section-title">Students</h2>
-            </div>
-
-            <div className="tdash__student-list">
-              {students.length > 0 ? (
-                students.map((student) => (
-                  <button
-                    className={`tdash__student-btn ${
-                      selectedStudentId === student.id
-                        ? "tdash__student-btn--active"
-                        : ""
-                    }`}
-                    key={student.id}
-                    onClick={() => setSelectedStudentId(student.id)}
-                    type="button"
-                  >
-                    <span className="tdash__student-name">
-                      {student.name || `Student ${student.id}`}
-                    </span>
-                    <span className="tdash__student-id">({student.id})</span>
-                  </button>
-                ))
-              ) : (
-                <p className="tdash__empty-text">
-                  No students found for this class yet.
-                </p>
-=======
               {managerMode === "student" && (
                 <div className="tdash__field">
                   <label className="tdash__label">Student</label>
@@ -757,7 +635,6 @@ export default function TeacherDash({ teacher, onLogout }) {
                     ))}
                   </select>
                 </div>
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
               )}
 
               {managerMode === "group" && (
@@ -874,81 +751,6 @@ export default function TeacherDash({ teacher, onLogout }) {
             </button>
           </div>
 
-<<<<<<< HEAD
-          {selectedStudent ? (
-            <>
-              <div className="tdash__details-grid">
-                <div className="tdash__detail-item">
-                  <span className="tdash__detail-title">Name</span>
-                  <span className="tdash__pill">
-                    {selectedStudent.name || "Unknown Student"}
-                  </span>
-                </div>
-
-                <div className="tdash__detail-item">
-                  <span className="tdash__detail-title">Student ID</span>
-                  <span className="tdash__pill">{selectedStudent.id}</span>
-                </div>
-
-                <div className="tdash__detail-item">
-                  <span className="tdash__detail-title">Grade</span>
-                  <span className="tdash__pill">
-                    {selectedStudent.grade ?? "—"}
-                  </span>
-                </div>
-
-                <div className="tdash__detail-item">
-                  <span className="tdash__detail-title">Birthday</span>
-                  <span className="tdash__pill">
-                    {selectedStudent.birthday ?? "—"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="tdash__results">
-                <h3 className="tdash__results-title">Assignment Results</h3>
-
-                {studentResults.length > 0 ? (
-                  <div className="tdash__results-list">
-                    {studentResults.map((result) => (
-                      <div className="tdash__result-card" key={result.id}>
-                        <div className="tdash__result-title">
-                          {result.assignmentTitle || result.gameKey}
-                        </div>
-
-                        <div className="tdash__result-meta">
-                          Total Wrong Tries:{" "}
-                          <strong>{result.totalWrongGuesses ?? 0}</strong>
-                        </div>
-
-                        {result.problemBreakdown && (
-                          <div className="tdash__result-breakdown">
-                            {Object.entries(result.problemBreakdown).map(
-                              ([problem, tries]) => (
-                                <div
-                                  key={problem}
-                                  className="tdash__result-line"
-                                >
-                                  <span>{problem}</span>
-                                  <span>{tries} wrong tries</span>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="tdash__empty-text">
-                    No completed assignments yet.
-                  </p>
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="tdash__empty-text">No student selected yet.</p>
-=======
           {showGroupsBuilder && (
             <StudentGroupsBuilder
               classroom={classroom}
@@ -958,7 +760,6 @@ export default function TeacherDash({ teacher, onLogout }) {
               setResetGroupId={setResetGroupId}
               setResultsGroupId={setResultsGroupId}
             />
->>>>>>> ef202402d8e24042738745960b94c7b70976df78
           )}
         </section>
 
