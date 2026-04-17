@@ -8,9 +8,6 @@ export class Game_1st_grade_addition extends Phaser.Scene {
     super("Game");
   }
 
-  /*Frame Dimensions: width: 1536,
-                      height: 793*/
-
   create() {
     this.gameKey = "1st_addition";
     this.assignmentTitle = "1st Grade Addition";
@@ -39,7 +36,7 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       { question: "1+8", answer: 9 },
       { question: "1+9", answer: 10 },
       { question: "1+10", answer: 11 }
-    ]; //2D array for questions and their respective answers
+    ];
 
     this.problems2 = [
       { question: "2+0", answer: 2 },
@@ -587,7 +584,6 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       { question: "40+10", answer: 50 }
     ];
 
-    // 41–50
     this.problems41 = [
       { question: "41+0", answer: 41 },
       { question: "41+1", answer: 42 },
@@ -728,7 +724,6 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       { question: "50+10", answer: 60 }
     ];
 
-    // 51–60
     this.problems51 = [
       { question: "51+0", answer: 51 },
       { question: "51+1", answer: 52 },
@@ -1429,63 +1424,24 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       { question: "100+10", answer: 110 }
     ];
 
+    // merged game-logic background loop
+    for (let i = 1; i <= 7; i++) {
+      const y = 50 + (i - 1) * 100;
 
-    // this.add.image(90, 50, 'camp').setScale(3);
-    this.campGroundR1 = this.add.group({
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 50, stepX: 180 },
-      setScale: { x: 3, y: 4 },
+      this[`campGroundRow${i}`] = this.add.group({
+        key: "camp",
+        repeat: 11,
+        setXY: { x: 90, y: y, stepX: 180 },
+        setScale: { x: 3, y: 6 }
+      });
+    }
 
-    });
-
-    this.campGroundR2 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 200, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR3 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 300, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR4 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 400, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR5 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 500, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR6 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 600, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR7 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 720, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
+    // merged decorations
+    this.add.image(1250, 100, "yellowTent", 0).setScale(3);
+    this.add.image(200, 100, "yellowTent", 1).setScale(3);
+    this.add.image(100, 300, "campFire", 3).setScale(3);
+    this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
+    this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
     this.problem1 = Phaser.Utils.Array.GetRandom(this.problems1);
     Phaser.Utils.Array.Remove(this.problems1, this.problem1);
@@ -1502,16 +1458,14 @@ export class Game_1st_grade_addition extends Phaser.Scene {
     this.problem5 = Phaser.Utils.Array.GetRandom(this.problems1);
     Phaser.Utils.Array.Remove(this.problems1, this.problem5);
 
-    //createes and array of randomized problems
     this.possibleQuestions = [
       this.problem1,
       this.problem2,
       this.problem3,
       this.problem4,
       this.problem5
-    ]
+    ];
 
-    //each question is one of the random problems
     this.question1 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
     Phaser.Utils.Array.Remove(this.possibleQuestions, this.question1);
 
@@ -1527,16 +1481,14 @@ export class Game_1st_grade_addition extends Phaser.Scene {
     this.question5 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
     Phaser.Utils.Array.Remove(this.possibleQuestions, this.question5);
 
-    // creates an array of randomized answers
     this.possibleAnswers = [
       this.problem1,
       this.problem2,
       this.problem3,
       this.problem4,
       this.problem5
-    ]
+    ];
 
-    //assign a random answer to one of the answer#
     this.answer1 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
     Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer1);
 
@@ -1552,22 +1504,18 @@ export class Game_1st_grade_addition extends Phaser.Scene {
     this.answer5 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
     Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer5);
 
-
-    // creates trashcans and their individual answers
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
     this.trashCan3 = new TrashCan(this, 740, 700, this.answer3).setScale(1);
     this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
 
-
-    // Createse trash and their individual questions
-    this.trash1 = new Trash(this, 100, 280, this.question1).setScale(0.6);
-    this.trash2 = new Trash(this, 440, 340, this.question2).setScale(0.6);
-    this.trash3 = new Trash(this, 740, 280, this.question3).setScale(0.6);
-    this.trash4 = new Trash(this, 1040, 340, this.question4).setScale(0.6);
-    this.trash5 = new Trash(this, 1340, 280, this.question5).setScale(0.6);
-    //this.replacementTrash = new Trash;
+    // merged game-logic trash positions
+    this.trash1 = new Trash(this, 550, 280, this.question1);
+    this.trash2 = new Trash(this, 650, 400, this.question2);
+    this.trash3 = new Trash(this, 750, 280, this.question3);
+    this.trash4 = new Trash(this, 850, 400, this.question4);
+    this.trash5 = new Trash(this, 950, 280, this.question5);
 
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
@@ -1577,102 +1525,54 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       { guessedAnswer: this.trash5, numGuess: 0 }
     ];
 
-    //////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////
-    this.numCorrect = 0; //Will keep track of number of right guesses
-    this.numWrong = 0; //Will keep track of number of wrong guesses
-    //this.triesUsed = 0;
-    //this.numTries1 = 0;
-    //this.numTriesUsed = this.add.text(20, 20, 'Num Tries: 3', {fontSize: '40px', fill: "#ffffff"});
+    this.numCorrect = 0;
+    this.numWrong = 0;
+    this.triesUsed = 0;
 
+    // merged grouped overlap logic
+    this.trashGroup = this.physics.add.group();
+    this.trashGroup.add(this.trash1);
+    this.trashGroup.add(this.trash2);
+    this.trashGroup.add(this.trash3);
+    this.trashGroup.add(this.trash4);
+    this.trashGroup.add(this.trash5);
 
-    //March 3
-    // Will trigger when a piece of trash is over a garbage can
-    this.physics.add.overlap(this.trash1, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan5,
-      this.putInTrash, null, this);
+    this.trashCanGroup = this.physics.add.group();
+    this.trashCanGroup.add(this.trashCan1);
+    this.trashCanGroup.add(this.trashCan2);
+    this.trashCanGroup.add(this.trashCan3);
+    this.trashCanGroup.add(this.trashCan4);
+    this.trashCanGroup.add(this.trashCan5);
 
-
-    this.physics.add.overlap(this.trash2, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan5,
-      this.putInTrash, null, this);
-
-    this.physics.add.overlap(this.trash3, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan5,
-      this.putInTrash, null, this);
-
-    this.physics.add.overlap(this.trash4, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan5,
-      this.putInTrash, null, this);
-
-    this.physics.add.overlap(this.trash5, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan5,
-      this.putInTrash, null, this);
-
-
-    /*this.testText = this.add.text(this.trash.x, this.trash.y, '3+4', {
-      fontSize: '15px', fill: '#ffffff'
-    }); //Obviously this only attaches text to one piece of trash
-        //it would be annoying/time consuming to do this for each and every
-        //possible equation that could appear.*/
-
+    this.physics.add.overlap(
+      this.trashGroup,
+      this.trashCanGroup,
+      this.putInTrash,
+      null,
+      this
+    );
   }
 
-
   putInTrash(trash, trashCan) {
-    // if this can is already solved, ignore
     if (trashCan && trashCan._disabled) return;
-
-    // stop overlap-per-frame spam
     if (trash._lockedOnCan) return;
+
     trash._lockedOnCan = true;
 
-    // unlock only after leaving all cans
     const unlockWhenLeaving = () => {
-      const cans = [this.trashCan1, this.trashCan2, this.trashCan3, this.trashCan4, this.trashCan5]
-        .filter((c) => c && c.active);
+      const cans = [
+        this.trashCan1,
+        this.trashCan2,
+        this.trashCan3,
+        this.trashCan4,
+        this.trashCan5
+      ].filter((c) => c && c.active);
 
       const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
 
       if (!stillOverAny) {
         trash._lockedOnCan = false;
 
-        // restore tint if not dragging
         if (trash && trash.active && trash.trashMath && !trash._dragging) {
           trash.trashMath.clearTint();
         }
@@ -1681,7 +1581,6 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       }
     };
 
-    // Check if the trash can is the correct one
     if (trash.answer === trashCan.answer) {
       this.correct?.destroy();
       this.correct = this.add.text(30, 200, "That is Correct!", {
@@ -1689,10 +1588,8 @@ export class Game_1st_grade_addition extends Phaser.Scene {
         fill: "#ffffff",
       });
 
-      // destorying trash, and trash can
       if (trashCan.markCorrect) trashCan.markCorrect();
 
-      // remove trash
       trash.destroy();
       trashCan.destroy();
 
@@ -1700,33 +1597,25 @@ export class Game_1st_grade_addition extends Phaser.Scene {
       this.time.delayedCall(550, this.onCorrect, [], this);
 
       if (this.numCorrect === 5) {
-        // keep hidden during play; toast shows final number
         this.time.delayedCall(1000, this.onFinish, [], this);
       }
 
       return;
     }
 
-    // Wrong (count once)
     this.numWrong += 1;
-
-    // keep hidden, but update stored number for toast
 
     if (trash === this.trash1) {
       this.numGuessesPerAnswer[0].numGuess++;
-    }
-    else if (trash === this.trash2) {
+    } else if (trash === this.trash2) {
       this.numGuessesPerAnswer[1].numGuess++;
-    }
-    else if (trash === this.trash3) {
+    } else if (trash === this.trash3) {
       this.numGuessesPerAnswer[2].numGuess++;
-    }
-    else if (trash == this.trash4) {
+    } else if (trash === this.trash4) {
       this.numGuessesPerAnswer[3].numGuess++;
-    }
-    else if (trash == this.trash5) {
+    } else if (trash === this.trash5) {
       this.numGuessesPerAnswer[4].numGuess++;
-    };
+    }
 
     this.wrongText?.destroy();
     this.wrongText = this.add.text(30, 200, "Try again!", {
@@ -1737,21 +1626,19 @@ export class Game_1st_grade_addition extends Phaser.Scene {
     this.time.delayedCall(550, () => this.wrongText?.destroy());
     this.triesUsed += 1;
 
-    // allow another wrong count only after leaving cans
     unlockWhenLeaving();
   }
 
   onCorrect() {
-    this.correct.destroy();
-  };
-
+    this.correct?.destroy();
+  }
 
   async onFinish() {
     let coinsEarned = 0;
 
     try {
       const rewardResult = await this.saveResults();
-      console.log("rewardResult:", rewardResult); // 👈 keep this for testing
+      console.log("rewardResult:", rewardResult);
       coinsEarned = rewardResult?.coinReward || 0;
     } catch (error) {
       console.error("Save failed:", error);
