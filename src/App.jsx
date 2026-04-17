@@ -5,6 +5,7 @@ import Assignments from "./components/Assignments.jsx";
 import GamePage from "./components/GamePage.jsx";
 import TeacherDash from "./components/TeacherDash.jsx";
 import Shop from "./components/Shop.jsx";
+import CursorOverlay from "./components/cursorOverlay.jsx";
 import "./App.css";
 
 import { db } from "./firebase";
@@ -187,55 +188,64 @@ export default function App() {
     setScreen("game");
   }
 
-  if (!student && !teacher) {
-    return (
-      <Login
-        onLogin={handleStudentLogin}
-        onTeacherLogin={handleTeacherLogin}
-      />
-    );
-  }
+  function renderScreen() {
+    if (!student && !teacher) {
+      return (
+        <Login
+          onLogin={handleStudentLogin}
+          onTeacherLogin={handleTeacherLogin}
+        />
+      );
+    }
 
-  if (teacher) {
-    return <TeacherDash teacher={teacher} onLogout={handleLogout} />;
-  }
+    if (teacher) {
+      return <TeacherDash teacher={teacher} onLogout={handleLogout} />;
+    }
 
-  if (screen === "game") {
+    if (screen === "game") {
+      return (
+        <GamePage
+          gameKey={currentGameKey}
+          student={student}
+          onFinishReturn={() => {
+            setCurrentGameKey(null);
+            setScreen("assignments");
+          }}
+        />
+      );
+    }
+
+    if (screen === "assignments") {
+      return (
+        <Assignments
+          student={student}
+          onBack={() => setScreen("welcome")}
+          onOpenGame={handleOpenGame}
+        />
+      );
+    }
+
+    if (screen === "shop") {
+      return <Shop student={student} onBack={() => setScreen("welcome")} />;
+    }
+
     return (
-      <GamePage
-        gameKey={currentGameKey}
+      <Welcome
         student={student}
-        onFinishReturn={() => {
-          setCurrentGameKey(null);
-          setScreen("assignments");
-        }}
+        onPlayGame={handlePlayNextGame}
+        onOpenAssignments={handleOpenAssignments}
+        onOpenShop={handleOpenShop}
+        onLogout={handleLogout}
+        nextAssignmentTitle={nextAssignment?.title || null}
+        nextAssignmentKey={nextAssignment?.gameKey || null}
       />
     );
-  }
-
-  if (screen === "assignments") {
-    return (
-      <Assignments
-        student={student}
-        onBack={() => setScreen("welcome")}
-        onOpenGame={handleOpenGame}
-      />
-    );
-  }
-
-  if (screen === "shop") {
-    return <Shop student={student} onBack={() => setScreen("welcome")} />;
   }
 
   return (
-    <Welcome
-      student={student}
-      onPlayGame={handlePlayNextGame}
-      onOpenAssignments={handleOpenAssignments}
-      onOpenShop={handleOpenShop}
-      onLogout={handleLogout}
-      nextAssignmentTitle={nextAssignment?.title || null}
-      nextAssignmentKey={nextAssignment?.gameKey || null}
-    />
+    <>
+      {renderScreen()}
+      <CursorOverlay />
+    </>
   );
 }

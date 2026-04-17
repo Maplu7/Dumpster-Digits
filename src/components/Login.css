@@ -7,36 +7,28 @@
   overflow: hidden;
 }
 
-.login-wrapper {
+.login-container {
   position: relative;
   z-index: 2;
-  width: 420px;
-  max-width: 90%;
-  background: rgba(255, 255, 255, 0.10);
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-  color: white;
-  border-radius: 15px;
-  padding: 30px 40px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 20px;
 }
 
-.login-wrapper h1 {
-  font-size: 40px;
+.game-title {
   font-family: "Fjalla One", sans-serif;
+  font-size: 90px;
   text-align: center;
+  margin: 0;
+  line-height: 0.95;
+
   background: linear-gradient(135deg, #00c2ff, #7cff00, #ff7a00, #ff003c);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   animation: hueRotate 5s linear infinite;
-  margin: 0 0 18px;
+  text-shadow: 0 0 15px rgba(0, 194, 255, 0.4);
 }
 
 @keyframes hueRotate {
@@ -48,11 +40,28 @@
   }
 }
 
+.login-wrapper {
+  width: 420px;
+  max-width: 90%;
+  color: white;
+  border-radius: 15px;
+  padding: 30px 40px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.login-wrapper form {
+  width: 100%;
+}
+
 .login-wrapper .input-box {
   position: relative;
   width: 100%;
   height: 50px;
-  margin: 30px 0;
+  margin: 20px 0;
 }
 
 .input-box input {
@@ -64,7 +73,7 @@
   border-radius: 40px;
   font-size: 16px;
   color: white;
-  padding: 20px 40px 20px 20px;
+  padding: 20px 45px 20px 20px;
   box-sizing: border-box;
 }
 
@@ -81,31 +90,54 @@
   color: white;
 }
 
-.login-wrapper button {
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
   width: 100%;
-  height: 45px;
-  background: white;
-  border: none;
-  outline: none;
-  border-radius: 40px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.button-row button {
+  font-family: "Fjalla One", sans-serif;
+  width: 150px;
+  height: 60px;
+  border-radius: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  font-size: 16px;
-  color: black;
-  font-weight: 700;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
 }
 
-.login-wrapper button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.03);
+.button-row button:nth-child(1) {
+  background: linear-gradient(135deg, #00c2ff, #0066ff);
 }
 
-.login-wrapper button:active {
-  transform: translateY(1px);
+.button-row button:nth-child(2) {
+  background: linear-gradient(135deg, #7cff00, #2ecc71);
 }
 
-.login-wrapper p {
+.button-row button:hover {
+  transform: translateY(-6px) scale(1.08);
+  filter: brightness(1.1);
+}
+
+.button-row button:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.button-row button.active {
+  box-shadow: 0 0 0 3px rgba(255, 231, 180, 0.7);
+}
+
+.login-msg {
+  margin-top: 16px;
+  font-size: 14px;
   color: white;
-  margin-bottom: 0;
 }

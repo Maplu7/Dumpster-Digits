@@ -3,29 +3,20 @@ export class Preloader extends Phaser.Scene {
         super('Preloader');
     }
 
-    init() {
-        this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
-
-        const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
-
-        this.load.on('progress', (progress) => {
-            bar.width = 4 + (460 * progress);
-        });
-    }
-
     preload() {
-        this.load.setPath('assets');
+        this.load.setPath('assets/new');
 
+        this.load.image('camp', 'ground.png');
+        this.load.image('trash', 'trash.png');
+        this.load.image('emptyCan', 'emptes.png');
         this.load.image('trashCan', 'trashCan.png');
-        this.load.image('trash', 'can.png');   // ← put this back
-        this.load.image('camp', 'campGround.png');
+        this.load.image('cardboardBox', 'cardboardbox.png');
 
-        this.load.image('emptyCan', 'used_can.png');
+        this.load.image('wrongBubble', 'emote_cross.png');
+        this.load.image('happyBubble', 'emote_faceHappy.png');
+        this.load.image('heartBubble', 'emote_heart.png');
 
-        this.load.spritesheet('usedItems', 'used_items.png', {
-            frameWidth: 32,
-            frameHeight: 50
-        });
+        this.load.image('usedItemsRow', 'trashes.png');
     }
 
     create() {

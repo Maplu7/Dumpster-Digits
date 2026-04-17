@@ -6,19 +6,20 @@ import LayeredSkyScene from "../components/LayeredSkyScene";
 import "./Shop.css";
 import useAmbience from "../hooks/useAmbience";
 
+
 const PRICES = [200, 175, 70, 175, 200, 100, 130, 150, 70, 120, 160];
 const IMAGES = [
   "/raccacoonies/E9D4CA22-965B-43B3-9E3A-AA2EC31DFEE2_1_105_c.jpeg",
-  "/raccacoonies/7E32B860-A05B-49B7-AB3B-208B26385CA8_1_105_c.jpeg",
-  "/raccacoonies/23676FF1-6D12-4B24-A576-990E2E736642_1_102_o.jpeg",
+  "/raccacoonies/angy.jpeg",
+  "/raccacoonies/crying.jpeg",
   "/raccacoonies/E6F5A42F-2434-43C6-9A81-E276C38D97BC_1_105_c.jpeg",
-  "/raccacoonies/WhatsApp_Image_2026-03-26_at_10.50.00.jpeg",
-  "/raccacoonies/1AFCAC26-4B70-4834-97D9-94C2C973CE13_1_105_c.jpeg",
-  "/raccacoonies/E221DD6D-0233-4593-BD69-5AD781ED443C_1_105_c.jpeg",
-  "/raccacoonies/WhatsApp_Image_2026-03-26_at_10.49.59.jpeg",
-  "/raccacoonies/61B48BF2-CD54-4014-8323-24A334CDA1B1_1_105_c.jpeg",
-  "/raccacoonies/D645C719-A1F7-4A08-A446-789F0E13EE88_1_105_c.jpeg",
-  "/raccacoonies/508D1861-E43D-4454-8284-A36067C53306_1_102_o.jpeg",
+  "/raccacoonies/bleh.jpeg",
+  "/raccacoonies/thinking.jpeg",
+  "/raccacoonies/confused.jpeg",
+  "/raccacoonies/bleh_2.jpeg",
+  "/raccacoonies/what.jpeg",
+  "/raccacoonies/playing_dead.jpeg",
+  "/raccacoonies/furious.jpeg",
 ];
 
 const NAMES = [
@@ -35,11 +36,12 @@ const NAMES = [
   "Furious Raccacoonie",
 ];
 
-const shopItems = IMAGES.map((image, index) => ({
+const pfpItems = IMAGES.map((image, index) => ({
   id: index + 1,
   name: NAMES[index],
   price: PRICES[index],
   image,
+  category: "pfp",
 }));
 
 const Shop = ({ student, onBack }) => {
@@ -47,6 +49,7 @@ const Shop = ({ student, onBack }) => {
   const [ownedItems, setOwnedItems] = useState([]);
   const [equippedItemId, setEquippedItemId] = useState(null);
   const [busyItemId, setBusyItemId] = useState(null);
+  const [activeTab, setActiveTab] = useState("customize");
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
 
@@ -68,7 +71,7 @@ const Shop = ({ student, onBack }) => {
   }, [student]);
 
   const equippedItem =
-    shopItems.find((item) => item.id === equippedItemId) || shopItems[0];
+    pfpItems.find((item) => item.id === equippedItemId) || pfpItems[0];
 
   async function handleItemClick(item) {
     if (!student?.id) return;
@@ -124,47 +127,78 @@ const Shop = ({ student, onBack }) => {
 
       <div className="shop-layout">
         <div className="shop-left">
-          <div className="shop-grid">
-            {shopItems.map((item) => {
-              const isOwned = ownedItems.includes(item.id);
-              const isEquipped = equippedItemId === item.id;
+          <div className="shop-tabs">
+            <button
+              className={`shop-tab ${activeTab === "customize" ? "active" : ""}`}
+              onClick={() => setActiveTab("customize")}
+            >
+              Customize
+            </button>
 
-              return (
-                <div key={item.id} className="shop-card">
-                  <div className="shop-item-art shop-item-art--image">
-                    <img src={item.image} alt={item.name} />
-                  </div>
-
-                  <h3>{item.name}</h3>
-
-                  <p>
-                    <img
-                      src="/ui-assets/raccacoin.png"
-                      alt="coin"
-                      className="shop-coin"
-                      style={{
-                        width: 18,
-                        verticalAlign: "middle",
-                        marginRight: 6,
-                      }}
-                    />
-                    {item.price}
-                  </p>
-
-                  <button
-                    disabled={
-                      busyItemId === item.id ||
-                      (!isOwned && coins < item.price) ||
-                      isEquipped
-                    }
-                    onClick={() => handleItemClick(item)}
-                  >
-                    {getButtonLabel(item)}
-                  </button>
-                </div>
-              );
-            })}
+            <button
+              className={`shop-tab ${activeTab === "pfps" ? "active" : ""}`}
+              onClick={() => setActiveTab("pfps")}
+            >
+              PFPs
+            </button>
           </div>
+
+          {activeTab === "customize" ? (
+            <div className="shop-customize-panel">
+              <div className="shop-customize-card">
+                <h2>Customize Your Raccacoonie</h2>
+                <p>
+                  This tab is for the customizable raccoon.
+                </p>
+                <p>
+                  Right now it shows your base character, and later you can add
+                  hats, accessories, outfits, and more here.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="shop-grid">
+              {pfpItems.map((item) => {
+                const isOwned = ownedItems.includes(item.id);
+                const isEquipped = equippedItemId === item.id;
+
+                return (
+                  <div key={item.id} className="shop-card">
+                    <div className="shop-item-art shop-item-art--image">
+                      <img src={item.image} alt={item.name} />
+                    </div>
+
+                    <h3>{item.name}</h3>
+
+                    <p>
+                      <img
+                        src="/ui-assets/raccacoin.png"
+                        alt="coin"
+                        className="shop-coin"
+                        style={{
+                          width: 18,
+                          verticalAlign: "middle",
+                          marginRight: 6,
+                        }}
+                      />
+                      {item.price}
+                    </p>
+
+                    <button
+                      disabled={
+                        busyItemId === item.id ||
+                        (!isOwned && coins < item.price) ||
+                        isEquipped
+                      }
+                      onClick={() => handleItemClick(item)}
+                    >
+                      {getButtonLabel(item)}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="shop-right">
@@ -175,11 +209,23 @@ const Shop = ({ student, onBack }) => {
               <div className="stand-base" />
 
               <div className="preview-character preview-character--shop-image">
-                <img src={equippedItem.image} alt="Raccacoonie preview" />
+                {activeTab === "customize" ? (
+                  <img
+                    src="/shop_raccacoonie.jpg"
+                    alt="Customizable Raccacoonie preview"
+                  />
+                ) : (
+                  <img
+                    src={equippedItem.image}
+                    alt="Raccacoonie preview"
+                  />
+                )}
               </div>
 
               <div className="equipped-label">
-                Wearing: {equippedItem.name}
+                {activeTab === "customize"
+                  ? "Customize Mode"
+                  : `Wearing: ${equippedItem.name}`}
               </div>
             </div>
           </div>

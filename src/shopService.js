@@ -1,70 +1,73 @@
-import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
+import { doc, runTransaction } from "firebase/firestore";
 
 export async function buyShopItem(studentId, item) {
-  if (!studentId || !item?.id || !item?.price) {
-    throw new Error("Missing student or item info.");
+  if (!studentId) {
+    throw new Error("Missing student id.");
+  }
+
+  if (!item?.id || !item?.image) {
+    throw new Error("Invalid shop item.");
   }
 
   const studentRef = doc(db, "students", String(studentId));
 
   await runTransaction(db, async (transaction) => {
-    const snap = await transaction.get(studentRef);
+    const studentSnap = await transaction.get(studentRef);
 
-    if (!snap.exists()) {
+    if (!studentSnap.exists()) {
       throw new Error("Student not found.");
     }
 
-    const data = snap.data();
-    const currentCoins = Number(data.coins || 0);
+    const data = studentSnap.data() || {};
+    const coins = Number(data.coins || 0);
     const ownedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
 
     if (ownedItems.includes(item.id)) {
       transaction.update(studentRef, {
         equippedItemId: item.id,
-        equippedItemImage: item.image,
-        updatedAt: serverTimestamp(),
+        profileImage: item.image,
       });
       return;
     }
 
-    if (currentCoins < item.price) {
+    if (coins < Number(item.price || 0)) {
       throw new Error("Not enough coins.");
     }
 
     transaction.update(studentRef, {
-      coins: currentCoins - item.price,
+      coins: coins - Number(item.price || 0),
       ownedItems: [...ownedItems, item.id],
       equippedItemId: item.id,
-      equippedItemImage: item.image,
-      updatedAt: serverTimestamp(),
+      profileImage: item.image,
     });
   });
 }
 
-export async function equipShopItem(studentId, itemId, itemImage) {
-  if (!studentId || !itemId) return;
+export async function equipShopItem(studentId, itemId, image) {
+  if (!studentId) {
+    throw new Error("Missing student id.");
+  }
 
   const studentRef = doc(db, "students", String(studentId));
 
   await runTransaction(db, async (transaction) => {
-    const snap = await transaction.get(studentRef);
+    const studentSnap = await transaction.get(studentRef);
 
-    if (!snap.exists()) {
+    if (!studentSnap.exists()) {
       throw new Error("Student not found.");
     }
 
-    const data = snap.data();
+    const data = studentSnap.data() || {};
     const ownedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
 
     if (!ownedItems.includes(itemId)) {
-      throw new Error("Item not owned.");
+      throw new Error("Item is not owned yet.");
     }
 
     transaction.update(studentRef, {
       equippedItemId: itemId,
-      equippedItemImage: itemImage || data.equippedItemImage || null,
-      updatedAt: serverTimestamp(),
+      profileImage: image,
     });
   });
 }

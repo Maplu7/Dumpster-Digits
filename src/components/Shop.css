@@ -317,4 +317,72 @@
   .preview-character img {
     width: 200px;
   }
+
+  .shop-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.shop-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.8);
+  color: #2f2240;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shop-tab:hover {
+  transform: translateY(-1px);
+}
+
+.shop-tab.active {
+  background: #ffd86b;
+  color: #3a2558;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.shop-customize-panel {
+  width: 100%;
+}
+
+.shop-customize-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 22px;
+  padding: 22px;
+  color: #2f2240;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  text-align: left;
+}
+
+.shop-customize-card h2 {
+  margin-bottom: 10px;
+}
+
+.shop-customize-card p {
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+
+.preview-character {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 340px;
+}
+
+.preview-character img {
+  width: 320px;
+  max-width: 92%;
+  height: auto;
+  object-fit: contain;
+}
+
 }

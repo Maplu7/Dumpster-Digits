@@ -13,7 +13,6 @@ import StarTwinkleOverlay from "./StarTwinkleOverlay";
 import LayeredSkyScene from "../components/LayeredSkyScene";
 import useAmbience from "../hooks/useAmbience";
 
-
 function getPreviewProblem(gameKey) {
   switch (gameKey) {
     case "1st_addition":
@@ -80,8 +79,29 @@ export default function Assignments({
   const [completedMap, setCompletedMap] = useState({});
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 200);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 
   useEffect(() => {
     if (usingExternalData) {
@@ -268,6 +288,17 @@ export default function Assignments({
           </div>
         )}
       </div>
+
+      {showScrollTop && (
+        <button
+          className="scroll-top-btn"
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+          title="Scroll to top"
+        >
+          ↑
+        </button>
+      )}
     </div>
   );
 }
