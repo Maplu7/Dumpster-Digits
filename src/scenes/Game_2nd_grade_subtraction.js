@@ -115,7 +115,6 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
     this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
 
-    // Arabella game logic positions kept
     this.trash1 = new Trash(this, 550, 280, this.question1);
     this.trash2 = new Trash(this, 650, 400, this.question2);
     this.trash3 = new Trash(this, 750, 280, this.question3);
@@ -134,7 +133,6 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    // Arabella grouped overlap logic kept
     this.trashGroup = this.physics.add.group();
     this.trashGroup.add(this.trash1);
     this.trashGroup.add(this.trash2);
