@@ -30,14 +30,25 @@ function getSceneForGameKey(gameKey) {
   }
 }
 
-export function createGame(gameKey, parent = "game-container", studentId = null) {
+export function createGame(gameKey, parent = "game-container", options = {}) {
   const SelectedScene = getSceneForGameKey(gameKey);
+
+  const {
+    studentId = "",
+    classId = "",
+    assignedProblems = [],
+  } = options || {};
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     width: 1536,
     height: 793,
     parent,
+    backgroundColor: "#000000",
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     physics: {
       default: "arcade",
       arcade: {
@@ -49,7 +60,13 @@ export function createGame(gameKey, parent = "game-container", studentId = null)
   });
 
   game.registry.set("studentId", studentId ? String(studentId) : "");
+  game.registry.set("classId", classId ? String(classId) : "");
   game.registry.set("gameKey", gameKey);
+  game.registry.set(
+    "assignedProblems",
+    Array.isArray(assignedProblems) ? assignedProblems : []
+  );
+
   return game;
 }
 

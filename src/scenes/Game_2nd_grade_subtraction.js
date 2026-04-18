@@ -1,113 +1,104 @@
-import { Trash } from '../GameObjects/Trash.js';
-import { TrashCan } from '../GameObjects/TrashCan.js';
-import { showFinishScreen } from "./utils/showFinishScreen";
-import { saveAssignmentResult } from "../saveAssignmentResult";
+import Phaser from "phaser";
+import { Trash } from "../GameObjects/Trash.js";
+import { TrashCan } from "../GameObjects/TrashCan.js";
+import { BaseMathGameScene } from "./BaseMathGameScene";
 
-export class Game_2nd_grade_subtraction extends Phaser.Scene {
+export class Game_2nd_grade_subtraction extends BaseMathGameScene {
   constructor() {
-    super('Game');
+    super("Game");
+  }
+
+  buildSubtractionProblems(topNumber) {
+    return Array.from({ length: topNumber + 1 }, (_, i) => ({
+      question: `${topNumber}-${i}`,
+      answer: topNumber - i,
+    }));
+  }
+
+  pickFiveUniqueAnswerProblems(problemPool) {
+    const shuffled = Phaser.Utils.Array.Shuffle([...problemPool]);
+    const selected = [];
+    const usedAnswers = new Set();
+
+    for (const problem of shuffled) {
+      const answerKey = String(problem.answer);
+      if (usedAnswers.has(answerKey)) continue;
+
+      usedAnswers.add(answerKey);
+      selected.push(problem);
+
+      if (selected.length === 5) break;
+    }
+
+    return selected;
   }
 
   create() {
-    this.gameKey = "2nd_subtraction";
-    this.assignmentTitle = "2nd Grade Subtraction";
+    this.initSharedGameConfig({
+      gameKey: "2nd_subtraction",
+      assignmentTitle: "2nd Grade Subtraction",
+    });
 
-    this.saveResults = async () => {
-      const studentId = this.studentId || this.registry.get("studentId");
-
-      return await saveAssignmentResult({
-        studentId,
-        gameKey: this.gameKey,
-        assignmentTitle: this.assignmentTitle,
-        totalWrongGuesses: this.numWrong || 0,
-        numGuessesPerAnswer: this.numGuessesPerAnswer || [],
-      });
-    };
+    this.problems1 = this.buildSubtractionProblems(1);
+    this.problems2 = this.buildSubtractionProblems(2);
+    this.problems3 = this.buildSubtractionProblems(3);
+    this.problems4 = this.buildSubtractionProblems(4);
+    this.problems5 = this.buildSubtractionProblems(5);
+    this.problems6 = this.buildSubtractionProblems(6);
+    this.problems7 = this.buildSubtractionProblems(7);
+    this.problems8 = this.buildSubtractionProblems(8);
+    this.problems9 = this.buildSubtractionProblems(9);
+    this.problems10 = this.buildSubtractionProblems(10);
 
     this.problems = [
-      { question: "10-1", answer: 9 },
-      { question: "10-2", answer: 8 },
-      { question: "10-3", answer: 7 },
-      { question: "10-4", answer: 6 },
-      { question: "10-5", answer: 5 },
-      { question: "10-6", answer: 4 },
-      { question: "10-7", answer: 3 },
-      { question: "10-8", answer: 2 },
-      { question: "10-9", answer: 1 },
-      { question: "10-10", answer: 0 }
+      ...this.problems1,
+      ...this.problems2,
+      ...this.problems3,
+      ...this.problems4,
+      ...this.problems5,
+      ...this.problems6,
+      ...this.problems7,
+      ...this.problems8,
+      ...this.problems9,
+      ...this.problems10,
     ];
 
     for (let i = 1; i <= 7; i++) {
       const y = 50 + (i - 1) * 100;
 
       this[`campGroundRow${i}`] = this.add.group({
-        key: 'camp',
+        key: "camp",
         repeat: 11,
-        setXY: { x: 90, y: y, stepX: 180 },
-        setScale: { x: 3, y: 6 }
+        setXY: { x: 90, y, stepX: 180 },
+        setScale: { x: 3, y: 6 },
       });
     }
 
-    this.problem1 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem1);
+    this.add.image(1250, 100, "yellowTent", 0).setScale(3);
+    this.add.image(200, 100, "yellowTent", 1).setScale(3);
+    this.add.image(100, 300, "campFire", 3).setScale(3);
+    this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
+    this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
-    this.problem2 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem2);
+    const selectedProblems = this.pickFiveUniqueAnswerProblems(this.problems);
+    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
 
-    this.problem3 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem3);
+    [
+      this.question1,
+      this.question2,
+      this.question3,
+      this.question4,
+      this.question5,
+    ] = questionOrder;
 
-    this.problem4 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem4);
-
-    this.problem5 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem5);
-
-    this.possibleQuestions = [
-      this.problem1,
-      this.problem2,
-      this.problem3,
-      this.problem4,
-      this.problem5
-    ];
-
-    this.question1 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question1);
-
-    this.question2 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question2);
-
-    this.question3 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question3);
-
-    this.question4 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question4);
-
-    this.question5 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question5);
-
-    this.possibleAnswers = [
-      this.problem1,
-      this.problem2,
-      this.problem3,
-      this.problem4,
-      this.problem5
-    ];
-
-    this.answer1 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer1);
-
-    this.answer2 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer2);
-
-    this.answer3 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer3);
-
-    this.answer4 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer4);
-
-    this.answer5 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer5);
+    [
+      this.answer1,
+      this.answer2,
+      this.answer3,
+      this.answer4,
+      this.answer5,
+    ] = answerOrder;
 
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
@@ -126,26 +117,28 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
       { guessedAnswer: this.trash2, numGuess: 0 },
       { guessedAnswer: this.trash3, numGuess: 0 },
       { guessedAnswer: this.trash4, numGuess: 0 },
-      { guessedAnswer: this.trash5, numGuess: 0 }
+      { guessedAnswer: this.trash5, numGuess: 0 },
     ];
 
     this.numCorrect = 0;
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group();
-    this.trashGroup.add(this.trash1);
-    this.trashGroup.add(this.trash2);
-    this.trashGroup.add(this.trash3);
-    this.trashGroup.add(this.trash4);
-    this.trashGroup.add(this.trash5);
+    this.trashGroup = this.physics.add.group([
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ]);
 
-    this.trashCanGroup = this.physics.add.group();
-    this.trashCanGroup.add(this.trashCan1);
-    this.trashCanGroup.add(this.trashCan2);
-    this.trashCanGroup.add(this.trashCan3);
-    this.trashCanGroup.add(this.trashCan4);
-    this.trashCanGroup.add(this.trashCan5);
+    this.trashCanGroup = this.physics.add.group([
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5,
+    ]);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -157,9 +150,9 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
   }
 
   putInTrash(trash, trashCan) {
+    if (this.introActive) return;
     if (trashCan && trashCan._disabled) return;
     if (trash._lockedOnCan) return;
-
     trash._lockedOnCan = true;
 
     const unlockWhenLeaving = () => {
@@ -168,7 +161,7 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
         this.trashCan2,
         this.trashCan3,
         this.trashCan4,
-        this.trashCan5
+        this.trashCan5,
       ].filter((c) => c && c.active);
 
       const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
@@ -176,7 +169,7 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
       if (!stillOverAny) {
         trash._lockedOnCan = false;
 
-        if (trash && trash.active && trash.trashMath && !trash._dragging) {
+        if (trash?.trashMath && !trash._dragging) {
           trash.trashMath.clearTint();
         }
       } else {
@@ -185,78 +178,45 @@ export class Game_2nd_grade_subtraction extends Phaser.Scene {
     };
 
     if (trash.answer === trashCan.answer) {
-      this.correct?.destroy();
-      this.correct = this.add.text(30, 200, "That is Correct!", {
-        fontSize: "80px",
-        fill: "#ffffff",
-      });
+      this.playFeedbackSound(true);
+      this.clearCenteredFeedback();
+      this.showCenteredFeedback("That is Correct!", true);
 
-      if (trashCan.markCorrect) trashCan.markCorrect();
-
+      trashCan.markCorrect?.();
       trash.destroy();
       trashCan.destroy();
 
-      this.numCorrect += 1;
-      this.time.delayedCall(550, this.onCorrect, [], this);
+      this.numCorrect++;
+      this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
       if (this.numCorrect === 5) {
-        this.time.delayedCall(550, this.onFinish, [], this);
+        this.time.delayedCall(this.feedbackDuration + 250, this.onFinish, [], this);
       }
 
       return;
     }
 
-    this.numWrong += 1;
+    this.numWrong++;
 
-    if (trash === this.trash1) {
-      this.numGuessesPerAnswer[0].numGuess++;
-    } else if (trash === this.trash2) {
-      this.numGuessesPerAnswer[1].numGuess++;
-    } else if (trash === this.trash3) {
-      this.numGuessesPerAnswer[2].numGuess++;
-    } else if (trash === this.trash4) {
-      this.numGuessesPerAnswer[3].numGuess++;
-    } else if (trash === this.trash5) {
-      this.numGuessesPerAnswer[4].numGuess++;
+    const index = [
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ].indexOf(trash);
+
+    if (index !== -1) {
+      this.numGuessesPerAnswer[index].numGuess++;
     }
 
-    this.wrongText?.destroy();
-    this.wrongText = this.add.text(30, 200, "Try again!", {
-      fontSize: "80px",
-      fill: "#ffffff",
-    });
+    this.playFeedbackSound(false);
+    this.clearCenteredFeedback();
+    this.showCenteredFeedback("Try again!", false);
 
-    this.time.delayedCall(550, () => this.wrongText?.destroy());
+    this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
     this.triesUsed += 1;
 
     unlockWhenLeaving();
-  }
-
-  onCorrect() {
-    this.correct?.destroy();
-  }
-
-  async onFinish() {
-    let coinsEarned = 0;
-
-    try {
-      const rewardResult = await this.saveResults();
-      console.log("rewardResult:", rewardResult);
-      coinsEarned = rewardResult?.coinReward || 0;
-    } catch (error) {
-      console.error("Save failed:", error);
-    }
-
-    showFinishScreen(this, {
-      title: "Congratulations!",
-      subtitle: `You earned ${coinsEarned} coins!`,
-      formatLine: (trash, guessCount) =>
-        "Wrong guesses for " +
-        trash.question +
-        " has " +
-        trash.answer +
-        ": " +
-        guessCount,
-    });
   }
 }

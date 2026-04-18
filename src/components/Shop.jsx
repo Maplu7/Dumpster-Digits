@@ -6,8 +6,7 @@ import LayeredSkyScene from "../components/LayeredSkyScene";
 import "./Shop.css";
 import useAmbience from "../hooks/useAmbience";
 
-
-const PRICES = [200, 175, 70, 175, 200, 100, 130, 150, 70, 120, 160];
+const PRICES = [200, 175, 70, 175, 200, 100, 130, 150, 70, 120, 160, 110];
 const IMAGES = [
   "/raccacoonies/E9D4CA22-965B-43B3-9E3A-AA2EC31DFEE2_1_105_c.jpeg",
   "/raccacoonies/angy.jpeg",
@@ -20,6 +19,7 @@ const IMAGES = [
   "/raccacoonies/what.jpeg",
   "/raccacoonies/playing_dead.jpeg",
   "/raccacoonies/furious.jpeg",
+  "/raccacoonies/blush.jpeg",
 ];
 
 const NAMES = [
@@ -34,6 +34,7 @@ const NAMES = [
   "What Raccacoonie",
   "Playing Dead Raccacoonie",
   "Furious Raccacoonie",
+  "Blush Raccacoonie",
 ];
 
 const pfpItems = IMAGES.map((image, index) => ({
@@ -44,12 +45,33 @@ const pfpItems = IMAGES.map((image, index) => ({
   category: "pfp",
 }));
 
+const outfitItems = [
+  {
+    id: "outfit-chef",
+    name: "Chef Racco",
+    price: 0,
+    image: "/raccacoonies/CHEF_RACCO.png",
+    category: "customize",
+  },
+  {
+    id: "outfit-argg",
+    name: "Argg Racco",
+    price: 0,
+    image: "/raccacoonies/ARGG.png",
+    category: "customize",
+  },
+];
+
+const FALLBACK_IMAGE = "/raccacoonies/what.jpeg";
+
 const Shop = ({ student, onBack }) => {
   const [coins, setCoins] = useState(0);
   const [ownedItems, setOwnedItems] = useState([]);
   const [equippedItemId, setEquippedItemId] = useState(null);
+  const [equippedItemCategory, setEquippedItemCategory] = useState("pfp");
+  const [equippedItemImage, setEquippedItemImage] = useState(FALLBACK_IMAGE);
   const [busyItemId, setBusyItemId] = useState(null);
-  const [activeTab, setActiveTab] = useState("customize");
+  const [activeTab, setActiveTab] = useState("outfits");
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
 
@@ -65,13 +87,20 @@ const Shop = ({ student, onBack }) => {
       setCoins(Number(data.coins || 0));
       setOwnedItems(Array.isArray(data.ownedItems) ? data.ownedItems : []);
       setEquippedItemId(data.equippedItemId ?? null);
+      setEquippedItemCategory(data.equippedItemCategory || "pfp");
+      setEquippedItemImage(data.equippedItemImage || FALLBACK_IMAGE);
     });
 
     return () => unsubscribe();
   }, [student]);
 
+  const defaultPfp = pfpItems.find((item) => item.name === "What Raccacoonie") || pfpItems[0];
+  const defaultOutfit = outfitItems[0];
+
   const equippedItem =
-    pfpItems.find((item) => item.id === equippedItemId) || pfpItems[0];
+    equippedItemCategory === "customize"
+      ? outfitItems.find((item) => item.id === equippedItemId) || defaultOutfit
+      : pfpItems.find((item) => item.id === equippedItemId) || defaultPfp;
 
   async function handleItemClick(item) {
     if (!student?.id) return;
@@ -79,8 +108,8 @@ const Shop = ({ student, onBack }) => {
     try {
       setBusyItemId(item.id);
 
-      if (ownedItems.includes(item.id)) {
-        await equipShopItem(student.id, item.id, item.image);
+      if (item.price === 0 || ownedItems.includes(item.id)) {
+        await equipShopItem(student.id, item.id, item.image, item.category);
       } else {
         await buyShopItem(student.id, item);
       }
@@ -92,8 +121,9 @@ const Shop = ({ student, onBack }) => {
   }
 
   function getButtonLabel(item) {
-    const isOwned = ownedItems.includes(item.id);
-    const isEquipped = equippedItemId === item.id;
+    const isOwned = ownedItems.includes(item.id) || item.price === 0;
+    const isEquipped =
+      equippedItemId === item.id && equippedItemCategory === item.category;
 
     if (busyItemId === item.id) return "Saving...";
     if (isEquipped) return "Wearing";
@@ -120,7 +150,7 @@ const Shop = ({ student, onBack }) => {
           </p>
         </div>
 
-        <button className="shop-back-btn" onClick={onBack}>
+        <button className="shop-back-btn" onClick={onBack} type="button">
           Back
         </button>
       </div>
@@ -129,43 +159,99 @@ const Shop = ({ student, onBack }) => {
         <div className="shop-left">
           <div className="shop-tabs">
             <button
-              className={`shop-tab ${activeTab === "customize" ? "active" : ""}`}
-              onClick={() => setActiveTab("customize")}
+              className={`shop-tab ${activeTab === "outfits" ? "active" : ""}`}
+              onClick={() => setActiveTab("outfits")}
+              type="button"
             >
-              Customize
+              Outfits
             </button>
 
             <button
               className={`shop-tab ${activeTab === "pfps" ? "active" : ""}`}
               onClick={() => setActiveTab("pfps")}
+              type="button"
             >
-              PFPs
+              Pfps
             </button>
           </div>
 
-          {activeTab === "customize" ? (
-            <div className="shop-customize-panel">
-              <div className="shop-customize-card">
-                <h2>Customize Your Raccacoonie</h2>
-                <p>
-                  This tab is for the customizable raccoon.
-                </p>
-                <p>
-                  Right now it shows your base character, and later you can add
-                  hats, accessories, outfits, and more here.
-                </p>
-              </div>
+          {activeTab === "outfits" ? (
+            <div className="shop-grid shop-grid--outfits">
+              {outfitItems.map((item) => {
+                const isOwned = ownedItems.includes(item.id) || item.price === 0;
+                const isEquipped =
+                  equippedItemId === item.id &&
+                  equippedItemCategory === item.category;
+
+                return (
+                  <div key={item.id} className="shop-card shop-card--outfit">
+                    <div className="shop-item-art shop-item-art--image shop-item-art--outfit">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_IMAGE;
+                        }}
+                      />
+                    </div>
+
+                    <h3>{item.name}</h3>
+
+                    <p>
+                      {item.price === 0 ? (
+                        "Free"
+                      ) : (
+                        <>
+                          <img
+                            src="/ui-assets/raccacoin.png"
+                            alt="coin"
+                            className="shop-coin"
+                            style={{
+                              width: 18,
+                              verticalAlign: "middle",
+                              marginRight: 6,
+                            }}
+                          />
+                          {item.price}
+                        </>
+                      )}
+                    </p>
+
+                    <button
+                      disabled={
+                        busyItemId === item.id ||
+                        (!isOwned && coins < item.price) ||
+                        isEquipped
+                      }
+                      onClick={() => handleItemClick(item)}
+                      type="button"
+                    >
+                      {getButtonLabel(item)}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="shop-grid">
               {pfpItems.map((item) => {
                 const isOwned = ownedItems.includes(item.id);
-                const isEquipped = equippedItemId === item.id;
+                const isEquipped =
+                  equippedItemId === item.id &&
+                  equippedItemCategory === item.category;
 
                 return (
                   <div key={item.id} className="shop-card">
                     <div className="shop-item-art shop-item-art--image">
-                      <img src={item.image} alt={item.name} />
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_IMAGE;
+                        }}
+                      />
                     </div>
 
                     <h3>{item.name}</h3>
@@ -191,6 +277,7 @@ const Shop = ({ student, onBack }) => {
                         isEquipped
                       }
                       onClick={() => handleItemClick(item)}
+                      type="button"
                     >
                       {getButtonLabel(item)}
                     </button>
@@ -208,23 +295,45 @@ const Shop = ({ student, onBack }) => {
             <div className="stand-area">
               <div className="stand-base" />
 
-              <div className="preview-character preview-character--shop-image">
-                {activeTab === "customize" ? (
+              <div
+                className={`preview-character ${
+                  activeTab === "outfits"
+                    ? "preview-character--customize"
+                    : "preview-character--pfp"
+                }`}
+              >
+                {activeTab === "outfits" ? (
                   <img
-                    src="/shop_raccacoonie.jpg"
-                    alt="Customizable Raccacoonie preview"
+                    src={
+                      equippedItemCategory === "customize"
+                        ? equippedItemImage || defaultOutfit.image
+                        : defaultOutfit.image
+                    }
+                    alt="Outfit preview"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = FALLBACK_IMAGE;
+                    }}
                   />
                 ) : (
                   <img
-                    src={equippedItem.image}
+                    src={equippedItemImage || FALLBACK_IMAGE}
                     alt="Raccacoonie preview"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = FALLBACK_IMAGE;
+                    }}
                   />
                 )}
               </div>
 
               <div className="equipped-label">
-                {activeTab === "customize"
-                  ? "Customize Mode"
+                {activeTab === "outfits"
+                  ? `Outfit: ${
+                      equippedItemCategory === "customize"
+                        ? equippedItem.name
+                        : defaultOutfit.name
+                    }`
                   : `Wearing: ${equippedItem.name}`}
               </div>
             </div>

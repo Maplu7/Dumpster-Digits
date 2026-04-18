@@ -1,5 +1,7 @@
 import { db } from "./firebase";
 import {
+  addDoc,
+  collection,
   doc,
   getDoc,
   serverTimestamp,
@@ -15,6 +17,25 @@ function getCoinRewardForPlay(playCount) {
   return 5;
 }
 
+function getAttemptPercentFromAnswers(answers) {
+  if (!Array.isArray(answers) || answers.length === 0) return 0;
+
+  const total = answers.reduce((sum, answer) => {
+    const wrongTries = Number(answer?.wrongTries || 0);
+    const answerPercent = Math.max(0, 100 - wrongTries * 25);
+    return sum + answerPercent;
+  }, 0);
+
+  return Math.round(total / answers.length);
+}
+
+function isPerfectRun(totalWrongGuesses, answers) {
+  if (Number(totalWrongGuesses || 0) === 0) return true;
+  return Array.isArray(answers)
+    ? answers.every((answer) => Number(answer?.wrongTries || 0) === 0)
+    : false;
+}
+
 export async function saveAssignmentResult({
   studentId,
   gameKey,
@@ -27,12 +48,22 @@ export async function saveAssignmentResult({
   }
 
   const studentRef = doc(db, "students", String(studentId));
-  const resultRef = doc(
+
+  // summary doc per game
+  const gameSummaryRef = doc(
     db,
     "students",
     String(studentId),
-    "assignmentResults",
+    "assignmentGameSummary",
     String(gameKey)
+  );
+
+  // attempts collection: one doc per attempt
+  const attemptsCollectionRef = collection(
+    db,
+    "students",
+    String(studentId),
+    "assignmentResults"
   );
 
   const problemBreakdown = {};
@@ -57,41 +88,64 @@ export async function saveAssignmentResult({
     });
   }
 
-  const [studentSnap, resultSnap] = await Promise.all([
+  const [studentSnap, gameSummarySnap] = await Promise.all([
     getDoc(studentRef),
-    getDoc(resultRef),
+    getDoc(gameSummaryRef),
   ]);
 
   const currentCoins = studentSnap.exists()
     ? Number(studentSnap.data()?.coins || 0)
     : 0;
 
-  const previousPlayCount = resultSnap.exists()
-    ? Number(resultSnap.data()?.playCount || 0)
+  const previousPlayCount = gameSummarySnap.exists()
+    ? Number(gameSummarySnap.data()?.playCount || 0)
     : 0;
 
-  const previousTotalCoinsEarnedFromGame = resultSnap.exists()
-    ? Number(resultSnap.data()?.totalCoinsEarnedFromGame || 0)
+  const previousTotalCoinsEarnedFromGame = gameSummarySnap.exists()
+    ? Number(gameSummarySnap.data()?.totalCoinsEarnedFromGame || 0)
     : 0;
 
   const nextPlayCount = previousPlayCount + 1;
   const coinReward = getCoinRewardForPlay(nextPlayCount);
   const newCoinTotal = currentCoins + coinReward;
 
+  const numericWrongGuesses = Number(totalWrongGuesses ?? 0);
+  const percentCorrect = getAttemptPercentFromAnswers(answers);
+  const perfectRun = isPerfectRun(numericWrongGuesses, answers);
+
+  // 1) save a brand new attempt doc every time
+  const attemptDocRef = await addDoc(attemptsCollectionRef, {
+    assignmentTitle: assignmentTitle || gameKey,
+    gameKey,
+    totalWrongGuesses: numericWrongGuesses,
+    completedAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+    problemBreakdown,
+    answers,
+    completed: true,
+    playCount: nextPlayCount,
+    lastCoinReward: coinReward,
+    percentCorrect,
+    perfectRun,
+  });
+
+  // 2) save/update a per-game summary doc for quick lookup
   await setDoc(
-    resultRef,
+    gameSummaryRef,
     {
       assignmentTitle: assignmentTitle || gameKey,
       gameKey,
-      totalWrongGuesses: Number(totalWrongGuesses ?? 0),
+      totalWrongGuesses: numericWrongGuesses,
       completedAt: serverTimestamp(),
-      problemBreakdown,
-      answers,
+      lastAttemptId: attemptDocRef.id,
+      latestProblemBreakdown: problemBreakdown,
+      latestAnswers: answers,
       completed: true,
       playCount: nextPlayCount,
       lastCoinReward: coinReward,
-      totalCoinsEarnedFromGame:
-        previousTotalCoinsEarnedFromGame + coinReward,
+      totalCoinsEarnedFromGame: previousTotalCoinsEarnedFromGame + coinReward,
+      percentCorrect,
+      perfectRun,
     },
     { merge: true }
   );
@@ -114,5 +168,8 @@ export async function saveAssignmentResult({
     coinReward,
     playCount: nextPlayCount,
     newCoinTotal,
+    attemptId: attemptDocRef.id,
+    percentCorrect,
+    perfectRun,
   };
 }
