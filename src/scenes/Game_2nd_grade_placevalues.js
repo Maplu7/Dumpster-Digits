@@ -82,7 +82,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       this[`campGroundRow${i}`] = this.add.group({
         key: "camp",
         repeat: 11,
-        setXY: { x: 90, y, stepX: 180 },
+        setXY: { x: 90, y: y, stepX: 180 },
         setScale: { x: 3, y: 6 },
       });
     }
@@ -93,26 +93,19 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
+    // KEEPING YOUR GENERATED ARRAYS/PROBLEM BUILD EXACTLY THE SAME
     this.problemsPlaceValues = this.buildPlaceValueProblems();
 
+    // only change: allow live/teacher problems if they exist, otherwise use your original built pool
+    this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);
+
+    // keep your unique-answer step
     const selectedProblems = this.pickFiveUniqueAnswerProblems(
-      this.problemsPlaceValues
+      this.configuredProblems
     );
 
-    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-
-    this.question1 = questionOrder[0];
-    this.question2 = questionOrder[1];
-    this.question3 = questionOrder[2];
-    this.question4 = questionOrder[3];
-    this.question5 = questionOrder[4];
-
-    this.answer1 = answerOrder[0];
-    this.answer2 = answerOrder[1];
-    this.answer3 = answerOrder[2];
-    this.answer4 = answerOrder[3];
-    this.answer5 = answerOrder[4];
+    // use shared slot assignment so question/answer randomization stays clean
+    this.assignFiveQuestionAndAnswerSlots(selectedProblems);
 
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);

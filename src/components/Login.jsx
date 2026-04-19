@@ -10,37 +10,89 @@ const Login = ({ onLogin, onTeacherLogin }) => {
   const [msg, setMsg] = useState("");
   const [fireBoost, setFireBoost] = useState(0);
   const [loginMode, setLoginMode] = useState("student");
+  const [isLoading, setIsLoading] = useState(false);
+  const [enterFlash, setEnterFlash] = useState(false);
 
-  function pulseFire() {
-    setFireBoost((n) => n + 1);
+  function pulseFire(strength = 1) {
+    setFireBoost((n) => n + strength);
+  }
+
+  function triggerEnterEffects() {
+    setEnterFlash(true);
+    pulseFire(2);
+
+    window.clearTimeout(triggerEnterEffects._timer);
+    triggerEnterEffects._timer = window.setTimeout(() => {
+      setEnterFlash(false);
+    }, 260);
+  }
+
+  async function handleStudentLogin() {
+    if (isLoading) return;
+
+    pulseFire();
+    setMsg("Logging in as student...");
+    setIsLoading(true);
+
+    try {
+      const { student } = await loginStudent(userId, password);
+      setMsg("");
+      onLogin(student);
+    } catch (error) {
+      console.error("Student login failed:", error);
+      setMsg(error.message || "Student login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleTeacherLogin() {
+    if (isLoading) return;
+
+    pulseFire();
+    setMsg("Logging in as teacher...");
+    setIsLoading(true);
+
+    try {
+      const { teacher } = await loginTeacher(userId, password);
+      setMsg("");
+      onTeacherLogin(teacher);
+    } catch (error) {
+      console.error("Teacher login failed:", error);
+      setMsg(error.message || "Teacher login failed.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    pulseFire();
+    if (isLoading) return;
+
+    triggerEnterEffects();
 
     if (loginMode === "teacher") {
-      setMsg("Logging in as teacher...");
-
-      try {
-        const { teacher } = await loginTeacher(userId, password);
-        setMsg("");
-        onTeacherLogin(teacher);
-      } catch (error) {
-        console.error("Teacher login failed:", error);
-        setMsg(error.message || "Teacher login failed.");
-      }
+      await handleTeacherLogin();
     } else {
-      setMsg("Logging in as student...");
+      await handleStudentLogin();
+    }
+  }
 
-      try {
-        const { student } = await loginStudent(userId, password);
-        setMsg("");
-        onLogin(student);
-      } catch (error) {
-        console.error("Student login failed:", error);
-        setMsg(error.message || "Student login failed.");
-      }
+  async function handleStudentButton() {
+    if (isLoading) return;
+    setLoginMode("student");
+    await handleStudentLogin();
+  }
+
+  async function handleTeacherButton() {
+    if (isLoading) return;
+    setLoginMode("teacher");
+    await handleTeacherLogin();
+  }
+
+  function handleInputKeyDown(e) {
+    if (e.key === "Enter") {
+      handleSubmit(e);
     }
   }
 
@@ -59,7 +111,9 @@ const Login = ({ onLogin, onTeacherLogin }) => {
                 placeholder={loginMode === "teacher" ? "Teacher ID" : "Student ID"}
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 required
+                disabled={isLoading}
               />
               <FaUser className="icon" />
             </div>
@@ -74,24 +128,34 @@ const Login = ({ onLogin, onTeacherLogin }) => {
                 }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 required
+                disabled={isLoading}
               />
               <FaLock className="icon" />
             </div>
 
             <div className="button-row">
               <button
-                type="submit"
-                onClick={() => setLoginMode("student")}
-                className={loginMode === "student" ? "active" : ""}
+                type="button"
+                onClick={handleStudentButton}
+                className={[
+                  loginMode === "student" ? "active" : "",
+                  enterFlash && loginMode === "student" ? "enter-flash" : "",
+                ].join(" ").trim()}
+                disabled={isLoading}
               >
                 Student
               </button>
 
               <button
-                type="submit"
-                onClick={() => setLoginMode("teacher")}
-                className={loginMode === "teacher" ? "active" : ""}
+                type="button"
+                onClick={handleTeacherButton}
+                className={[
+                  loginMode === "teacher" ? "active" : "",
+                  enterFlash && loginMode === "teacher" ? "enter-flash" : "",
+                ].join(" ").trim()}
+                disabled={isLoading}
               >
                 Teacher
               </button>

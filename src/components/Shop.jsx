@@ -49,16 +49,38 @@ const outfitItems = [
   {
     id: "outfit-chef",
     name: "Chef Racco",
-    price: 0,
+    price: 1500,
     image: "/raccacoonies/CHEF_RACCO.png",
-    category: "customize",
+    category: "outfit",
   },
   {
     id: "outfit-argg",
-    name: "Argg Racco",
-    price: 0,
+    name: "Pirate",
+    price: 1500,
     image: "/raccacoonies/ARGG.png",
-    category: "customize",
+    category: "outfit",
+  },
+
+  {
+    id: "knight",
+    name: "Knight",
+    image: "/raccacoonies/knight.png",
+    price: 1500,
+    category: "outfit",
+  },
+  {
+    id: "fairy",
+    name: "Fairy",
+    image: "/raccacoonies/fairy.png",
+    price: 1500,
+    category: "outfit",
+  },
+  {
+    id: "princess",
+    name: "Princess",
+    image: "/raccacoonies/princess.png",
+    price: 1500,
+    category: "outfit",
   },
 ];
 

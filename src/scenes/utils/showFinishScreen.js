@@ -69,7 +69,14 @@ export function showFinishScreen(scene, options = {}) {
     .setOrigin(0);
 
   const glow = scene.add
-    .ellipse(centerX, cardY + cardHeight / 2, width * 0.7, height * 0.52, 0xffc96f, 0.16);
+    .ellipse(
+      centerX,
+      cardY + cardHeight / 2,
+      width * 0.7,
+      height * 0.52,
+      0xffc96f,
+      0.16
+    );
 
   const sideGlowLeft = scene.add
     .ellipse(centerX - 220, cardY + cardHeight * 0.65, 190, 135, 0xff9f43, 0.09);
@@ -89,7 +96,13 @@ export function showFinishScreen(scene, options = {}) {
 
   const innerBorder = scene.add.graphics();
   innerBorder.lineStyle(3, 0xc08d58, 0.82);
-  innerBorder.strokeRoundedRect(cardX + 16, cardY + 16, cardWidth - 32, cardHeight - 32, 24);
+  innerBorder.strokeRoundedRect(
+    cardX + 16,
+    cardY + 16,
+    cardWidth - 32,
+    cardHeight - 32,
+    24
+  );
 
   const topGlow = scene.add
     .ellipse(centerX, cardY + 22, cardWidth * 0.72, 56, 0xfff1c7, 0.34);
@@ -115,8 +128,7 @@ export function showFinishScreen(scene, options = {}) {
     .setOrigin(0.5);
 
   const perfectRunGlow = isPerfectRun
-    ? scene.add
-        .ellipse(centerX, topY + 32, 460, 110, 0xffe58a, 0.28)
+    ? scene.add.ellipse(centerX, topY + 32, 460, 110, 0xffe58a, 0.28)
     : null;
 
   const titleText = scene.add
@@ -135,31 +147,67 @@ export function showFinishScreen(scene, options = {}) {
   let coinGlow = null;
   let coinImage = null;
   let subtitleText = null;
+  let subtitleLineTwoText = null;
 
   if (subtitle) {
-    const coinY = subtitleY + 16;
+    const subtitleLines = String(subtitle)
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
 
-    coinGlow = scene.add
-      .ellipse(centerX - 80, coinY, 42, 42, 0xffd97a, 0.35)
-      .setAlpha(0);
+    const firstLine = subtitleLines[0] || "";
+    const secondLine = subtitleLines[1] || "";
 
-    coinImage = scene.add
-      .image(centerX - 80, coinY, "raccacoin")
-      .setDisplaySize(18, 18)
-      .setDepth(1001)
-      .setAlpha(0);
+    // polished coin sizing + spacing
+    const coinSize = 28;
+    const coinGlowSize = 34;
+    const coinGap = 10;
+    const rowY = subtitleY + 18;
 
     subtitleText = scene.add
-      .text(centerX, subtitleY, subtitle, {
+      .text(0, rowY, firstLine, {
         fontFamily: "'Fjalla One', sans-serif",
         fontSize: subtitleSize,
         color: subtitleColor,
-        align: "center",
-        lineSpacing: 6,
+        align: "left",
       })
-      .setPadding(0, 4, 0, 10)
-      .setOrigin(0.5, 0)
+      .setPadding(0, 4, 0, 8)
+      .setOrigin(0, 0.5)
       .setAlpha(0);
+
+    const subtitleWidth = subtitleText.width || 0;
+    const rowWidth = coinSize + coinGap + subtitleWidth;
+    const rowLeft = centerX - rowWidth / 2;
+    const coinX = rowLeft + coinSize / 2;
+    const textX = rowLeft + coinSize + coinGap;
+
+    coinGlow = scene.add
+      .ellipse(coinX, rowY, coinGlowSize, coinGlowSize, 0xffd97a, 0.26)
+      .setAlpha(0);
+
+    coinImage = scene.add
+      .image(coinX, rowY, "raccacoin")
+      .setDisplaySize(coinSize, coinSize)
+      .setDepth(1001)
+      .setAlpha(0);
+
+    // keep the tiny pop-in without resetting to giant native texture size
+    coinImage.setScale(coinImage.scaleX * 0.92, coinImage.scaleY * 0.92);
+
+    subtitleText.setPosition(textX, rowY + 1);
+
+    if (secondLine) {
+      subtitleLineTwoText = scene.add
+        .text(centerX, rowY + 30, secondLine, {
+          fontFamily: "'Fjalla One', sans-serif",
+          fontSize: "26px",
+          color: subtitleColor,
+          align: "center",
+        })
+        .setPadding(0, 2, 0, 6)
+        .setOrigin(0.5, 0)
+        .setAlpha(0);
+    }
   }
 
   scene.finishTexts = lineTexts.map((lineText, index) => {
@@ -184,7 +232,14 @@ export function showFinishScreen(scene, options = {}) {
   const buttonY = cardY + cardHeight - 116;
 
   const buttonGlow = scene.add
-    .ellipse(centerX, buttonY + buttonHeight / 2, buttonWidth + 96, buttonHeight + 44, 0xa8e6ff, 0.24);
+    .ellipse(
+      centerX,
+      buttonY + buttonHeight / 2,
+      buttonWidth + 96,
+      buttonHeight + 44,
+      0xa8e6ff,
+      0.24
+    );
 
   const buttonShadow = scene.add.graphics();
   const buttonBg = scene.add.graphics();
@@ -248,6 +303,7 @@ export function showFinishScreen(scene, options = {}) {
   if (coinGlow) overlay.add(coinGlow);
   if (coinImage) overlay.add(coinImage);
   if (subtitleText) overlay.add(subtitleText);
+  if (subtitleLineTwoText) overlay.add(subtitleLineTwoText);
   scene.finishTexts.forEach((textObj) => overlay.add(textObj));
 
   overlay.add([
@@ -318,7 +374,11 @@ export function showFinishScreen(scene, options = {}) {
             {
               fontFamily: "'Fjalla One', sans-serif",
               fontSize: `${Phaser.Math.Between(16, 24)}px`,
-              color: Phaser.Utils.Array.GetRandom(["#fff2a6", "#ffe07a", "#fff6d5"]),
+              color: Phaser.Utils.Array.GetRandom([
+                "#fff2a6",
+                "#ffe07a",
+                "#fff6d5",
+              ]),
               stroke: "#8f5b12",
               strokeThickness: 2,
             }
@@ -345,9 +405,9 @@ export function showFinishScreen(scene, options = {}) {
   if (coinGlow) {
     scene.tweens.add({
       targets: coinGlow,
-      alpha: { from: 0.25, to: 0.45 },
-      scaleX: 1.2,
-      scaleY: 1.2,
+      alpha: { from: 0.16, to: 0.28 },
+      scaleX: 1.08,
+      scaleY: 1.08,
       duration: 900,
       yoyo: true,
       repeat: -1,
@@ -356,10 +416,13 @@ export function showFinishScreen(scene, options = {}) {
   }
 
   if (coinImage) {
+    const finalScaleX = coinImage.scaleX / 0.92;
+    const finalScaleY = coinImage.scaleY / 0.92;
+
     scene.tweens.add({
       targets: coinImage,
       alpha: 1,
-      y: coinImage.y - 4,
+      y: coinImage.y - 2,
       delay: 100,
       duration: 300,
       ease: "Sine.easeOut",
@@ -367,8 +430,8 @@ export function showFinishScreen(scene, options = {}) {
 
     scene.tweens.add({
       targets: coinImage,
-      scaleX: { from: 0.85, to: 1 },
-      scaleY: { from: 0.85, to: 1 },
+      scaleX: finalScaleX,
+      scaleY: finalScaleY,
       delay: 100,
       duration: 420,
       ease: "Back.easeOut",
@@ -378,9 +441,20 @@ export function showFinishScreen(scene, options = {}) {
   if (subtitleText) {
     scene.tweens.add({
       targets: subtitleText,
-      y: subtitleText.y - 4,
+      y: subtitleText.y - 2,
       alpha: 1,
       delay: 120,
+      duration: 340,
+      ease: "Sine.easeOut",
+    });
+  }
+
+  if (subtitleLineTwoText) {
+    scene.tweens.add({
+      targets: subtitleLineTwoText,
+      y: subtitleLineTwoText.y - 2,
+      alpha: 1,
+      delay: 160,
       duration: 340,
       ease: "Sine.easeOut",
     });
@@ -418,22 +492,37 @@ export function showFinishScreen(scene, options = {}) {
   scene.tweens.add({
     targets: buttonText,
     alpha: 1,
-    delay: 260 + lineTexts.length * 75,
-    duration: 240,
+    y: buttonText.y - 4,
+    delay: 520,
+    duration: 260,
     ease: "Sine.easeOut",
   });
 
-  buttonHit.on("pointerdown", () => {
-    if (window.onPhaserReturnToGames) {
-      window.onPhaserReturnToGames();
-      return;
-    }
-
-    if (window.onPhaserGameFinished) {
-      window.onPhaserGameFinished();
-    }
+  scene.tweens.add({
+    targets: buttonGlow,
+    alpha: { from: 0.22, to: 0.34 },
+    duration: 1200,
+    yoyo: true,
+    repeat: -1,
+    ease: "Sine.easeInOut",
   });
 
-  scene.endGame = titleText;
-  scene.endGameSubtitle = subtitleText;
+  buttonHit.on("pointerdown", () => {
+    buttonHit.disableInteractive();
+
+    scene.tweens.add({
+      targets: overlay,
+      alpha: 0,
+      duration: 180,
+      ease: "Sine.easeIn",
+      onComplete: () => {
+        overlay.destroy(true);
+        scene.finishOverlay = null;
+
+        if (window.onPhaserReturnToGames) {
+          window.onPhaserReturnToGames();
+        }
+      },
+    });
+  });
 }

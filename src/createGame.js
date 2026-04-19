@@ -39,6 +39,12 @@ export function createGame(gameKey, parent = "game-container", options = {}) {
     assignedProblems = [],
   } = options || {};
 
+  const safeStudentId = studentId ? String(studentId) : "";
+  const safeClassId = classId ? String(classId) : "";
+  const safeAssignedProblems = Array.isArray(assignedProblems)
+    ? assignedProblems
+    : [];
+
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     width: 1536,
@@ -59,13 +65,17 @@ export function createGame(gameKey, parent = "game-container", options = {}) {
     scene: [Preloader, SelectedScene],
   });
 
-  game.registry.set("studentId", studentId ? String(studentId) : "");
-  game.registry.set("classId", classId ? String(classId) : "");
+  game.registry.set("studentId", safeStudentId);
+  game.registry.set("classId", safeClassId);
   game.registry.set("gameKey", gameKey);
-  game.registry.set(
-    "assignedProblems",
-    Array.isArray(assignedProblems) ? assignedProblems : []
-  );
+  game.registry.set("assignedProblems", safeAssignedProblems);
+
+  console.log("🎮 createGame config", {
+    gameKey,
+    studentId: safeStudentId,
+    classId: safeClassId,
+    assignedProblems: safeAssignedProblems,
+  });
 
   return game;
 }

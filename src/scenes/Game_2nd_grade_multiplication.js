@@ -185,13 +185,17 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       ...this.tensProblems,
     ];
 
+    this.configuredProblems = this.getConfiguredProblems(this.problems);
+    const selectedProblems = this.pickFiveUniqueAnswerProblems(this.configuredProblems);
+    this.assignFiveQuestionAndAnswerSlots(selectedProblems);
+
     for (let i = 1; i <= 7; i++) {
       const y = 50 + (i - 1) * 100;
 
       this[`campGroundRow${i}`] = this.add.group({
         key: "camp",
         repeat: 11,
-        setXY: { x: 90, y, stepX: 180 },
+        setXY: { x: 90, y: y, stepX: 180 },
         setScale: { x: 3, y: 6 },
       });
     }
@@ -201,26 +205,6 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     this.add.image(100, 300, "campFire", 3).setScale(3);
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
-
-    const selectedProblems = this.pickFiveUniqueAnswerProblems(this.problems);
-    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-
-    [
-      this.question1,
-      this.question2,
-      this.question3,
-      this.question4,
-      this.question5,
-    ] = questionOrder;
-
-    [
-      this.answer1,
-      this.answer2,
-      this.answer3,
-      this.answer4,
-      this.answer5,
-    ] = answerOrder;
 
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
@@ -246,21 +230,19 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group([
-      this.trash1,
-      this.trash2,
-      this.trash3,
-      this.trash4,
-      this.trash5,
-    ]);
+    this.trashGroup = this.physics.add.group();
+    this.trashGroup.add(this.trash1);
+    this.trashGroup.add(this.trash2);
+    this.trashGroup.add(this.trash3);
+    this.trashGroup.add(this.trash4);
+    this.trashGroup.add(this.trash5);
 
-    this.trashCanGroup = this.physics.add.group([
-      this.trashCan1,
-      this.trashCan2,
-      this.trashCan3,
-      this.trashCan4,
-      this.trashCan5,
-    ]);
+    this.trashCanGroup = this.physics.add.group();
+    this.trashCanGroup.add(this.trashCan1);
+    this.trashCanGroup.add(this.trashCan2);
+    this.trashCanGroup.add(this.trashCan3);
+    this.trashCanGroup.add(this.trashCan4);
+    this.trashCanGroup.add(this.trashCan5);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -291,7 +273,7 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       if (!stillOverAny) {
         trash._lockedOnCan = false;
 
-        if (trash?.trashMath && !trash._dragging) {
+        if (trash && trash.active && trash.trashMath && !trash._dragging) {
           trash.trashMath.clearTint();
         }
       } else {
@@ -304,11 +286,12 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
 
-      trashCan.markCorrect?.();
+      if (trashCan.markCorrect) trashCan.markCorrect();
+
       trash.destroy();
       trashCan.destroy();
 
-      this.numCorrect++;
+      this.numCorrect += 1;
       this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
       if (this.numCorrect === 5) {
@@ -318,18 +301,18 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       return;
     }
 
-    this.numWrong++;
+    this.numWrong += 1;
 
-    const index = [
-      this.trash1,
-      this.trash2,
-      this.trash3,
-      this.trash4,
-      this.trash5,
-    ].indexOf(trash);
-
-    if (index !== -1) {
-      this.numGuessesPerAnswer[index].numGuess++;
+    if (trash === this.trash1) {
+      this.numGuessesPerAnswer[0].numGuess++;
+    } else if (trash === this.trash2) {
+      this.numGuessesPerAnswer[1].numGuess++;
+    } else if (trash === this.trash3) {
+      this.numGuessesPerAnswer[2].numGuess++;
+    } else if (trash === this.trash4) {
+      this.numGuessesPerAnswer[3].numGuess++;
+    } else if (trash === this.trash5) {
+      this.numGuessesPerAnswer[4].numGuess++;
     }
 
     this.playFeedbackSound(false);

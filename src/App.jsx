@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Login from "./components/Login.jsx";
 import Welcome from "./components/Welcome.jsx";
 import Assignments from "./components/Assignments.jsx";
@@ -9,7 +9,7 @@ import CursorOverlay from "./components/cursorOverlay.jsx";
 import "./App.css";
 
 import { db } from "./firebase";
-import { getAssignmentsForGrade } from "./assignmentService";
+import { subscribeAssignmentsForGrade } from "./assignmentService";
 import {
   collection,
   doc,
@@ -29,11 +29,16 @@ export default function App() {
   const [lockMap, setLockMap] = useState({});
 
   function handleStudentLogin(studentData) {
-    setStudent(studentData);
+    const normalizedStudent = {
+      ...(studentData || {}),
+      id: String(studentData?.id || ""),
+    };
+
+    setStudent(normalizedStudent);
     setTeacher(null);
     setScreen("welcome");
     setCurrentGameKey(null);
-    sessionStorage.setItem("studentId", studentData.id);
+    sessionStorage.setItem("studentId", normalizedStudent.id);
   }
 
   function handleTeacherLogin(teacherData) {
@@ -67,6 +72,11 @@ export default function App() {
     setScreen("shop");
   }
 
+  const handleFinishReturn = useCallback(() => {
+    setCurrentGameKey(null);
+    setScreen("assignments");
+  }, []);
+
   useEffect(() => {
     if (!student?.id) return;
 
@@ -76,11 +86,16 @@ export default function App() {
       studentRef,
       (snap) => {
         if (!snap.exists()) return;
-        setStudent((prev) => ({
-          ...(prev || {}),
-          id: String(student.id),
-          ...snap.data(),
-        }));
+
+        setStudent((prev) => {
+          const data = snap.data() || {};
+
+          return {
+            ...(prev || {}),
+            ...data,
+            id: String(student.id),
+          };
+        });
       },
       (error) => {
         console.error("Error watching student document:", error);
@@ -89,71 +104,78 @@ export default function App() {
   }, [student?.id]);
 
   useEffect(() => {
+    let unsubscribeAssignments = null;
     let unsubscribeResults = null;
     let unsubscribeClassroom = null;
 
-    async function loadStudentAssignmentState() {
-      setStudentAssignments([]);
-      setCompletedMap({});
-      setLockMap({});
+    setStudentAssignments([]);
+    setCompletedMap({});
+    setLockMap({});
 
-      if (!student?.grade) return;
+    if (!student?.grade) return;
 
-      const items = await getAssignmentsForGrade(student.grade);
-      setStudentAssignments(items);
+    unsubscribeAssignments = subscribeAssignmentsForGrade(
+      student.grade,
+      (items) => {
+        setStudentAssignments(Array.isArray(items) ? items : []);
+      },
+      (error) => {
+        console.error("Error watching assignments:", error);
+      }
+    );
 
-      if (!student?.id) return;
-
-      const resultsRef = collection(
-        db,
-        "students",
-        String(student.id),
-        "assignmentResults"
-      );
-
-      unsubscribeResults = onSnapshot(
-        resultsRef,
-        (snapshot) => {
-          const completed = {};
-          snapshot.forEach((docSnap) => {
-            const gameKey = docSnap.data()?.gameKey;
-            if (gameKey) completed[gameKey] = true;
-          });
-          setCompletedMap(completed);
-        },
-        (error) => {
-          console.error("Error watching completed assignments:", error);
-        }
-      );
-
-      const classQ = query(
-        collection(db, "classrooms"),
-        where("studentID", "array-contains", String(student.id))
-      );
-
-      unsubscribeClassroom = onSnapshot(
-        classQ,
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const classData = snapshot.docs[0].data();
-            const studentLocks =
-              classData?.studentAssignments?.[String(student.id)] || {};
-            setLockMap(studentLocks);
-          } else {
-            setLockMap({});
-          }
-        },
-        (error) => {
-          console.error("Error watching classroom locks:", error);
-        }
-      );
+    if (!student?.id) {
+      return () => {
+        if (unsubscribeAssignments) unsubscribeAssignments();
+      };
     }
 
-    if (student) {
-      loadStudentAssignmentState();
-    }
+    const resultsRef = collection(
+      db,
+      "students",
+      String(student.id),
+      "assignmentResults"
+    );
+
+    unsubscribeResults = onSnapshot(
+      resultsRef,
+      (snapshot) => {
+        const completed = {};
+        snapshot.forEach((docSnap) => {
+          const gameKey = docSnap.data()?.gameKey;
+          if (gameKey) completed[gameKey] = true;
+        });
+        setCompletedMap(completed);
+      },
+      (error) => {
+        console.error("Error watching completed assignments:", error);
+      }
+    );
+
+    const classQ = query(
+      collection(db, "classrooms"),
+      where("studentID", "array-contains", String(student.id))
+    );
+
+    unsubscribeClassroom = onSnapshot(
+      classQ,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const classData = snapshot.docs[0].data();
+          const studentLocks =
+            classData?.studentAssignments?.[String(student.id)] || {};
+          setLockMap(studentLocks);
+        } else {
+          setLockMap({});
+        }
+      },
+      (error) => {
+        console.error("Error watching classroom locks:", error);
+      }
+    );
 
     return () => {
+      if (unsubscribeAssignments) unsubscribeAssignments();
       if (unsubscribeResults) unsubscribeResults();
       if (unsubscribeClassroom) unsubscribeClassroom();
     };
@@ -207,10 +229,7 @@ export default function App() {
         <GamePage
           gameKey={currentGameKey}
           student={student}
-          onFinishReturn={() => {
-            setCurrentGameKey(null);
-            setScreen("assignments");
-          }}
+          onFinishReturn={handleFinishReturn}
         />
       );
     }

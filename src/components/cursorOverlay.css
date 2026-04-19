@@ -3,7 +3,6 @@
   inset: 0;
   z-index: 9999999;
   pointer-events: none;
-  overflow: hidden;
 }
 
 .cursor-sparkle-layer {
@@ -15,64 +14,73 @@
 .cursor-wrapper {
   position: fixed;
   pointer-events: none;
-  left: 0;
-  top: 0;
-  transform: translate(-14px, -6px);
+  transform: translate3d(0, 0, 0);
   z-index: 2;
-  will-change: left, top;
-}
-
-.cursor-overlay-image {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-
-  transform: rotate(-28deg);
-  transform-origin: 12px 10px;
-
-  filter: drop-shadow(0 0 4px rgba(255, 196, 110, 0.35));
-  animation: pawFloat 2.4s ease-in-out infinite;
-  transition: transform 120ms ease, filter 120ms ease;
   will-change: transform;
 }
 
-.cursor-overlay-image.clicking {
-  transform: rotate(-20deg) scale(0.9);
-  filter: drop-shadow(0 0 8px rgba(255, 196, 110, 0.45));
+/* 🐾 paw */
+.cursor-overlay-image {
+  width: 170px;
+  height: 170px;
+
+  transform: translate(-72px, -34px) rotate(-28deg) scale(1.6);
+  transform-origin: 30px 20px;
+
+  filter: drop-shadow(0 0 6px rgba(255, 210, 120, 0.55));
+  animation: pawFloat 2.6s ease-in-out infinite;
+  transition: transform 100ms ease;
 }
 
+.cursor-overlay-image.clicking {
+  transform: translate(-72px, -34px) rotate(-20deg) scale(1.4);
+}
+
+/* ✨ curved star sparkles */
 .cursor-sparkle {
   position: fixed;
   pointer-events: none;
-  z-index: 1;
-  background: linear-gradient(180deg, #fff7bf, #ffd45c, #f6a623);
-  clip-path: polygon(50% 0%, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0% 50%, 37% 37%);
-  animation: sparkleFade 500ms ease-out forwards;
+
+  background: linear-gradient(180deg, #fff8c9, #ffd960, #f6a623);
+
+  clip-path: polygon(
+    50% 0%,
+    62% 36%,
+    100% 50%,
+    62% 64%,
+    50% 100%,
+    38% 64%,
+    0% 50%,
+    38% 36%
+  );
+
   opacity: 0.95;
+  filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.5));
+
+  animation: sparkleFade 480ms ease-out forwards;
 }
 
+/* paw float */
 @keyframes pawFloat {
   0% {
-    transform: rotate(-28deg) translateY(0px);
+    transform: translate(-72px, -34px) rotate(-28deg) scale(1.6);
   }
   50% {
-    transform: rotate(-28deg) translateY(-3px);
+    transform: translate(-72px, -40px) rotate(-28deg) scale(1.6);
   }
   100% {
-    transform: rotate(-28deg) translateY(0px);
+    transform: translate(-72px, -34px) rotate(-28deg) scale(1.6);
   }
 }
 
+/* ✨ curved fade */
 @keyframes sparkleFade {
   0% {
     opacity: 0.95;
-    transform: scale(0.65);
+    transform: scale(0.7);
   }
   100% {
     opacity: 0;
-    transform: scale(0.2);
+    transform: scale(0.2) translateY(12px);
   }
 }

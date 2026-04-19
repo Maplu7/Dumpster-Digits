@@ -156,6 +156,21 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
           {question: "10+10", answer: 20}
         ];
 
+        this.allProblems = [
+          ...this.problems1,
+          ...this.problems2,
+          ...this.problems3,
+          ...this.problems4,
+          ...this.problems5,
+          ...this.problems6,
+          ...this.problems7,
+          ...this.problems8,
+          ...this.problems9,
+          ...this.problems10,
+        ];
+
+        this.configuredProblems = this.getConfiguredProblems(this.allProblems);
+
         for (let i = 1; i <= 7; i++) {
             const y = 50 + (i - 1) * 100;
 
@@ -173,66 +188,7 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
         this.add.image(1400, 200, 'campChairGreen', 0).setScale(2);
         this.add.image(1480, 280, 'campChairGreen', 2).setScale(2);
 
-        this.problem1 = Phaser.Utils.Array.GetRandom(this.problems1);
-        Phaser.Utils.Array.Remove(this.problems1, this.problem1);
-
-        this.problem2 = Phaser.Utils.Array.GetRandom(this.problems1);
-        Phaser.Utils.Array.Remove(this.problems1, this.problem2);
-
-        this.problem3 = Phaser.Utils.Array.GetRandom(this.problems1);
-        Phaser.Utils.Array.Remove(this.problems1, this.problem3);
-
-        this.problem4 = Phaser.Utils.Array.GetRandom(this.problems1);
-        Phaser.Utils.Array.Remove(this.problems1, this.problem4);
-
-        this.problem5 = Phaser.Utils.Array.GetRandom(this.problems1);
-        Phaser.Utils.Array.Remove(this.problems1, this.problem5);
-
-        this.possibleQuestions = [
-          this.problem1,
-          this.problem2,
-          this.problem3,
-          this.problem4,
-          this.problem5
-        ];
-
-        this.question1 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-        Phaser.Utils.Array.Remove(this.possibleQuestions, this.question1);
-
-        this.question2 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-        Phaser.Utils.Array.Remove(this.possibleQuestions, this.question2);
-
-        this.question3 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-        Phaser.Utils.Array.Remove(this.possibleQuestions, this.question3);
-
-        this.question4 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-        Phaser.Utils.Array.Remove(this.possibleQuestions, this.question4);
-
-        this.question5 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-        Phaser.Utils.Array.Remove(this.possibleQuestions, this.question5);
-
-        this.possibleAnswers = [
-          this.problem1,
-          this.problem2,
-          this.problem3,
-          this.problem4,
-          this.problem5
-        ];
-
-        this.answer1 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-        Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer1);
-
-        this.answer2 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-        Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer2);
-
-        this.answer3 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-        Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer3);
-
-        this.answer4 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-        Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer4);
-
-        this.answer5 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-        Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer5);
+        this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
         this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
         this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
@@ -282,6 +238,7 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     }
 
     putInTrash(trash, trashCan) {
+        if (this.introActive) return;
         if (trashCan && trashCan._disabled) return;
         if (trash._lockedOnCan) return;
         trash._lockedOnCan = true;

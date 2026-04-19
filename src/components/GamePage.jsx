@@ -3,7 +3,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import "./GamePage.css";
 import createGame from "../createGame";
 import { db } from "../firebase";
-import { getAssignedProblemsForGame } from "../getAssignedProblemsForGame";
+import { subscribeAssignedProblemsForGame } from "../getAssignedProblemsForGame";
 
 const ASSIGNMENTS_TITLE_COLOR = "#ffe7b4";
 const DEFAULT_PROFILE_IMAGE = "/raccacoonies/what.jpeg";
@@ -41,9 +41,57 @@ function resolveStudentClassId(student) {
   );
 }
 
+function normalizeProblems(problems) {
+  if (!Array.isArray(problems)) return [];
+
+  return problems
+    .map((problem) => {
+      if (!problem || typeof problem !== "object") return null;
+
+      const question = String(problem.question ?? "").trim();
+      const answer = Number(problem.answer);
+
+      if (!question || Number.isNaN(answer)) return null;
+
+      return { question, answer };
+    })
+    .filter(Boolean);
+}
+
+function problemKey(problem) {
+  return `${String(problem?.question ?? "").trim()}::${Number(problem?.answer)}`;
+}
+
+function dedupeProblems(problems) {
+  const seen = new Map();
+
+  normalizeProblems(problems).forEach((problem) => {
+    seen.set(problemKey(problem), problem);
+  });
+
+  return [...seen.values()];
+}
+
+function areProblemSetsEqual(a = [], b = []) {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; i += 1) {
+    const left = a[i] || {};
+    const right = b[i] || {};
+
+    if (String(left.question) !== String(right.question)) return false;
+    if (Number(left.answer) !== Number(right.answer)) return false;
+  }
+
+  return true;
+}
+
 export default function GamePage({ gameKey, onFinishReturn, student }) {
   const gameContainerRef = useRef(null);
   const gameRef = useRef(null);
+  const previousProblemsRef = useRef([]);
 
   const [isLoadingGame, setIsLoadingGame] = useState(true);
   const [equippedImage, setEquippedImage] = useState(DEFAULT_PROFILE_IMAGE);
@@ -51,53 +99,83 @@ export default function GamePage({ gameKey, onFinishReturn, student }) {
 
   useEffect(() => {
     let cancelled = false;
+    let unsubscribeAssignedProblems = null;
 
     const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousBodyOverflow = document.body.style.overflow;
     const previousBodyOverflowX = document.body.style.overflowX;
     const previousBodyOverflowY = document.body.style.overflowY;
 
-    async function bootGame() {
-      setIsLoadingGame(true);
+    setIsLoadingGame(true);
+    previousProblemsRef.current = [];
 
-      if (!gameContainerRef.current || !gameKey) {
+    if (!gameContainerRef.current || !gameKey) {
+      setIsLoadingGame(false);
+      return () => {};
+    }
+
+    const studentId =
+      String(student?.id || sessionStorage.getItem("studentId") || "").trim();
+
+    const classId = String(resolveStudentClassId(student)).trim();
+    const fallbackProblems = dedupeProblems(assignmentProblemBanks[gameKey] || []);
+
+    console.log("🎯 FINAL studentId being passed to game:", studentId);
+    console.log("🚀 Booting game with:", {
+      gameKey,
+      studentId,
+      classId,
+      fallbackProblems,
+    });
+
+    if (!studentId) {
+      console.warn("⛔ Game blocked: missing studentId");
+      setIsLoadingGame(false);
+      return () => {};
+    }
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.overflowX = "hidden";
+    document.body.style.overflowY = "hidden";
+
+    window.onPhaserReturnToGames = () => {
+      if (!cancelled) {
+        document.documentElement.style.overflow = previousHtmlOverflow;
+        document.body.style.overflow = previousBodyOverflow;
+        document.body.style.overflowX = previousBodyOverflowX;
+        document.body.style.overflowY = previousBodyOverflowY;
+        onFinishReturn?.();
+      }
+    };
+
+    window.onPhaserGameFinished = () => {};
+
+    const rebuildGame = (assignedProblemsRaw) => {
+      if (cancelled || !gameContainerRef.current) return;
+
+      const assignedProblems = dedupeProblems(assignedProblemsRaw);
+
+      if (
+        gameRef.current &&
+        areProblemSetsEqual(previousProblemsRef.current, assignedProblems)
+      ) {
         setIsLoadingGame(false);
         return;
       }
 
-      const studentId = student?.id || null;
-      const classId = resolveStudentClassId(student);
-      const fallbackProblems = assignmentProblemBanks[gameKey] || [];
+      previousProblemsRef.current = assignedProblems;
+
+      if (gameRef.current) {
+        try {
+          gameRef.current.destroy(true);
+        } catch (error) {
+          console.error("Error destroying previous Phaser game:", error);
+        }
+        gameRef.current = null;
+      }
 
       try {
-        // lock page scroll while inside the game
-        document.documentElement.style.overflow = "hidden";
-        document.body.style.overflow = "hidden";
-        document.body.style.overflowX = "hidden";
-        document.body.style.overflowY = "hidden";
-
-        // only leave the game when the Phaser return button is clicked
-        window.onPhaserReturnToGames = () => {
-          if (!cancelled) {
-            document.documentElement.style.overflow = previousHtmlOverflow;
-            document.body.style.overflow = previousBodyOverflow;
-            document.body.style.overflowX = previousBodyOverflowX;
-            document.body.style.overflowY = previousBodyOverflowY;
-            onFinishReturn?.();
-          }
-        };
-
-        // do NOT auto-return on finish anymore
-        window.onPhaserGameFinished = () => {};
-
-        const assignedProblems = await getAssignedProblemsForGame({
-          classId,
-          gameKey,
-          fallbackProblems,
-        });
-
-        if (cancelled || !gameContainerRef.current) return;
-
         gameRef.current = createGame(gameKey, gameContainerRef.current, {
           studentId,
           classId,
@@ -110,16 +188,31 @@ export default function GamePage({ gameKey, onFinishReturn, student }) {
           setIsLoadingGame(false);
         }
       }
-    }
+    };
 
-    bootGame();
+    unsubscribeAssignedProblems = subscribeAssignedProblemsForGame(
+      {
+        classId,
+        gameKey,
+        fallbackProblems,
+      },
+      rebuildGame,
+      (error) => {
+        console.error("Error watching assigned problems for game:", error);
+        if (!cancelled) setIsLoadingGame(false);
+      }
+    );
 
     return () => {
       cancelled = true;
+
+      if (typeof unsubscribeAssignedProblems === "function") {
+        unsubscribeAssignedProblems();
+      }
+
       window.onPhaserReturnToGames = null;
       window.onPhaserGameFinished = null;
 
-      // always restore scroll when leaving the game page
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.overflowX = previousBodyOverflowX;
@@ -136,12 +229,12 @@ export default function GamePage({ gameKey, onFinishReturn, student }) {
     };
   }, [
     gameKey,
-    onFinishReturn,
     student?.id,
     student?.classId,
     student?.classID,
     student?.classroomId,
     student?.classroomID,
+    onFinishReturn,
   ]);
 
   useEffect(() => {

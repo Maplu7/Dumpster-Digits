@@ -33,143 +33,143 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     });
 
     this.problems1 = [
-      { question: "1+__=1", answer: 0 },
-      { question: "1+__=2", answer: 1 },
-      { question: "1+__=3", answer: 2 },
-      { question: "1+__=4", answer: 3 },
-      { question: "1+__=5", answer: 4 },
-      { question: "1+__=6", answer: 5 },
-      { question: "1+__=7", answer: 6 },
-      { question: "1+__=8", answer: 7 },
-      { question: "1+__=9", answer: 8 },
-      { question: "1+__=10", answer: 9 },
-      { question: "1+__=11", answer: 10 },
+      { question: "1+?=1", answer: 0 },
+      { question: "1+?=2", answer: 1 },
+      { question: "1+?=3", answer: 2 },
+      { question: "1+?=4", answer: 3 },
+      { question: "1+?=5", answer: 4 },
+      { question: "1+?=6", answer: 5 },
+      { question: "1+?=7", answer: 6 },
+      { question: "1+?=8", answer: 7 },
+      { question: "1+?=9", answer: 8 },
+      { question: "1+?=10", answer: 9 },
+      { question: "1+?=11", answer: 10 },
     ];
 
     this.problems2 = [
-      { question: "2+__=2", answer: 0 },
-      { question: "2+__=3", answer: 1 },
-      { question: "2+__=4", answer: 2 },
-      { question: "2+__=5", answer: 3 },
-      { question: "2+__=6", answer: 4 },
-      { question: "2+__=7", answer: 5 },
-      { question: "2+__=8", answer: 6 },
-      { question: "2+__=9", answer: 7 },
-      { question: "2+__=10", answer: 8 },
-      { question: "2+__=11", answer: 9 },
-      { question: "2+__=12", answer: 10 },
+      { question: "2+?=2", answer: 0 },
+      { question: "2+?=3", answer: 1 },
+      { question: "2+?=4", answer: 2 },
+      { question: "2+?=5", answer: 3 },
+      { question: "2+?=6", answer: 4 },
+      { question: "2+?=7", answer: 5 },
+      { question: "2+?=8", answer: 6 },
+      { question: "2+?=9", answer: 7 },
+      { question: "2+?=10", answer: 8 },
+      { question: "2+?=11", answer: 9 },
+      { question: "2+?=12", answer: 10 },
     ];
 
     this.problems3 = [
-      { question: "3+__=3", answer: 0 },
-      { question: "3+__=4", answer: 1 },
-      { question: "3+__=5", answer: 2 },
-      { question: "3+__=6", answer: 3 },
-      { question: "3+__=7", answer: 4 },
-      { question: "3+__=8", answer: 5 },
-      { question: "3+__=9", answer: 6 },
-      { question: "3+__=10", answer: 7 },
-      { question: "3+__=11", answer: 8 },
-      { question: "3+__=12", answer: 9 },
-      { question: "3+__=13", answer: 10 },
+      { question: "3+?=3", answer: 0 },
+      { question: "3+?=4", answer: 1 },
+      { question: "3+?=5", answer: 2 },
+      { question: "3+?=6", answer: 3 },
+      { question: "3+?=7", answer: 4 },
+      { question: "3+?=8", answer: 5 },
+      { question: "3+?=9", answer: 6 },
+      { question: "3+?=10", answer: 7 },
+      { question: "3+?=11", answer: 8 },
+      { question: "3+?=12", answer: 9 },
+      { question: "3+?=13", answer: 10 },
     ];
 
     this.problems4 = [
-      { question: "4+__=4", answer: 0 },
-      { question: "4+__=5", answer: 1 },
-      { question: "4+__=6", answer: 2 },
-      { question: "4+__=7", answer: 3 },
-      { question: "4+__=8", answer: 4 },
-      { question: "4+__=9", answer: 5 },
-      { question: "4+__=10", answer: 6 },
-      { question: "4+__=11", answer: 7 },
-      { question: "4+__=12", answer: 8 },
-      { question: "4+__=13", answer: 9 },
-      { question: "4+__=14", answer: 10 },
+      { question: "4+?=4", answer: 0 },
+      { question: "4+?=5", answer: 1 },
+      { question: "4+?=6", answer: 2 },
+      { question: "4+?=7", answer: 3 },
+      { question: "4+?=8", answer: 4 },
+      { question: "4+?=9", answer: 5 },
+      { question: "4+?=10", answer: 6 },
+      { question: "4+?=11", answer: 7 },
+      { question: "4+?=12", answer: 8 },
+      { question: "4+?=13", answer: 9 },
+      { question: "4+?=14", answer: 10 },
     ];
 
     this.problems5 = [
-      { question: "5+__=5", answer: 0 },
-      { question: "5+__=6", answer: 1 },
-      { question: "5+__=7", answer: 2 },
-      { question: "5+__=8", answer: 3 },
-      { question: "5+__=9", answer: 4 },
-      { question: "5+__=10", answer: 5 },
-      { question: "5+__=11", answer: 6 },
-      { question: "5+__=12", answer: 7 },
-      { question: "5+__=13", answer: 8 },
-      { question: "5+__=14", answer: 9 },
-      { question: "5+__=15", answer: 10 },
+      { question: "5+?=5", answer: 0 },
+      { question: "5+?=6", answer: 1 },
+      { question: "5+?=7", answer: 2 },
+      { question: "5+?=8", answer: 3 },
+      { question: "5+?=9", answer: 4 },
+      { question: "5+?=10", answer: 5 },
+      { question: "5+?=11", answer: 6 },
+      { question: "5+?=12", answer: 7 },
+      { question: "5+?=13", answer: 8 },
+      { question: "5+?=14", answer: 9 },
+      { question: "5+?=15", answer: 10 },
     ];
 
     this.problems6 = [
-      { question: "6+__=6", answer: 0 },
-      { question: "6+__=7", answer: 1 },
-      { question: "6+__=8", answer: 2 },
-      { question: "6+__=9", answer: 3 },
-      { question: "6+__=10", answer: 4 },
-      { question: "6+__=11", answer: 5 },
-      { question: "6+__=12", answer: 6 },
-      { question: "6+__=13", answer: 7 },
-      { question: "6+__=14", answer: 8 },
-      { question: "6+__=15", answer: 9 },
-      { question: "6+__=16", answer: 10 },
+      { question: "6+?=6", answer: 0 },
+      { question: "6+?=7", answer: 1 },
+      { question: "6+?=8", answer: 2 },
+      { question: "6+?=9", answer: 3 },
+      { question: "6+?=10", answer: 4 },
+      { question: "6+?=11", answer: 5 },
+      { question: "6+?=12", answer: 6 },
+      { question: "6+?=13", answer: 7 },
+      { question: "6+?=14", answer: 8 },
+      { question: "6+?=15", answer: 9 },
+      { question: "6+?=16", answer: 10 },
     ];
 
     this.problems7 = [
-      { question: "7+__=7", answer: 0 },
-      { question: "7+__=8", answer: 1 },
-      { question: "7+__=9", answer: 2 },
-      { question: "7+__=10", answer: 3 },
-      { question: "7+__=11", answer: 4 },
-      { question: "7+__=12", answer: 5 },
-      { question: "7+__=13", answer: 6 },
-      { question: "7+__=14", answer: 7 },
-      { question: "7+__=15", answer: 8 },
-      { question: "7+__=16", answer: 9 },
-      { question: "7+__=17", answer: 10 },
+      { question: "7+?=7", answer: 0 },
+      { question: "7+?=8", answer: 1 },
+      { question: "7+?=9", answer: 2 },
+      { question: "7+?=10", answer: 3 },
+      { question: "7+?=11", answer: 4 },
+      { question: "7+?=12", answer: 5 },
+      { question: "7+?=13", answer: 6 },
+      { question: "7+?=14", answer: 7 },
+      { question: "7+?=15", answer: 8 },
+      { question: "7+?=16", answer: 9 },
+      { question: "7+?=17", answer: 10 },
     ];
 
     this.problems8 = [
-      { question: "8+__=8", answer: 0 },
-      { question: "8+__=9", answer: 1 },
-      { question: "8+__=10", answer: 2 },
-      { question: "8+__=11", answer: 3 },
-      { question: "8+__=12", answer: 4 },
-      { question: "8+__=13", answer: 5 },
-      { question: "8+__=14", answer: 6 },
-      { question: "8+__=15", answer: 7 },
-      { question: "8+__=16", answer: 8 },
-      { question: "8+__=17", answer: 9 },
-      { question: "8+__=18", answer: 10 },
+      { question: "8+?=8", answer: 0 },
+      { question: "8+?=9", answer: 1 },
+      { question: "8+?=10", answer: 2 },
+      { question: "8+?=11", answer: 3 },
+      { question: "8+?=12", answer: 4 },
+      { question: "8+?=13", answer: 5 },
+      { question: "8+?=14", answer: 6 },
+      { question: "8+?=15", answer: 7 },
+      { question: "8+?=16", answer: 8 },
+      { question: "8+?=17", answer: 9 },
+      { question: "8+?=18", answer: 10 },
     ];
 
     this.problems9 = [
-      { question: "9+__=9", answer: 0 },
-      { question: "9+__=10", answer: 1 },
-      { question: "9+__=11", answer: 2 },
-      { question: "9+__=12", answer: 3 },
-      { question: "9+__=13", answer: 4 },
-      { question: "9+__=14", answer: 5 },
-      { question: "9+__=15", answer: 6 },
-      { question: "9+__=16", answer: 7 },
-      { question: "9+__=17", answer: 8 },
-      { question: "9+__=18", answer: 9 },
-      { question: "9+__=19", answer: 10 },
+      { question: "9+?=9", answer: 0 },
+      { question: "9+?=10", answer: 1 },
+      { question: "9+?=11", answer: 2 },
+      { question: "9+?=12", answer: 3 },
+      { question: "9+?=13", answer: 4 },
+      { question: "9+?=14", answer: 5 },
+      { question: "9+?=15", answer: 6 },
+      { question: "9+?=16", answer: 7 },
+      { question: "9+?=17", answer: 8 },
+      { question: "9+?=18", answer: 9 },
+      { question: "9+?=19", answer: 10 },
     ];
 
     this.problems10 = [
-      { question: "10+__=10", answer: 0 },
-      { question: "10+__=11", answer: 1 },
-      { question: "10+__=12", answer: 2 },
-      { question: "10+__=13", answer: 3 },
-      { question: "10+__=14", answer: 4 },
-      { question: "10+__=15", answer: 5 },
-      { question: "10+__=16", answer: 6 },
-      { question: "10+__=17", answer: 7 },
-      { question: "10+__=18", answer: 8 },
-      { question: "10+__=19", answer: 9 },
-      { question: "10+__=20", answer: 10 },
+      { question: "10+?=10", answer: 0 },
+      { question: "10+?=11", answer: 1 },
+      { question: "10+?=12", answer: 2 },
+      { question: "10+?=13", answer: 3 },
+      { question: "10+?=14", answer: 4 },
+      { question: "10+?=15", answer: 5 },
+      { question: "10+?=16", answer: 6 },
+      { question: "10+?=17", answer: 7 },
+      { question: "10+?=18", answer: 8 },
+      { question: "10+?=19", answer: 9 },
+      { question: "10+?=20", answer: 10 },
     ];
 
     this.problems = [
@@ -185,13 +185,19 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
       ...this.problems10,
     ];
 
+    this.configuredProblems = this.getConfiguredProblems(this.problems);
+    const selectedProblems = this.pickFiveUniqueAnswerProblems(
+      this.configuredProblems
+    );
+    this.assignFiveQuestionAndAnswerSlots(selectedProblems);
+
     for (let i = 1; i <= 7; i++) {
       const y = 50 + (i - 1) * 100;
 
       this[`campGroundRow${i}`] = this.add.group({
         key: "camp",
         repeat: 11,
-        setXY: { x: 90, y, stepX: 180 },
+        setXY: { x: 90, y: y, stepX: 180 },
         setScale: { x: 3, y: 6 },
       });
     }
@@ -201,26 +207,6 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     this.add.image(100, 300, "campFire", 3).setScale(3);
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
-
-    const selectedProblems = this.pickFiveUniqueAnswerProblems(this.problems);
-    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-
-    [
-      this.question1,
-      this.question2,
-      this.question3,
-      this.question4,
-      this.question5,
-    ] = questionOrder;
-
-    [
-      this.answer1,
-      this.answer2,
-      this.answer3,
-      this.answer4,
-      this.answer5,
-    ] = answerOrder;
 
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
@@ -246,21 +232,19 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group([
-      this.trash1,
-      this.trash2,
-      this.trash3,
-      this.trash4,
-      this.trash5,
-    ]);
+    this.trashGroup = this.physics.add.group();
+    this.trashGroup.add(this.trash1);
+    this.trashGroup.add(this.trash2);
+    this.trashGroup.add(this.trash3);
+    this.trashGroup.add(this.trash4);
+    this.trashGroup.add(this.trash5);
 
-    this.trashCanGroup = this.physics.add.group([
-      this.trashCan1,
-      this.trashCan2,
-      this.trashCan3,
-      this.trashCan4,
-      this.trashCan5,
-    ]);
+    this.trashCanGroup = this.physics.add.group();
+    this.trashCanGroup.add(this.trashCan1);
+    this.trashCanGroup.add(this.trashCan2);
+    this.trashCanGroup.add(this.trashCan3);
+    this.trashCanGroup.add(this.trashCan4);
+    this.trashCanGroup.add(this.trashCan5);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -313,7 +297,12 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
       this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
       if (this.numCorrect === 5) {
-        this.time.delayedCall(this.feedbackDuration + 250, this.onFinish, [], this);
+        this.time.delayedCall(
+          this.feedbackDuration + 250,
+          this.onFinish,
+          [],
+          this
+        );
       }
 
       return;
@@ -321,23 +310,25 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
 
     this.numWrong += 1;
 
-    const index = [
-      this.trash1,
-      this.trash2,
-      this.trash3,
-      this.trash4,
-      this.trash5,
-    ].indexOf(trash);
-
-    if (index !== -1) {
-      this.numGuessesPerAnswer[index].numGuess++;
+    if (trash === this.trash1) {
+      this.numGuessesPerAnswer[0].numGuess++;
+    } else if (trash === this.trash2) {
+      this.numGuessesPerAnswer[1].numGuess++;
+    } else if (trash === this.trash3) {
+      this.numGuessesPerAnswer[2].numGuess++;
+    } else if (trash === this.trash4) {
+      this.numGuessesPerAnswer[3].numGuess++;
+    } else if (trash === this.trash5) {
+      this.numGuessesPerAnswer[4].numGuess++;
     }
 
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
 
-    this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
+    this.time.delayedCall(this.feedbackDuration, () =>
+      this.clearCenteredFeedback()
+    );
     this.triesUsed += 1;
 
     unlockWhenLeaving();

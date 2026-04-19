@@ -10,37 +10,107 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     this.assignedProblems = [];
     this.bgMusic = null;
+    this.studentId = "";
+    this.classId = "";
+    this.gameKey = "";
+    this.assignmentTitle = "";
+    this.saveResults = null;
+    this.unsubscribeLiveProblems = null;
   }
 
   init(data) {
-    const fromData = Array.isArray(data?.assignedProblems)
+    const fromDataProblems = Array.isArray(data?.assignedProblems)
       ? data.assignedProblems
       : [];
-
-    const fromRegistry = this.registry.get("assignedProblems");
+    const fromRegistryProblems = this.registry.get("assignedProblems");
 
     this.assignedProblems =
-      fromData.length > 0
-        ? fromData
-        : Array.isArray(fromRegistry)
-          ? fromRegistry
+      fromDataProblems.length > 0
+        ? fromDataProblems
+        : Array.isArray(fromRegistryProblems)
+          ? fromRegistryProblems
           : [];
+
+    this.studentId = String(
+      data?.studentId ||
+      this.registry.get("studentId") ||
+      ""
+    ).trim();
+
+    this.classId = String(
+      data?.classId ||
+      this.registry.get("classId") ||
+      ""
+    ).trim();
+
+    console.log("🧩 BaseMathGameScene init", {
+      scene: this.scene.key,
+      studentId: this.studentId,
+      classId: this.classId,
+      assignedProblems: this.assignedProblems,
+    });
+  }
+
+  normalizeProblem(problem) {
+    if (!problem || typeof problem !== "object") return null;
+
+    const question = String(problem.question ?? "").trim();
+    const answer = Number(problem.answer);
+
+    if (!question || Number.isNaN(answer)) return null;
+
+    return { question, answer };
+  }
+
+  problemKey(problem) {
+    return `${String(problem?.question ?? "").trim()}::${Number(problem?.answer)}`;
+  }
+
+  dedupeProblems(problems = []) {
+    const seen = new Map();
+
+    (Array.isArray(problems) ? problems : []).forEach((problem) => {
+      const normalized = this.normalizeProblem(problem);
+      if (!normalized) return;
+      seen.set(this.problemKey(normalized), normalized);
+    });
+
+    return [...seen.values()];
   }
 
   getConfiguredProblems(fallbackProblems = []) {
+    const normalizedAssigned = this.dedupeProblems(this.assignedProblems);
+    const normalizedFallback = this.dedupeProblems(fallbackProblems);
+
     const problems =
-      this.assignedProblems.length > 0
-        ? this.assignedProblems
-        : fallbackProblems;
+      normalizedAssigned.length > 0
+        ? normalizedAssigned
+        : normalizedFallback;
 
     console.log("🧠 Loaded Problems:", problems);
-
     return problems;
   }
 
+  updateAssignedProblems(newProblems = []) {
+    this.assignedProblems = this.dedupeProblems(newProblems);
+    this.registry.set("assignedProblems", this.assignedProblems);
+
+    console.log("🔄 Scene assigned problems updated", {
+      scene: this.scene.key,
+      gameKey: this.gameKey,
+      classId: this.classId,
+      count: this.assignedProblems.length,
+      assignedProblems: this.assignedProblems,
+    });
+
+    if (typeof this.onAssignedProblemsUpdated === "function") {
+      this.onAssignedProblemsUpdated(this.assignedProblems);
+    }
+  }
+
   initSharedGameConfig({ gameKey, assignmentTitle }) {
-    this.gameKey = gameKey;
-    this.assignmentTitle = assignmentTitle;
+    this.gameKey = String(gameKey || this.registry.get("gameKey") || "").trim();
+    this.assignmentTitle = assignmentTitle || this.gameKey;
 
     this.feedbackDuration = 1100;
     this.correctSoundKey = "correctSfx";
@@ -50,28 +120,125 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.introOverlay = null;
     this._introShown = false;
 
+    this.registry.set("studentId", this.studentId || "");
+    this.registry.set("classId", this.classId || "");
+    this.registry.set("gameKey", this.gameKey || "");
+    this.registry.set("assignmentTitle", this.assignmentTitle || "");
+    this.registry.set("assignedProblems", this.assignedProblems || []);
+
     this.startBackgroundMusic();
 
-    this.events.once("shutdown", this.cleanupSceneAudio, this);
-    this.events.once("destroy", this.cleanupSceneAudio, this);
+    this.events.once("shutdown", () => {
+      this.cleanupSceneAudio();
+      this.cleanupLiveAssignmentSync();
+    });
+
+    this.events.once("destroy", () => {
+      this.cleanupSceneAudio();
+      this.cleanupLiveAssignmentSync();
+    });
 
     this.saveResults = async () => {
-      const studentId = this.studentId || this.registry.get("studentId");
+      const studentId = String(
+        this.studentId || this.registry.get("studentId") || ""
+      ).trim();
 
-      return await saveAssignmentResult({
+      const gameKey = String(
+        this.gameKey || this.registry.get("gameKey") || ""
+      ).trim();
+
+      const payload = {
         studentId,
-        gameKey: this.gameKey,
-        assignmentTitle: this.assignmentTitle,
-        totalWrongGuesses: this.numWrong || 0,
-        numGuessesPerAnswer: this.numGuessesPerAnswer || [],
-        perfectRun: this.isPerfectRun(),
-        celebrationMessage: this.getCelebrationMessage(),
-      });
+        gameKey,
+        assignmentTitle: this.assignmentTitle || gameKey,
+        totalWrongGuesses: Number(this.numWrong || 0),
+        numGuessesPerAnswer: Array.isArray(this.numGuessesPerAnswer)
+          ? this.numGuessesPerAnswer
+          : [],
+      };
+
+      console.log("💾 saveResults payload", payload);
+
+      if (!payload.studentId) {
+        throw new Error(
+          `[${this.scene.key}] save blocked: missing studentId`
+        );
+      }
+
+      if (!payload.gameKey) {
+        throw new Error(
+          `[${this.scene.key}] save blocked: missing gameKey`
+        );
+      }
+
+      const result = await saveAssignmentResult(payload);
+      console.log("✅ saveAssignmentResult result", result);
+      return result;
     };
 
     this.time.delayedCall(0, () => {
       this.showGameIntroOverlay();
     });
+  }
+
+  cleanupLiveAssignmentSync() {
+    if (typeof this.unsubscribeLiveProblems === "function") {
+      try {
+        this.unsubscribeLiveProblems();
+      } catch (error) {
+        console.error("Error cleaning up live assignment sync:", error);
+      }
+    }
+
+    this.unsubscribeLiveProblems = null;
+  }
+
+  pickUniqueProblemsByAnswer(problemPool, count = 5) {
+    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
+    const selected = [];
+    const usedAnswers = new Set();
+
+    for (const problem of shuffled) {
+      const answerKey = String(problem?.answer);
+      if (usedAnswers.has(answerKey)) continue;
+
+      usedAnswers.add(answerKey);
+      selected.push(problem);
+
+      if (selected.length === count) break;
+    }
+
+    if (selected.length < count) {
+      throw new Error(
+        `[${this.scene.key}] Not enough unique-answer problems to choose ${count}.`
+      );
+    }
+
+    return selected;
+  }
+
+  assignFiveQuestionAndAnswerSlots(problemPool) {
+    const selectedProblems = this.pickUniqueProblemsByAnswer(problemPool, 5);
+    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+
+    [
+      this.question1,
+      this.question2,
+      this.question3,
+      this.question4,
+      this.question5,
+    ] = questionOrder;
+
+    [
+      this.answer1,
+      this.answer2,
+      this.answer3,
+      this.answer4,
+      this.answer5,
+    ] = answerOrder;
+
+    return selectedProblems;
   }
 
   startBackgroundMusic() {
@@ -151,8 +318,10 @@ export class BaseMathGameScene extends Phaser.Scene {
   isPerfectRun() {
     if (!Array.isArray(this.numGuessesPerAnswer)) return false;
     return (
-      this.numWrong === 0 &&
-      this.numGuessesPerAnswer.every((entry) => entry.numGuess === 0)
+      Number(this.numWrong || 0) === 0 &&
+      this.numGuessesPerAnswer.every(
+        (entry) => Number(entry?.numGuess || 0) === 0
+      )
     );
   }
 
@@ -213,7 +382,10 @@ export class BaseMathGameScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.feedbackContainer = this.add.container(centerX, centerY, [shadowText, text]);
+    this.feedbackContainer = this.add.container(centerX, centerY, [
+      shadowText,
+      text,
+    ]);
     this.feedbackContainer.setDepth(100);
     this.feedbackContainer.setScrollFactor(0);
     this.feedbackContainer.setAlpha(0);
@@ -632,6 +804,12 @@ export class BaseMathGameScene extends Phaser.Scene {
     const perfectRun = this.isPerfectRun();
 
     try {
+      if (typeof this.saveResults !== "function") {
+        throw new Error(
+          `[${this.scene.key}] saveResults is missing. Make sure this scene calls initSharedGameConfig(...).`
+        );
+      }
+
       const rewardResult = await this.saveResults();
       console.log("rewardResult:", rewardResult);
       coinsEarned = rewardResult?.coinReward || 0;

@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 const FALLBACK_ASSIGNMENTS = {
   1: [
@@ -26,7 +26,8 @@ const FALLBACK_ASSIGNMENTS = {
     {
       id: "grade2-addition",
       title: "2nd Grade Addition",
-      description: "Practice bigger addition facts by dragging trash to the correct can.",
+      description:
+        "Practice bigger addition facts by dragging trash to the correct can.",
       grade: 2,
       gameKey: "2nd_addition",
       enabled: true,
@@ -44,7 +45,8 @@ const FALLBACK_ASSIGNMENTS = {
     {
       id: "grade2-fill-blank",
       title: "2nd Grade Fill in the Blank",
-      description: "Solve the missing number problem and drag trash to the right can.",
+      description:
+        "Solve the missing number problem and drag trash to the right can.",
       grade: 2,
       gameKey: "2nd_fill_blank",
       enabled: true,
@@ -62,7 +64,8 @@ const FALLBACK_ASSIGNMENTS = {
     {
       id: "grade2-multiplication",
       title: "2nd Grade Multiplication",
-      description: "Practice multiplication by dragging trash to the correct can.",
+      description:
+        "Practice multiplication by dragging trash to the correct can.",
       grade: 2,
       gameKey: "2nd_multiplication",
       enabled: true,
@@ -90,10 +93,19 @@ function getFallbackGameKey(docId, title, description, grade) {
   }
 
   if (grade === 2) {
-    if (text.includes("fill in the blank") || text.includes("fill-blank") || text.includes("missing number")) {
+    if (
+      text.includes("fill in the blank") ||
+      text.includes("fill-blank") ||
+      text.includes("missing number")
+    ) {
       return "2nd_fill_blank";
     }
-    if (text.includes("place value") || text.includes("tens") || text.includes("ones") || text.includes("hundreds")) {
+    if (
+      text.includes("place value") ||
+      text.includes("tens") ||
+      text.includes("ones") ||
+      text.includes("hundreds")
+    ) {
       return "2nd_place_value";
     }
     if (text.includes("multiplication")) {
@@ -110,62 +122,92 @@ function getFallbackGameKey(docId, title, description, grade) {
   return null;
 }
 
-export async function getAssignmentsForGrade(gradeRaw) {
-  const grade = Number(gradeRaw);
-  if (!grade) return [];
-
-  try {
-    const snap = await getDocs(collection(db, "assignments"));
-
-    const dbItems = snap.docs
-      .map((docSnap) => {
-        const data = docSnap.data() || {};
-        const gradeValue = Number(data.grade);
-        const fallbackGameKey = getFallbackGameKey(
-          docSnap.id,
-          data.title,
-          data.description,
-          gradeValue
-        );
-
-        const gameKey = VALID_GAME_KEYS.has(data.gameKey)
-          ? data.gameKey
-          : fallbackGameKey;
-
-        return {
-          id: docSnap.id,
-          ...data,
-          grade: gradeValue,
-          gameKey,
-        };
-      })
-      .filter((item) => item.grade === grade)
-      .filter((item) => item.enabled !== false)
-      .filter((item) => Boolean(item.gameKey));
-
-    const merged = new Map();
-
-    for (const item of FALLBACK_ASSIGNMENTS[grade] ?? []) {
-      merged.set(item.gameKey, item);
-    }
-
-    for (const item of dbItems) {
-      const fallbackMatch = (FALLBACK_ASSIGNMENTS[grade] || []).find(
-        (fallbackItem) => fallbackItem.gameKey === item.gameKey
+function mergeAssignmentsForGrade(grade, docs = []) {
+  const dbItems = docs
+    .map((docSnap) => {
+      const data = docSnap.data() || {};
+      const gradeValue = Number(data.grade);
+      const fallbackGameKey = getFallbackGameKey(
+        docSnap.id,
+        data.title,
+        data.description,
+        gradeValue
       );
 
-      merged.set(item.gameKey, {
-        ...(fallbackMatch || {}),
-        ...item,
-        gameKey: item.gameKey,
-      });
-    }
+      const gameKey = VALID_GAME_KEYS.has(data.gameKey)
+        ? data.gameKey
+        : fallbackGameKey;
 
-    return Array.from(merged.values()).sort(
-      (a, b) => (a.order ?? 999) - (b.order ?? 999)
-    );
-  } catch (error) {
-    console.error("Error loading assignments:", error);
-    return FALLBACK_ASSIGNMENTS[grade] ?? [];
+      return {
+        id: docSnap.id,
+        ...data,
+        grade: gradeValue,
+        gameKey,
+      };
+    })
+    .filter((item) => item.grade === grade)
+    .filter((item) => item.enabled !== false)
+    .filter((item) => Boolean(item.gameKey));
+
+  const merged = new Map();
+
+  for (const item of FALLBACK_ASSIGNMENTS[grade] ?? []) {
+    merged.set(item.gameKey, item);
   }
+
+  for (const item of dbItems) {
+    const fallbackMatch = (FALLBACK_ASSIGNMENTS[grade] || []).find(
+      (fallbackItem) => fallbackItem.gameKey === item.gameKey
+    );
+
+    merged.set(item.gameKey, {
+      ...(fallbackMatch || {}),
+      ...item,
+      gameKey: item.gameKey,
+    });
+  }
+
+  return Array.from(merged.values()).sort(
+    (a, b) => (a.order ?? 999) - (b.order ?? 999)
+  );
+}
+
+export function getAssignmentsForGrade(gradeRaw) {
+  const grade = Number(gradeRaw);
+  if (!grade) return Promise.resolve([]);
+
+  return new Promise((resolve) => {
+    const unsubscribe = subscribeAssignmentsForGrade(
+      grade,
+      (items) => {
+        resolve(items);
+        unsubscribe();
+      },
+      () => {
+        resolve(FALLBACK_ASSIGNMENTS[grade] ?? []);
+        unsubscribe();
+      }
+    );
+  });
+}
+
+export function subscribeAssignmentsForGrade(gradeRaw, onValue, onError) {
+  const grade = Number(gradeRaw);
+
+  if (!grade) {
+    onValue?.([]);
+    return () => {};
+  }
+
+  return onSnapshot(
+    collection(db, "assignments"),
+    (snap) => {
+      onValue?.(mergeAssignmentsForGrade(grade, snap.docs));
+    },
+    (error) => {
+      console.error("Error loading assignments:", error);
+      onError?.(error);
+      onValue?.(FALLBACK_ASSIGNMENTS[grade] ?? []);
+    }
+  );
 }

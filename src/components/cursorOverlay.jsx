@@ -4,6 +4,7 @@ import pawCursor from "./images/paw.png";
 
 export default function CursorOverlay() {
   const wrapperRef = useRef(null);
+  const sparkleLayerRef = useRef(null);
   const [isClicking, setIsClicking] = useState(false);
 
   const mouseRef = useRef({
@@ -12,14 +13,12 @@ export default function CursorOverlay() {
   });
 
   const rafRef = useRef(null);
-  const sparkleLayerRef = useRef(null);
   const lastSparkleTimeRef = useRef(0);
 
   useEffect(() => {
     const updateCursor = () => {
       if (wrapperRef.current) {
-        wrapperRef.current.style.left = `${mouseRef.current.x}px`;
-        wrapperRef.current.style.top = `${mouseRef.current.y}px`;
+        wrapperRef.current.style.transform = `translate3d(${mouseRef.current.x}px, ${mouseRef.current.y}px, 0)`;
       }
       rafRef.current = null;
     };
@@ -33,9 +32,9 @@ export default function CursorOverlay() {
       }
 
       const now = performance.now();
-      if (now - lastSparkleTimeRef.current > 90) {
+      if (now - lastSparkleTimeRef.current > 85) {
         lastSparkleTimeRef.current = now;
-        makeSparkle(event.clientX, event.clientY);
+        makeSparkle();
       }
     };
 
@@ -53,35 +52,39 @@ export default function CursorOverlay() {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
 
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
-  function makeSparkle(x, y) {
+  function makeSparkle() {
     const layer = sparkleLayerRef.current;
     if (!layer) return;
 
     const sparkle = document.createElement("span");
     sparkle.className = "cursor-sparkle";
 
-    const offsetX = Math.random() * 10 - 5;
-    const offsetY = Math.random() * 8 + 10;
-    const size = 6 + Math.random() * 6;
-    const rotation = Math.random() * 40 - 20;
+    // 🎯 anchor closer to ACTUAL mouse tip (not center of paw)
+    const baseX = mouseRef.current.x - 20;
+    const baseY = mouseRef.current.y + 18;
 
-    sparkle.style.left = `${x + offsetX}px`;
-    sparkle.style.top = `${y + offsetY}px`;
+    // 🌙 CURVED TRAIL (arc shape)
+    const curve = Math.sin(performance.now() * 0.01) * 8;
+
+    const offsetX = (Math.random() * 10 - 5) + curve - 6; // ← more LEFT
+    const offsetY = Math.random() * 10 + 6;
+
+    const size = 8 + Math.random() * 7;
+    const rotation = Math.random() * 50 - 25;
+
+    sparkle.style.left = `${baseX + offsetX}px`;
+    sparkle.style.top = `${baseY + offsetY}px`;
     sparkle.style.width = `${size}px`;
     sparkle.style.height = `${size}px`;
     sparkle.style.transform = `rotate(${rotation}deg)`;
 
     layer.appendChild(sparkle);
 
-    window.setTimeout(() => {
-      sparkle.remove();
-    }, 500);
+    setTimeout(() => sparkle.remove(), 480);
   }
 
   return (

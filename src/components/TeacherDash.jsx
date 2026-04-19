@@ -10,36 +10,13 @@ import {
   updateDoc,
   onSnapshot,
   deleteDoc,
-  getDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import StudentGroupsBuilder from "./StudentGroupsBuilder";
-
-const assignmentCatalog = [
-  { gameKey: "1st_addition", title: "1st Grade Addition", grade: 1 },
-  { gameKey: "1st_subtraction", title: "1st Grade Subtraction", grade: 1 },
-  { gameKey: "2nd_addition", title: "2nd Grade Addition", grade: 2 },
-  { gameKey: "2nd_subtraction", title: "2nd Grade Subtraction", grade: 2 },
-  { gameKey: "2nd_fill_blank", title: "2nd Grade Fill in the Blank", grade: 2 },
-  { gameKey: "2nd_place_value", title: "2nd Grade Place Value", grade: 2 },
-  { gameKey: "2nd_multiplication", title: "2nd Grade Multiplication", grade: 2 },
-];
-
-const assignmentProblemBanks = {
-  "1st_addition": [
-    { question: "1+0", answer: 1 },
-    { question: "1+1", answer: 2 },
-    { question: "1+2", answer: 3 },
-    { question: "1+3", answer: 4 },
-    { question: "1+4", answer: 5 },
-  ],
-  "1st_subtraction": [],
-  "2nd_addition": [],
-  "2nd_subtraction": [],
-  "2nd_fill_blank": [],
-  "2nd_place_value": [],
-  "2nd_multiplication": [],
-};
+import {
+  assignmentCatalog,
+  getProblemBankForGame,
+} from "../data/assignmentProblemBanks";
 
 function getTimestampValue(value) {
   if (!value) return 0;
@@ -109,14 +86,53 @@ function getAttemptPercent(attempt) {
   return 0;
 }
 
-function getLatestAttemptForGame(results, gameKey) {
-  return [...results]
+function getMedianNumber(values = []) {
+  const clean = values
+    .map((value) => Number(value))
+    .filter((value) => !Number.isNaN(value))
+    .sort((a, b) => a - b);
+
+  if (!clean.length) return 0;
+
+  const middle = Math.floor(clean.length / 2);
+
+  if (clean.length % 2 === 0) {
+    return Math.round((clean[middle - 1] + clean[middle]) / 2);
+  }
+
+  return Math.round(clean[middle]);
+}
+
+function getAttemptsForGame(results, gameKey) {
+  return [...(results || [])]
     .filter((result) => result.gameKey === gameKey)
     .sort((a, b) => {
       const aTime = getTimestampValue(a.completedAt || a.submittedAt || a.createdAt);
       const bTime = getTimestampValue(b.completedAt || b.submittedAt || b.createdAt);
       return bTime - aTime;
-    })[0] || null;
+    })
+    .map((attempt) => ({
+      ...attempt,
+      answers: Array.isArray(attempt.answers) ? attempt.answers : [],
+    }));
+}
+
+function getLatestAttemptForGame(results, gameKey) {
+  return getAttemptsForGame(results, gameKey)[0] || null;
+}
+
+function getMedianPercentForGame(results, gameKey) {
+  const attempts = getAttemptsForGame(results, gameKey);
+  if (!attempts.length) return 0;
+  return getMedianNumber(attempts.map((attempt) => getAttemptPercent(attempt)));
+}
+
+function getMedianWrongTriesForGame(results, gameKey) {
+  const attempts = getAttemptsForGame(results, gameKey);
+  if (!attempts.length) return 0;
+  return getMedianNumber(
+    attempts.map((attempt) => Number(attempt?.totalWrongGuesses || 0))
+  );
 }
 
 function isPerfectAttempt(attempt) {
@@ -178,8 +194,30 @@ function getRecentPerfectRuns(allResultsByStudent, students) {
   );
 }
 
+function normalizeProblem(problem) {
+  const question = String(problem?.question ?? "").trim();
+  const answer = Number(problem?.answer);
+
+  if (!question) return null;
+  if (Number.isNaN(answer)) return null;
+
+  return { question, answer };
+}
+
 function problemKey(problem) {
   return `${problem?.question ?? ""}::${problem?.answer ?? ""}`;
+}
+
+function dedupeProblems(list = []) {
+  const map = new Map();
+
+  list.forEach((problem) => {
+    const normalized = normalizeProblem(problem);
+    if (!normalized) return;
+    map.set(problemKey(normalized), normalized);
+  });
+
+  return [...map.values()];
 }
 
 function getStudentRiskScore(results, assignmentsForClass, classroom, studentId) {
@@ -188,7 +226,17 @@ function getStudentRiskScore(results, assignmentsForClass, classroom, studentId)
   let score = 0;
 
   assignmentsForClass.forEach((assignment) => {
-    const latest = getLatestAttemptForGame(results, assignment.gameKey);
+    const attempts = getAttemptsForGame(results, assignment.gameKey);
+    const latest = attempts[0] || null;
+    const medianPercent = attempts.length
+      ? getMedianNumber(attempts.map((attempt) => getAttemptPercent(attempt)))
+      : 0;
+    const medianWrongTries = attempts.length
+      ? getMedianNumber(
+          attempts.map((attempt) => Number(attempt?.totalWrongGuesses || 0))
+        )
+      : 0;
+
     const locked =
       classroom?.studentAssignments?.[studentId]?.[assignment.gameKey] ?? false;
 
@@ -202,26 +250,23 @@ function getStudentRiskScore(results, assignmentsForClass, classroom, studentId)
       return;
     }
 
-    const percent = getAttemptPercent(latest);
-    const wrongTries = Number(latest?.totalWrongGuesses || 0);
+    if (medianPercent < 40) score += 35;
+    else if (medianPercent <= 60) score += 24;
+    else if (medianPercent < 75) score += 12;
+    else if (medianPercent < 90) score += 5;
 
-    if (percent < 40) score += 35;
-    else if (percent < 60) score += 24;
-    else if (percent < 75) score += 12;
-    else if (percent < 90) score += 5;
-
-    if (wrongTries >= 6) score += 18;
-    else if (wrongTries >= 3) score += 10;
-    else if (wrongTries >= 1) score += 4;
+    if (medianWrongTries >= 6) score += 18;
+    else if (medianWrongTries >= 3) score += 10;
+    else if (medianWrongTries >= 1) score += 4;
   });
 
   return Math.min(100, score);
 }
 
-function getSeverityFromAssignment(latestAttempt, latestPercent, latestWrongTries, locked) {
-  if (!latestAttempt) return locked ? "attention" : "watch";
-  if (latestPercent < 60 || latestWrongTries >= 3) return "failing";
-  if (latestPercent < 75 || latestWrongTries > 0) return "attention";
+function getSeverityFromAssignment(hasAttempts, medianPercent, medianWrongTries, locked) {
+  if (!hasAttempts) return locked ? "attention" : "watch";
+  if (medianPercent <= 60 || medianWrongTries >= 3) return "failing";
+  if (medianPercent < 75 || medianWrongTries > 0) return "attention";
   return "ok";
 }
 
@@ -371,25 +416,25 @@ export default function TeacherDash({ teacher, onLogout }) {
         classroom?.studentAssignments?.[selectedStudent.id]?.[assignment.gameKey] ??
         false;
 
-      const attempts = studentResults
-        .filter((result) => result.gameKey === assignment.gameKey)
-        .sort((a, b) => {
-          const aTime = getTimestampValue(a.completedAt || a.submittedAt || a.createdAt);
-          const bTime = getTimestampValue(b.completedAt || b.submittedAt || b.createdAt);
-          return bTime - aTime;
-        })
-        .map((attempt) => ({
-          ...attempt,
-          answers: Array.isArray(attempt.answers) ? attempt.answers : [],
-        }));
-
+      const attempts = getAttemptsForGame(studentResults, assignment.gameKey);
       const latestAttempt = attempts[0] || null;
+
+      const medianPercent = attempts.length
+        ? getMedianNumber(attempts.map((attempt) => getAttemptPercent(attempt)))
+        : 0;
+
+      const medianWrongTries = attempts.length
+        ? getMedianNumber(
+            attempts.map((attempt) => Number(attempt?.totalWrongGuesses || 0))
+          )
+        : 0;
+
       const latestPercent = latestAttempt ? getAttemptPercent(latestAttempt) : 0;
-      const latestWrongTries = Number(latestAttempt?.totalWrongGuesses || 0);
+
       const severity = getSeverityFromAssignment(
-        latestAttempt,
-        latestPercent,
-        latestWrongTries,
+        attempts.length > 0,
+        medianPercent,
+        medianWrongTries,
         locked
       );
 
@@ -398,93 +443,116 @@ export default function TeacherDash({ teacher, onLogout }) {
         title: assignment.title,
         locked,
         attempts,
-        latestPercent,
-        latestWrongTries,
         latestAttempt,
+        latestPercent,
+        latestWrongTries: Number(latestAttempt?.totalWrongGuesses || 0),
+        medianPercent,
+        medianWrongTries,
         perfectRuns: getPerfectRunCount(attempts),
         severity,
+        needsAttentionFirst: medianPercent <= 60,
       };
     });
 
     return [...items].sort((a, b) => {
-      const order = { failing: 0, attention: 1, watch: 2, ok: 3 };
-      if (order[a.severity] !== order[b.severity]) {
-        return order[a.severity] - order[b.severity];
+      if (a.needsAttentionFirst !== b.needsAttentionFirst) {
+        return a.needsAttentionFirst ? -1 : 1;
       }
-      return a.latestPercent - b.latestPercent;
+      if (a.medianPercent !== b.medianPercent) {
+        return a.medianPercent - b.medianPercent;
+      }
+      return b.attempts.length - a.attempts.length;
     });
   }, [assignmentsForClass, classroom, selectedStudent, studentResults]);
 
   const classAssignmentProgress = useMemo(() => {
     const list = resultsViewMode === "class" ? students : resultsTargetStudents;
 
-    return assignmentsForClass.map((assignment) => {
-      const rows = list.map((student) => {
-        const studentResultsForView = allResultsByStudent[student.id] || [];
-        const latestAttempt = getLatestAttemptForGame(
-          studentResultsForView,
-          assignment.gameKey
-        );
+    return assignmentsForClass
+      .map((assignment) => {
+        const rows = list.map((student) => {
+          const studentResultsForView = allResultsByStudent[student.id] || [];
+          const attempts = getAttemptsForGame(studentResultsForView, assignment.gameKey);
+          const latestAttempt = attempts[0] || null;
 
-        const percent = latestAttempt ? getAttemptPercent(latestAttempt) : 0;
-        const completed = !!latestAttempt;
-        const riskScore = getStudentRiskScore(
-          studentResultsForView,
-          assignmentsForClass,
-          classroom,
-          student.id
-        );
-        const wrongTries = Number(latestAttempt?.totalWrongGuesses || 0);
-        const locked =
-          classroom?.studentAssignments?.[student.id]?.[assignment.gameKey] ?? false;
+          const medianPercent = attempts.length
+            ? getMedianNumber(attempts.map((attempt) => getAttemptPercent(attempt)))
+            : 0;
 
-        const severity = getSeverityFromAssignment(
-          latestAttempt,
-          percent,
-          wrongTries,
-          locked
-        );
+          const medianWrongTries = attempts.length
+            ? getMedianNumber(
+                attempts.map((attempt) => Number(attempt?.totalWrongGuesses || 0))
+              )
+            : 0;
 
-        return {
-          student,
-          latestAttempt,
-          completed,
-          percent,
-          perfectRun: latestAttempt ? isPerfectAttempt(latestAttempt) : false,
-          riskScore,
-          severity,
-        };
-      });
+          const completed = attempts.length > 0;
+          const riskScore = getStudentRiskScore(
+            studentResultsForView,
+            assignmentsForClass,
+            classroom,
+            student.id
+          );
 
-      const totalStudents = rows.length;
-      const completedCount = rows.filter((row) => row.completed).length;
-      const failingCount = rows.filter((row) => row.severity === "failing").length;
-      const perfectCount = rows.filter((row) => row.perfectRun).length;
+          const locked =
+            classroom?.studentAssignments?.[student.id]?.[assignment.gameKey] ?? false;
 
-      const averagePercent =
-        totalStudents > 0
-          ? Math.round(
-              rows.reduce((sum, row) => sum + Number(row.percent || 0), 0) / totalStudents
-            )
+          const severity = getSeverityFromAssignment(
+            completed,
+            medianPercent,
+            medianWrongTries,
+            locked
+          );
+
+          return {
+            student,
+            attempts,
+            latestAttempt,
+            completed,
+            percent: medianPercent,
+            medianPercent,
+            medianWrongTries,
+            perfectRun: attempts.some((attempt) => isPerfectAttempt(attempt)),
+            riskScore,
+            severity,
+            needsAttentionFirst: medianPercent <= 60,
+          };
+        });
+
+        const totalStudents = rows.length;
+        const completedRows = rows.filter((row) => row.completed);
+        const completedCount = completedRows.length;
+        const failingCount = rows.filter((row) => row.percent <= 60).length;
+        const perfectCount = rows.filter((row) => row.perfectRun).length;
+
+        const medianOfClassForThisGame = completedRows.length
+          ? getMedianNumber(completedRows.map((row) => row.medianPercent))
           : 0;
 
-      return {
-        assignment,
-        rows: [...rows].sort((a, b) => {
-          const order = { failing: 0, attention: 1, watch: 2, ok: 3 };
-          if (order[a.severity] !== order[b.severity]) {
-            return order[a.severity] - order[b.severity];
-          }
-          if (a.percent !== b.percent) return a.percent - b.percent;
-          return b.riskScore - a.riskScore;
-        }),
-        totalStudents,
-        completedCount,
-        failingCount,
-        perfectCount,
-        percentage: averagePercent,
-      };
-    });
+        return {
+          assignment,
+          rows: [...rows].sort((a, b) => {
+            if (a.needsAttentionFirst !== b.needsAttentionFirst) {
+              return a.needsAttentionFirst ? -1 : 1;
+            }
+            if (a.medianPercent !== b.medianPercent) {
+              return a.medianPercent - b.medianPercent;
+            }
+            return b.riskScore - a.riskScore;
+          }),
+          totalStudents,
+          completedCount,
+          failingCount,
+          perfectCount,
+          percentage: medianOfClassForThisGame,
+        };
+      })
+      .sort((a, b) => {
+        const aLow = a.percentage <= 60;
+        const bLow = b.percentage <= 60;
+
+        if (aLow !== bLow) return aLow ? -1 : 1;
+        return a.percentage - b.percentage;
+      });
   }, [
     assignmentsForClass,
     resultsTargetStudents,
@@ -496,9 +564,8 @@ export default function TeacherDash({ teacher, onLogout }) {
 
   const classResultsSummary = useMemo(() => {
     const assignments = classAssignmentProgress;
-    const totalStudents = resultsViewMode === "class"
-      ? students.length
-      : resultsTargetStudents.length;
+    const totalStudents =
+      resultsViewMode === "class" ? students.length : resultsTargetStudents.length;
 
     const totalAssignments = assignments.length;
     const totalPossible = totalStudents * totalAssignments;
@@ -509,10 +576,7 @@ export default function TeacherDash({ teacher, onLogout }) {
 
     const average =
       assignments.length > 0
-        ? Math.round(
-            assignments.reduce((sum, item) => sum + Number(item.percentage || 0), 0) /
-              assignments.length
-          )
+        ? getMedianNumber(assignments.map((item) => Number(item.percentage || 0)))
         : 0;
 
     return {
@@ -552,13 +616,21 @@ export default function TeacherDash({ teacher, onLogout }) {
       }
 
       assignmentsForClass.forEach((assignment) => {
-        const latest = getLatestAttemptForGame(results, assignment.gameKey);
-        const percent = latest ? getAttemptPercent(latest) : 0;
-        const wrongTries = Number(latest?.totalWrongGuesses || 0);
+        const attempts = getAttemptsForGame(results, assignment.gameKey);
+        const latest = attempts[0] || null;
+        const percent = attempts.length
+          ? getMedianNumber(attempts.map((attempt) => getAttemptPercent(attempt)))
+          : 0;
+        const wrongTries = attempts.length
+          ? getMedianNumber(
+              attempts.map((attempt) => Number(attempt?.totalWrongGuesses || 0))
+            )
+          : 0;
+
         const attemptTime =
           latest?.completedAt || latest?.submittedAt || latest?.createdAt || null;
 
-        if (latest && percent < 60) {
+        if (latest && percent <= 60) {
           alerts.push({
             type: "low-score",
             priority: 1,
@@ -567,7 +639,7 @@ export default function TeacherDash({ teacher, onLogout }) {
             studentId: student.id,
             timestamp: attemptTime,
             label: `${student.name || student.id} is failing ${assignment.title}`,
-            meta: `${percent}% • ${formatAttemptTime(attemptTime)}`,
+            meta: `Median ${percent}% • ${formatAttemptTime(attemptTime)}`,
           });
         }
 
@@ -580,7 +652,7 @@ export default function TeacherDash({ teacher, onLogout }) {
             studentId: student.id,
             timestamp: attemptTime,
             label: `${student.name || student.id} needs attention on ${assignment.title}`,
-            meta: `${wrongTries} wrong tries • ${formatAttemptTime(attemptTime)}`,
+            meta: `Median ${wrongTries} wrong tries • ${formatAttemptTime(attemptTime)}`,
           });
         }
 
@@ -635,16 +707,55 @@ export default function TeacherDash({ teacher, onLogout }) {
 
   const editorAssignmentConfig = useMemo(() => {
     return classroom?.assignmentEditor?.[editorGameKey] || {
+      liveSyncEnabled: true,
+      selectedPresetIds: [],
       selectedBuiltInProblems: [],
       customProblems: [],
     };
   }, [classroom, editorGameKey]);
 
-  const availableBuiltInProblems = useMemo(() => {
-    return assignmentProblemBanks[editorGameKey] || [];
+  const availableGameBank = useMemo(() => {
+    return getProblemBankForGame(editorGameKey);
   }, [editorGameKey]);
 
+  const availableBuiltInProblems = useMemo(() => {
+    return Array.isArray(availableGameBank?.flatBuiltInProblems)
+      ? availableGameBank.flatBuiltInProblems
+      : [];
+  }, [availableGameBank]);
+
+  const availablePresets = useMemo(() => {
+    return Array.isArray(availableGameBank?.presets) ? availableGameBank.presets : [];
+  }, [availableGameBank]);
+
+  const resolvedEditorPreviewProblems = useMemo(() => {
+    const selectedPresetIds = Array.isArray(editorAssignmentConfig.selectedPresetIds)
+      ? editorAssignmentConfig.selectedPresetIds
+      : [];
+
+    const selectedBuiltIns = Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
+      ? editorAssignmentConfig.selectedBuiltInProblems
+      : [];
+
+    const customProblems = Array.isArray(editorAssignmentConfig.customProblems)
+      ? editorAssignmentConfig.customProblems
+      : [];
+
+    const selectedPresetProblems = availablePresets
+      .filter((preset) => selectedPresetIds.includes(preset.id))
+      .flatMap((preset) => (Array.isArray(preset.problems) ? preset.problems : []));
+
+    return dedupeProblems([
+      ...selectedPresetProblems,
+      ...selectedBuiltIns,
+      ...customProblems,
+    ]);
+  }, [availablePresets, editorAssignmentConfig]);
+
   const editorSelectedCount = useMemo(() => {
+    const presets = Array.isArray(editorAssignmentConfig.selectedPresetIds)
+      ? editorAssignmentConfig.selectedPresetIds.length
+      : 0;
     const builtIn = Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
       ? editorAssignmentConfig.selectedBuiltInProblems.length
       : 0;
@@ -653,11 +764,12 @@ export default function TeacherDash({ teacher, onLogout }) {
       : 0;
 
     return {
+      presets,
       builtIn,
       custom,
-      total: builtIn + custom,
+      total: resolvedEditorPreviewProblems.length,
     };
-  }, [editorAssignmentConfig]);
+  }, [editorAssignmentConfig, resolvedEditorPreviewProblems.length]);
 
   useEffect(() => {
     let unsubscribeClassroom = null;
@@ -1039,17 +1151,65 @@ export default function TeacherDash({ teacher, onLogout }) {
 
     try {
       const classRef = doc(db, "classrooms", classroom.id);
+
       await updateDoc(classRef, {
         [`assignmentEditor.${editorGameKey}`]: {
-          ...nextConfig,
+          liveSyncEnabled: nextConfig.liveSyncEnabled !== false,
+          selectedPresetIds: Array.isArray(nextConfig.selectedPresetIds)
+            ? nextConfig.selectedPresetIds
+            : [],
+          selectedBuiltInProblems: dedupeProblems(nextConfig.selectedBuiltInProblems || []),
+          customProblems: dedupeProblems(nextConfig.customProblems || []),
+          liveProblemCount: dedupeProblems([
+            ...(nextConfig.selectedBuiltInProblems || []),
+            ...(nextConfig.customProblems || []),
+          ]).length,
           lastUpdatedAt: serverTimestamp(),
         },
       });
+
       setEditorLastSavedAt(Date.now());
     } catch (error) {
       console.error("Error saving assignment editor config:", error);
       alert("Could not save assignment editor changes.");
     }
+  }
+
+  async function toggleLiveSyncEnabled() {
+    await saveAssignmentEditorConfig({
+      ...editorAssignmentConfig,
+      liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled === false,
+      selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
+        ? editorAssignmentConfig.selectedPresetIds
+        : [],
+      selectedBuiltInProblems: Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
+        ? editorAssignmentConfig.selectedBuiltInProblems
+        : [],
+      customProblems: Array.isArray(editorAssignmentConfig.customProblems)
+        ? editorAssignmentConfig.customProblems
+        : [],
+    });
+  }
+
+  async function togglePreset(presetId) {
+    const current = Array.isArray(editorAssignmentConfig.selectedPresetIds)
+      ? editorAssignmentConfig.selectedPresetIds
+      : [];
+
+    const next = current.includes(presetId)
+      ? current.filter((id) => id !== presetId)
+      : [...current, presetId];
+
+    await saveAssignmentEditorConfig({
+      liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+      selectedPresetIds: next,
+      selectedBuiltInProblems: Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
+        ? editorAssignmentConfig.selectedBuiltInProblems
+        : [],
+      customProblems: Array.isArray(editorAssignmentConfig.customProblems)
+        ? editorAssignmentConfig.customProblems
+        : [],
+    });
   }
 
   async function toggleBuiltInProblem(problem) {
@@ -1062,9 +1222,13 @@ export default function TeacherDash({ teacher, onLogout }) {
 
     const next = exists
       ? current.filter((item) => problemKey(item) !== key)
-      : [...current, problem];
+      : [...current, normalizeProblem(problem)];
 
     await saveAssignmentEditorConfig({
+      liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+      selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
+        ? editorAssignmentConfig.selectedPresetIds
+        : [],
       selectedBuiltInProblems: next,
       customProblems: Array.isArray(editorAssignmentConfig.customProblems)
         ? editorAssignmentConfig.customProblems
@@ -1093,6 +1257,10 @@ export default function TeacherDash({ teacher, onLogout }) {
     const next = [...current, { question: trimmedQuestion, answer: parsedAnswer }];
 
     await saveAssignmentEditorConfig({
+      liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+      selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
+        ? editorAssignmentConfig.selectedPresetIds
+        : [],
       selectedBuiltInProblems: Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
         ? editorAssignmentConfig.selectedBuiltInProblems
         : [],
@@ -1113,10 +1281,23 @@ export default function TeacherDash({ teacher, onLogout }) {
     );
 
     await saveAssignmentEditorConfig({
+      liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+      selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
+        ? editorAssignmentConfig.selectedPresetIds
+        : [],
       selectedBuiltInProblems: Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
         ? editorAssignmentConfig.selectedBuiltInProblems
         : [],
       customProblems: next,
+    });
+  }
+
+  async function clearEditorForGame() {
+    await saveAssignmentEditorConfig({
+      liveSyncEnabled: true,
+      selectedPresetIds: [],
+      selectedBuiltInProblems: [],
+      customProblems: [],
     });
   }
 
@@ -1535,7 +1716,7 @@ export default function TeacherDash({ teacher, onLogout }) {
             <div className="tdash__stack">
               <div className="tdash__note">
                 {editorGameKey
-                  ? `${editorSelectedCount.total} total selected • ${editorSelectedCount.builtIn} built-in • ${editorSelectedCount.custom} custom`
+                  ? `${editorSelectedCount.total} live problems • ${editorSelectedCount.presets} preset group(s) • ${editorSelectedCount.builtIn} individual built-in • ${editorSelectedCount.custom} custom`
                   : "Choose a game to edit"}
               </div>
 
@@ -1555,6 +1736,20 @@ export default function TeacherDash({ teacher, onLogout }) {
                 </select>
               </div>
 
+              {editorGameKey && (
+                <div className="tdash__actions tdash__actions--left">
+                  <button className="tdash__ghost-btn" type="button" onClick={toggleLiveSyncEnabled}>
+                    {editorAssignmentConfig.liveSyncEnabled === false
+                      ? "Turn Live Sync On"
+                      : "Turn Live Sync Off"}
+                  </button>
+
+                  <button className="tdash__ghost-btn" type="button" onClick={clearEditorForGame}>
+                    Clear Weekly Set
+                  </button>
+                </div>
+              )}
+
               {editorLastSavedAt && (
                 <div className="tdash__note">
                   <div className="tdash__note-title">Assignment editor saved</div>
@@ -1565,102 +1760,168 @@ export default function TeacherDash({ teacher, onLogout }) {
               )}
 
               {editorGameKey && (
-                <div className="tdash__assignment-editor-grid">
-                  <div className="tdash__problem-bank">
-                    <h3 className="tdash__mini-title">Built-In Problems</h3>
-
-                    {availableBuiltInProblems.length > 0 ? (
-                      <div className="tdash__problem-list">
-                        {availableBuiltInProblems.map((problem, index) => {
-                          const selectedBuiltIn = Array.isArray(
-                            editorAssignmentConfig.selectedBuiltInProblems
-                          )
-                            ? editorAssignmentConfig.selectedBuiltInProblems
-                            : [];
-
-                          const selected = selectedBuiltIn.some(
-                            (item) => problemKey(item) === problemKey(problem)
-                          );
-
-                          return (
-                            <button
-                              key={`${problemKey(problem)}-${index}`}
-                              type="button"
-                              className={`tdash__problem-chip ${
-                                selected ? "tdash__problem-chip--selected" : ""
-                              }`}
-                              onClick={() => toggleBuiltInProblem(problem)}
-                            >
-                              {problem.question} = {problem.answer}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="tdash__empty-text">
-                        No built-in problems loaded yet for this game. Paste that game’s
-                        array into assignmentProblemBanks at the top of this file.
-                      </p>
-                    )}
+                <>
+                  <div className="tdash__note">
+                    Live Sync is{" "}
+                    <strong>
+                      {editorAssignmentConfig.liveSyncEnabled === false ? "OFF" : "ON"}
+                    </strong>
+                    . When it is on, students use the weekly set below instead of only the old local arrays.
                   </div>
 
-                  <div className="tdash__custom-problem-box">
-                    <h3 className="tdash__mini-title">Add Custom Problem</h3>
+                  <div className="tdash__assignment-editor-grid">
+                    <div className="tdash__problem-bank">
+                      <h3 className="tdash__mini-title">Preset Weekly Arrays</h3>
 
-                    <div className="tdash__stack">
-                      <input
-                        className="tdash__input"
-                        type="text"
-                        placeholder="Question, like 3+4"
-                        value={editorCustomQuestion}
-                        onChange={(e) => setEditorCustomQuestion(e.target.value)}
-                      />
+                      {availablePresets.length > 0 ? (
+                        <div className="tdash__problem-list">
+                          {availablePresets.map((preset) => {
+                            const selectedPresetIds = Array.isArray(
+                              editorAssignmentConfig.selectedPresetIds
+                            )
+                              ? editorAssignmentConfig.selectedPresetIds
+                              : [];
 
-                      <input
-                        className="tdash__input"
-                        type="number"
-                        placeholder="Answer"
-                        value={editorCustomAnswer}
-                        onChange={(e) => setEditorCustomAnswer(e.target.value)}
-                      />
+                            const selected = selectedPresetIds.includes(preset.id);
 
-                      <button
-                        type="button"
-                        className="tdash__ghost-btn"
-                        onClick={handleAddCustomProblem}
-                      >
-                        Add Custom Problem
-                      </button>
-
-                      <h3 className="tdash__mini-title">Saved Custom Problems</h3>
-
-                      {Array.isArray(editorAssignmentConfig.customProblems) &&
-                      editorAssignmentConfig.customProblems.length > 0 ? (
-                        <div className="tdash__stack">
-                          {editorAssignmentConfig.customProblems.map((problem, index) => (
-                            <div
-                              key={`${problemKey(problem)}-${index}`}
-                              className="tdash__drop-chip"
-                            >
-                              <span>
-                                {problem.question} = {problem.answer}
-                              </span>
+                            return (
                               <button
+                                key={preset.id}
                                 type="button"
-                                className="tdash__chip-remove"
-                                onClick={() => handleRemoveCustomProblem(problem)}
+                                className={`tdash__problem-chip ${
+                                  selected ? "tdash__problem-chip--selected" : ""
+                                }`}
+                                onClick={() => togglePreset(preset.id)}
                               >
-                                Remove
+                                {preset.label} (
+                                {Array.isArray(preset.problems) ? preset.problems.length : 0})
                               </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
-                        <p className="tdash__empty-text">No custom problems yet.</p>
+                        <p className="tdash__empty-text">
+                          No preset arrays loaded yet for this game.
+                        </p>
+                      )}
+
+                      <h3 className="tdash__mini-title" style={{ marginTop: "18px" }}>
+                        Individual Built-In Problems
+                      </h3>
+
+                      {availableBuiltInProblems.length > 0 ? (
+                        <div className="tdash__problem-list">
+                          {availableBuiltInProblems.map((problem, index) => {
+                            const selectedBuiltIn = Array.isArray(
+                              editorAssignmentConfig.selectedBuiltInProblems
+                            )
+                              ? editorAssignmentConfig.selectedBuiltInProblems
+                              : [];
+
+                            const selected = selectedBuiltIn.some(
+                              (item) => problemKey(item) === problemKey(problem)
+                            );
+
+                            return (
+                              <button
+                                key={`${problemKey(problem)}-${index}`}
+                                type="button"
+                                className={`tdash__problem-chip ${
+                                  selected ? "tdash__problem-chip--selected" : ""
+                                }`}
+                                onClick={() => toggleBuiltInProblem(problem)}
+                              >
+                                {problem.question} = {problem.answer}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="tdash__empty-text">
+                          No built-in problems loaded yet for this game.
+                        </p>
                       )}
                     </div>
+
+                    <div className="tdash__custom-problem-box">
+                      <h3 className="tdash__mini-title">Add Custom Problem</h3>
+
+                      <div className="tdash__stack">
+                        <input
+                          className="tdash__input"
+                          type="text"
+                          placeholder="Question, like 3+4"
+                          value={editorCustomQuestion}
+                          onChange={(e) => setEditorCustomQuestion(e.target.value)}
+                        />
+
+                        <input
+                          className="tdash__input"
+                          type="number"
+                          placeholder="Answer"
+                          value={editorCustomAnswer}
+                          onChange={(e) => setEditorCustomAnswer(e.target.value)}
+                        />
+
+                        <button
+                          type="button"
+                          className="tdash__ghost-btn"
+                          onClick={handleAddCustomProblem}
+                        >
+                          Add Custom Problem
+                        </button>
+
+                        <h3 className="tdash__mini-title">Saved Custom Problems</h3>
+
+                        {Array.isArray(editorAssignmentConfig.customProblems) &&
+                        editorAssignmentConfig.customProblems.length > 0 ? (
+                          <div className="tdash__stack">
+                            {editorAssignmentConfig.customProblems.map((problem, index) => (
+                              <div
+                                key={`${problemKey(problem)}-${index}`}
+                                className="tdash__drop-chip"
+                              >
+                                <span>
+                                  {problem.question} = {problem.answer}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="tdash__chip-remove"
+                                  onClick={() => handleRemoveCustomProblem(problem)}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="tdash__empty-text">No custom problems yet.</p>
+                        )}
+
+                        <h3 className="tdash__mini-title">Live Preview</h3>
+
+                        {resolvedEditorPreviewProblems.length > 0 ? (
+                          <div className="tdash__stack">
+                            {resolvedEditorPreviewProblems.map((problem, index) => (
+                              <div
+                                key={`${problemKey(problem)}-preview-${index}`}
+                                className="tdash__drop-chip"
+                              >
+                                <span>
+                                  {problem.question} = {problem.answer}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="tdash__empty-text">
+                            No live weekly problems selected yet.
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           )}
@@ -1782,12 +2043,12 @@ export default function TeacherDash({ teacher, onLogout }) {
                               </div>
                               <div className="tdash__accordion-progress">
                                 {assignment.attempts.length} attempt
-                                {assignment.attempts.length === 1 ? "" : "s"} • Latest:{" "}
-                                {assignment.latestPercent}%
+                                {assignment.attempts.length === 1 ? "" : "s"} • Median:{" "}
+                                {assignment.medianPercent}%
                                 {assignment.latestAttempt && (
                                   <>
                                     {" "}
-                                    •{" "}
+                                    • Latest: {assignment.latestPercent}% •{" "}
                                     {formatAttemptTime(
                                       assignment.latestAttempt.completedAt ||
                                         assignment.latestAttempt.submittedAt ||
@@ -1799,7 +2060,7 @@ export default function TeacherDash({ teacher, onLogout }) {
                             </div>
 
                             <div className="tdash__attempt-summary">
-                              Wrong tries: {assignment.latestWrongTries} • Perfect Runs:{" "}
+                              Median wrong tries: {assignment.medianWrongTries} • Perfect Runs:{" "}
                               {assignment.perfectRuns}
                             </div>
 
@@ -1997,7 +2258,7 @@ export default function TeacherDash({ teacher, onLogout }) {
 
                     <div className="tdash__stat tdash__stat--orange">
                       <div className="tdash__stat-number">{classResultsSummary.average}%</div>
-                      <div className="tdash__stat-label">Class Average</div>
+                      <div className="tdash__stat-label">Class Median</div>
                     </div>
                   </div>
 
@@ -2047,7 +2308,7 @@ export default function TeacherDash({ teacher, onLogout }) {
                             </div>
 
                             <div className="tdash__attempt-summary">
-                              Class Percentage: {assignmentProgress.percentage}%
+                              Class Median: {assignmentProgress.percentage}%
                             </div>
 
                             <span className="tdash__accordion-arrow">
@@ -2091,7 +2352,7 @@ export default function TeacherDash({ teacher, onLogout }) {
                                           ? "tdash__class-student-line--active"
                                           : ""
                                       } ${
-                                        row.percent < 60
+                                        row.percent <= 60
                                           ? "tdash__class-student-line--danger"
                                           : ""
                                       }`}

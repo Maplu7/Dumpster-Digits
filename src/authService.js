@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase";
 import { signInAnonymously, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export async function loginStudent(studentIdRaw, birthdayRaw) {
   const studentId = String(studentIdRaw).trim();
@@ -14,7 +14,9 @@ export async function loginStudent(studentIdRaw, birthdayRaw) {
   const cred = await signInAnonymously(auth);
 
   try {
-    const snap = await getDoc(doc(db, "students", studentId));
+    const studentRef = doc(db, "students", studentId);
+    const snap = await getDoc(studentRef);
+
     if (!snap.exists()) throw new Error("Student ID not found.");
 
     const data = snap.data();
@@ -23,12 +25,23 @@ export async function loginStudent(studentIdRaw, birthdayRaw) {
       throw new Error("Birthday password is incorrect.");
     }
 
+    await setDoc(
+      studentRef,
+      {
+        authUid: cred.user.uid,
+        lastLoginAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
     return {
       user: cred.user,
       student: {
         id: studentId,
         name: data.name ?? "Student",
         grade: data.grade ?? null,
+        classId: data.classId ?? data.classID ?? data.classroomId ?? data.classroomID ?? null,
+        authUid: cred.user.uid,
       },
     };
   } catch (err) {
@@ -47,7 +60,9 @@ export async function loginTeacher(teacherIdRaw, passwordRaw) {
   const cred = await signInAnonymously(auth);
 
   try {
-    const snap = await getDoc(doc(db, "teachers", teacherId));
+    const teacherRef = doc(db, "teachers", teacherId);
+    const snap = await getDoc(teacherRef);
+
     if (!snap.exists()) throw new Error("Teacher ID not found.");
 
     const data = snap.data();
@@ -56,12 +71,22 @@ export async function loginTeacher(teacherIdRaw, passwordRaw) {
       throw new Error("Teacher password is incorrect.");
     }
 
+    await setDoc(
+      teacherRef,
+      {
+        authUid: cred.user.uid,
+        lastLoginAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
     return {
       user: cred.user,
       teacher: {
         id: teacherId,
         name: data.name ?? "Teacher",
         classId: data.classId ?? null,
+        authUid: cred.user.uid,
       },
     };
   } catch (err) {
