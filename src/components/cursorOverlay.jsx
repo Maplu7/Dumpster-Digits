@@ -1,40 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import "./cursorOverlay.css";
-import pawCursor from "./images/paw.png";
+import pawCursor from "./images/paw-cropped.png";
 
 export default function CursorOverlay() {
   const wrapperRef = useRef(null);
-  const sparkleLayerRef = useRef(null);
+  const trailLayerRef = useRef(null);
   const [isClicking, setIsClicking] = useState(false);
-
-  const mouseRef = useRef({
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
-  });
-
-  const rafRef = useRef(null);
-  const lastSparkleTimeRef = useRef(0);
+  const lastTrailTimeRef = useRef(0);
 
   useEffect(() => {
-    const updateCursor = () => {
-      if (wrapperRef.current) {
-        wrapperRef.current.style.transform = `translate3d(${mouseRef.current.x}px, ${mouseRef.current.y}px, 0)`;
-      }
-      rafRef.current = null;
-    };
-
     const handleMouseMove = (event) => {
-      mouseRef.current.x = event.clientX;
-      mouseRef.current.y = event.clientY;
+      const x = event.clientX;
+      const y = event.clientY;
 
-      if (!rafRef.current) {
-        rafRef.current = requestAnimationFrame(updateCursor);
+      if (wrapperRef.current) {
+        wrapperRef.current.style.left = `${x}px`;
+        wrapperRef.current.style.top = `${y}px`;
       }
 
       const now = performance.now();
-      if (now - lastSparkleTimeRef.current > 85) {
-        lastSparkleTimeRef.current = now;
-        makeSparkle();
+      if (now - lastTrailTimeRef.current > 90) {
+        lastTrailTimeRef.current = now;
+        makePawPrint(x, y);
       }
     };
 
@@ -45,51 +32,39 @@ export default function CursorOverlay() {
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mouseup", handleMouseUp);
 
-    updateCursor();
-
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
-
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
-  function makeSparkle() {
-    const layer = sparkleLayerRef.current;
+  function makePawPrint(x, y) {
+    const layer = trailLayerRef.current;
     if (!layer) return;
 
-    const sparkle = document.createElement("span");
-    sparkle.className = "cursor-sparkle";
+    const print = document.createElement("span");
+    print.className = "cursor-pawprint";
 
-    // 🎯 anchor closer to ACTUAL mouse tip (not center of paw)
-    const baseX = mouseRef.current.x - 20;
-    const baseY = mouseRef.current.y + 18;
+    const offsetX = Math.random() * 8 - 4;
+    const offsetY = Math.random() * 8 + 4;
+    const rotation = Math.random() * 24 - 12;
+    const scale = 0.85 + Math.random() * 0.3;
 
-    // 🌙 CURVED TRAIL (arc shape)
-    const curve = Math.sin(performance.now() * 0.01) * 8;
+    print.style.left = `${x - 2 + offsetX}px`;
+    print.style.top = `${y + 8 + offsetY}px`;
+    print.style.transform = `rotate(${rotation}deg) scale(${scale})`;
 
-    const offsetX = (Math.random() * 10 - 5) + curve - 6; // ← more LEFT
-    const offsetY = Math.random() * 10 + 6;
+    layer.appendChild(print);
 
-    const size = 8 + Math.random() * 7;
-    const rotation = Math.random() * 50 - 25;
-
-    sparkle.style.left = `${baseX + offsetX}px`;
-    sparkle.style.top = `${baseY + offsetY}px`;
-    sparkle.style.width = `${size}px`;
-    sparkle.style.height = `${size}px`;
-    sparkle.style.transform = `rotate(${rotation}deg)`;
-
-    layer.appendChild(sparkle);
-
-    setTimeout(() => sparkle.remove(), 480);
+    setTimeout(() => {
+      print.remove();
+    }, 520);
   }
 
   return (
     <div className="cursor-overlay-layer" aria-hidden="true">
-      <div ref={sparkleLayerRef} className="cursor-sparkle-layer" />
+      <div ref={trailLayerRef} className="cursor-trail-layer" />
       <div ref={wrapperRef} className="cursor-wrapper">
         <img
           src={pawCursor}

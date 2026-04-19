@@ -306,8 +306,8 @@ export default function TeacherDash({ teacher, onLogout }) {
   const [hideResults, setHideResults] = useState(false);
   const [showGroupsBuilder, setShowGroupsBuilder] = useState(false);
   const [showAssignmentEditor, setShowAssignmentEditor] = useState(false);
-  const [showTeacherAlerts, setShowTeacherAlerts] = useState(true);
-  const [showPerfectRuns, setShowPerfectRuns] = useState(true);
+  const [showTeacherAlerts, setShowTeacherAlerts] = useState(false);
+  const [showPerfectRuns, setShowPerfectRuns] = useState(false);
 
   const [editorGameKey, setEditorGameKey] = useState("");
   const [editorCustomQuestion, setEditorCustomQuestion] = useState("");

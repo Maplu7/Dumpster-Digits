@@ -3,9 +3,10 @@
   inset: 0;
   z-index: 9999999;
   pointer-events: none;
+  overflow: hidden;
 }
 
-.cursor-sparkle-layer {
+.cursor-trail-layer {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -13,74 +14,81 @@
 
 .cursor-wrapper {
   position: fixed;
+  left: 0;
+  top: 0;
   pointer-events: none;
-  transform: translate3d(0, 0, 0);
   z-index: 2;
-  will-change: transform;
 }
 
-/* 🐾 paw */
+/* BIG and tilted all the time */
 .cursor-overlay-image {
-  width: 170px;
-  height: 170px;
-
-  transform: translate(-72px, -34px) rotate(-28deg) scale(1.6);
-  transform-origin: 30px 20px;
-
-  filter: drop-shadow(0 0 6px rgba(255, 210, 120, 0.55));
-  animation: pawFloat 2.6s ease-in-out infinite;
-  transition: transform 100ms ease;
-}
-
-.cursor-overlay-image.clicking {
-  transform: translate(-72px, -34px) rotate(-20deg) scale(1.4);
-}
-
-/* ✨ curved star sparkles */
-.cursor-sparkle {
-  position: fixed;
+  width: 185px;
+  height: auto;
+  object-fit: contain;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 
-  background: linear-gradient(180deg, #fff8c9, #ffd960, #f6a623);
+  /* more left + strongly tilted by default */
+  transform: translate(-64px, -12px) rotate(-42deg) scale(1.32);
+  transform-origin: 10px 10px;
 
-  clip-path: polygon(
-    50% 0%,
-    62% 36%,
-    100% 50%,
-    62% 64%,
-    50% 100%,
-    38% 64%,
-    0% 50%,
-    38% 36%
-  );
-
-  opacity: 0.95;
-  filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.5));
-
-  animation: sparkleFade 480ms ease-out forwards;
+  filter: drop-shadow(0 0 6px rgba(255, 210, 120, 0.5));
+  transition: transform 80ms ease, filter 80ms ease;
 }
 
-/* paw float */
-@keyframes pawFloat {
-  0% {
-    transform: translate(-72px, -34px) rotate(-28deg) scale(1.6);
-  }
-  50% {
-    transform: translate(-72px, -40px) rotate(-28deg) scale(1.6);
-  }
-  100% {
-    transform: translate(-72px, -34px) rotate(-28deg) scale(1.6);
-  }
+/* click should NOT be the only tilt */
+.cursor-overlay-image.clicking {
+  transform: translate(-64px, -12px) rotate(-42deg) scale(1.22);
+  filter: drop-shadow(0 0 8px rgba(255, 210, 120, 0.68));
 }
 
-/* ✨ curved fade */
-@keyframes sparkleFade {
+/* paw print trail */
+.cursor-pawprint {
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  opacity: 0.92;
+  animation: pawPrintFade 520ms ease-out forwards;
+}
+
+.cursor-pawprint::before,
+.cursor-pawprint::after {
+  content: "";
+  position: absolute;
+  background: #ffd46a;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 2px rgba(255, 214, 120, 0.4));
+}
+
+/* main pad */
+.cursor-pawprint::before {
+  width: 9px;
+  height: 8px;
+  left: 3px;
+  top: 7px;
+  border-radius: 55% 55% 45% 45%;
+}
+
+/* toes */
+.cursor-pawprint::after {
+  width: 4px;
+  height: 4px;
+  left: 1px;
+  top: 1px;
+  box-shadow:
+    5px -1px 0 0 #ffd46a,
+    10px 0 0 0 #ffd46a,
+    7px 3px 0 0 #ffd46a;
+}
+
+@keyframes pawPrintFade {
   0% {
-    opacity: 0.95;
-    transform: scale(0.7);
+    opacity: 0.92;
   }
   100% {
     opacity: 0;
-    transform: scale(0.2) translateY(12px);
+    transform: translateY(8px) scale(0.75);
   }
 }
