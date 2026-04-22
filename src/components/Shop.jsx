@@ -77,13 +77,26 @@ const outfitItems = [
     category: "outfit",
   },
   {
-    id: "sleepy",
-    name: "Sleepy Raccacoonie",
-    image: "/raccacoonies/eepy.png",
+    id: "princess",
+    name: "Princess",
+    image: "/raccacoonies/princess.png",
     price: 1500,
     category: "outfit",
   },
-
+  {
+    id: "sleepy",
+    name: "Sleepy",
+    image: "/raccacoonies/eppy.png",
+    price: 1500,
+    category: "outfit",
+  },
+ {
+    id: "wizard",
+    name: "Wizard",
+    image: "/raccacoonies/wizard.png",
+    price: 1500,
+    category: "outfit",
+  },
 ];
 
 const FALLBACK_IMAGE = "/raccacoonies/what.jpeg";

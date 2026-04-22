@@ -21,10 +21,19 @@ const config = {
   parent: "game-container",
   backgroundColor: "#028af8",
 
+  resolution: window.devicePixelRatio || 2,
+
+  render: {
+    antialias: true,
+    antialiasGL: true,
+    pixelArt: false,
+    roundPixels: false,
+  },
+
   physics: {
     default: "arcade",
     arcade: {
-      debug: true,
+      debug: false,
       gravity: { y: 500 },
     },
   },

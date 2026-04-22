@@ -158,11 +158,10 @@ export function showFinishScreen(scene, options = {}) {
     const firstLine = subtitleLines[0] || "";
     const secondLine = subtitleLines[1] || "";
 
-    // polished coin sizing + spacing
     const coinSize = 28;
     const coinGlowSize = 34;
     const coinGap = 10;
-    const rowY = subtitleY + 18;
+    const rowY = subtitleY + 34;
 
     subtitleText = scene.add
       .text(0, rowY, firstLine, {
@@ -185,14 +184,17 @@ export function showFinishScreen(scene, options = {}) {
       .ellipse(coinX, rowY, coinGlowSize, coinGlowSize, 0xffd97a, 0.26)
       .setAlpha(0);
 
-    coinImage = scene.add
-      .image(coinX, rowY, "raccacoin")
-      .setDisplaySize(coinSize, coinSize)
+    coinImage = scene.add.image(coinX, rowY, "raccacoin");
+
+    const baseWidth = coinImage.width || coinImage.displayWidth || 1;
+    const scale = coinSize / baseWidth;
+
+    coinImage
+      .setScale(scale)
       .setDepth(1001)
       .setAlpha(0);
 
-    // keep the tiny pop-in without resetting to giant native texture size
-    coinImage.setScale(coinImage.scaleX * 0.92, coinImage.scaleY * 0.92);
+    coinImage.setScale(scale * 0.92);
 
     subtitleText.setPosition(textX, rowY + 1);
 

@@ -9,8 +9,11 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-function getCoinRewardForPlay(playCount) {
-  if (playCount <= 1) return 60;
+function getCoinRewardForPlay(playCount, perfectRun = false) {
+  if (playCount <= 1) {
+    return perfectRun ? 80 : 60;
+  }
+
   if (playCount === 2) return 35;
   if (playCount === 3) return 20;
   if (playCount === 4) return 10;
@@ -31,6 +34,7 @@ function getAttemptPercentFromAnswers(answers) {
 
 function isPerfectRun(totalWrongGuesses, answers) {
   if (Number(totalWrongGuesses || 0) === 0) return true;
+
   return Array.isArray(answers)
     ? answers.every((answer) => Number(answer?.wrongTries || 0) === 0)
     : false;
@@ -49,7 +53,6 @@ export async function saveAssignmentResult({
 
   const studentRef = doc(db, "students", String(studentId));
 
-  // summary doc per game
   const gameSummaryRef = doc(
     db,
     "students",
@@ -58,7 +61,6 @@ export async function saveAssignmentResult({
     String(gameKey)
   );
 
-  // attempts collection: one doc per attempt
   const attemptsCollectionRef = collection(
     db,
     "students",
@@ -106,14 +108,12 @@ export async function saveAssignmentResult({
     : 0;
 
   const nextPlayCount = previousPlayCount + 1;
-  const coinReward = getCoinRewardForPlay(nextPlayCount);
-  const newCoinTotal = currentCoins + coinReward;
-
   const numericWrongGuesses = Number(totalWrongGuesses ?? 0);
   const percentCorrect = getAttemptPercentFromAnswers(answers);
   const perfectRun = isPerfectRun(numericWrongGuesses, answers);
+  const coinReward = getCoinRewardForPlay(nextPlayCount, perfectRun);
+  const newCoinTotal = currentCoins + coinReward;
 
-  // 1) save a brand new attempt doc every time
   const attemptDocRef = await addDoc(attemptsCollectionRef, {
     assignmentTitle: assignmentTitle || gameKey,
     gameKey,
@@ -129,7 +129,6 @@ export async function saveAssignmentResult({
     perfectRun,
   });
 
-  // 2) save/update a per-game summary doc for quick lookup
   await setDoc(
     gameSummaryRef,
     {

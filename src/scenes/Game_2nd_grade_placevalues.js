@@ -52,22 +52,43 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     return allProblems;
   }
 
-  pickFiveUniqueAnswerProblems(problemPool) {
-    const shuffled = Phaser.Utils.Array.Shuffle([...problemPool]);
+  pickFiveProblemsAllowingDuplicateLabels(problemPool) {
+    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
     const selected = [];
-    const usedAnswers = new Set();
+    const usedExactProblems = new Set();
 
     for (const problem of shuffled) {
-      const answerKey = String(problem.answer);
-      if (usedAnswers.has(answerKey)) continue;
+      const key = `${String(problem?.question ?? "").trim()}::${String(problem?.answer ?? "").trim()}`;
+      if (usedExactProblems.has(key)) continue;
 
-      usedAnswers.add(answerKey);
+      usedExactProblems.add(key);
       selected.push(problem);
 
       if (selected.length === 5) break;
     }
 
     return selected;
+  }
+
+  assignPlaceValueSlots(selectedProblems) {
+    const trashOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+    const canOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+
+    [
+      this.trashProblem1,
+      this.trashProblem2,
+      this.trashProblem3,
+      this.trashProblem4,
+      this.trashProblem5,
+    ] = trashOrder;
+
+    [
+      this.canProblem1,
+      this.canProblem2,
+      this.canProblem3,
+      this.canProblem4,
+      this.canProblem5,
+    ] = canOrder;
   }
 
   create() {
@@ -93,31 +114,41 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
-    // KEEPING YOUR GENERATED ARRAYS/PROBLEM BUILD EXACTLY THE SAME
     this.problemsPlaceValues = this.buildPlaceValueProblems();
-
-    // only change: allow live/teacher problems if they exist, otherwise use your original built pool
     this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);
 
-    // keep your unique-answer step
-    const selectedProblems = this.pickFiveUniqueAnswerProblems(
+    const selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
       this.configuredProblems
     );
 
-    // use shared slot assignment so question/answer randomization stays clean
-    this.assignFiveQuestionAndAnswerSlots(selectedProblems);
+    this.assignPlaceValueSlots(selectedProblems);
 
-    this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
-    this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
-    this.trashCan3 = new TrashCan(this, 740, 700, this.answer3).setScale(1);
-    this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
-    this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
+    // top draggable numbers
+    this.trash1 = new Trash(this, 550, 280, this.trashProblem1);
+    this.trash2 = new Trash(this, 650, 400, this.trashProblem2);
+    this.trash3 = new Trash(this, 750, 280, this.trashProblem3);
+    this.trash4 = new Trash(this, 850, 400, this.trashProblem4);
+    this.trash5 = new Trash(this, 950, 280, this.trashProblem5);
 
-    this.trash1 = new Trash(this, 550, 280, this.question1);
-    this.trash2 = new Trash(this, 650, 400, this.question2);
-    this.trash3 = new Trash(this, 750, 280, this.question3);
-    this.trash4 = new Trash(this, 850, 400, this.question4);
-    this.trash5 = new Trash(this, 950, 280, this.question5);
+    // bottom cans with labels
+    this.trashCan1 = new TrashCan(this, 100, 700, this.canProblem1).setScale(1);
+    this.trashCan2 = new TrashCan(this, 440, 700, this.canProblem2).setScale(1);
+    this.trashCan3 = new TrashCan(this, 740, 700, this.canProblem3).setScale(1);
+    this.trashCan4 = new TrashCan(this, 1040, 700, this.canProblem4).setScale(1);
+    this.trashCan5 = new TrashCan(this, 1340, 700, this.canProblem5).setScale(1);
+
+    // store original problem data explicitly so matching is reliable
+    this.trash1.problemData = this.trashProblem1;
+    this.trash2.problemData = this.trashProblem2;
+    this.trash3.problemData = this.trashProblem3;
+    this.trash4.problemData = this.trashProblem4;
+    this.trash5.problemData = this.trashProblem5;
+
+    this.trashCan1.problemData = this.canProblem1;
+    this.trashCan2.problemData = this.canProblem2;
+    this.trashCan3.problemData = this.canProblem3;
+    this.trashCan4.problemData = this.canProblem4;
+    this.trashCan5.problemData = this.canProblem5;
 
     this.trashCan1.setTextScale(20);
     this.trashCan2.setTextScale(20);
@@ -188,7 +219,10 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       }
     };
 
-    if (trash.answer === trashCan.answer) {
+    const trashLabel = String(trash?.problemData?.question ?? "").trim();
+    const canLabel = String(trashCan?.problemData?.question ?? "").trim();
+
+    if (trashLabel && canLabel && trashLabel === canLabel) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);

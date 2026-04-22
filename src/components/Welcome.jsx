@@ -84,7 +84,7 @@ const Welcome = ({
           />
         </div>
 
-        <h1>WELCOME{name ? `, ${name}` : ""}:</h1>
+       <h1>WELCOME{name ? `, ${name} :` : ""}</h1>
         <p>Let's get started!</p>
 
         <div className="buttons">

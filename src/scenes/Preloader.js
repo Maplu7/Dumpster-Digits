@@ -150,6 +150,11 @@ export class Preloader extends Phaser.Scene {
     }
 
     create() {
+        const coinTexture = this.textures.get("raccacoin");
+        if (coinTexture) {
+            coinTexture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+        }
+
         this.scene.start('Game');
     }
 }
