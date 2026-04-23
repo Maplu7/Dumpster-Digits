@@ -263,6 +263,108 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
+/* scroll to top */
+
+.scroll-top-btn {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 76px;
+  height: 76px;
+  border: none;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-family: "Fjalla One", sans-serif;
+  color: #fff7ec;
+  cursor: pointer;
+  z-index: 30;
+
+  background: linear-gradient(
+    180deg,
+    rgba(110, 94, 181, 0.94),
+    rgba(74, 60, 135, 0.98)
+  );
+  border: 1px solid rgba(255, 225, 170, 0.22);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(180, 160, 255, 0.28),
+    0 0 40px rgba(255, 210, 140, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    opacity 0.2s ease;
+
+  animation:
+    scrollTopFloat 4.6s ease-in-out infinite,
+    scrollTopPulseGlow 2.8s ease-in-out infinite;
+}
+
+.scroll-top-btn:hover {
+  transform: scale(1.08);
+  filter: brightness(1.06);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.42),
+    0 0 28px rgba(180, 160, 255, 0.48),
+    0 0 52px rgba(255, 210, 140, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.scroll-top-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes scrollTopFloat {
+  0% {
+    transform: translateY(0px);
+  }
+  25% {
+    transform: translateY(-4px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  75% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes scrollTopPulseGlow {
+  0% {
+    box-shadow:
+      0 12px 26px rgba(0, 0, 0, 0.34),
+      0 0 18px rgba(180, 160, 255, 0.22),
+      0 0 34px rgba(255, 210, 140, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+  50% {
+    box-shadow:
+      0 16px 32px rgba(0, 0, 0, 0.38),
+      0 0 30px rgba(180, 160, 255, 0.42),
+      0 0 54px rgba(255, 210, 140, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+  100% {
+    box-shadow:
+      0 12px 26px rgba(0, 0, 0, 0.34),
+      0 0 18px rgba(180, 160, 255, 0.22),
+      0 0 34px rgba(255, 210, 140, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+}
+
 @media (max-width: 700px) {
   .assignments-page {
     padding: 24px 14px 32px;
@@ -286,5 +388,13 @@
 
   .assignment-polaroid-caption h2 {
     font-size: 22px;
+  }
+
+  .scroll-top-btn {
+    width: 68px;
+    height: 68px;
+    right: 18px;
+    bottom: 18px;
+    font-size: 26px;
   }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { db } from "../firebase";
 import { doc, updateDoc, deleteField } from "firebase/firestore";
 
@@ -26,6 +26,14 @@ export default function StudentGroupsBuilder({
   const [groupBuilderStudentIds, setGroupBuilderStudentIds] = useState([]);
   const [dragOverBuilder, setDragOverBuilder] = useState(false);
   const [isSavingGroup, setIsSavingGroup] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState("");
+
+  const isEditing = Boolean(editingGroupId);
+
+  const editingGroup = useMemo(
+    () => studentGroups.find((group) => group.id === editingGroupId) || null,
+    [studentGroups, editingGroupId]
+  );
 
   function handleDragStart(studentId) {
     return (event) => {
@@ -50,6 +58,21 @@ export default function StudentGroupsBuilder({
     setGroupBuilderStudentIds((prev) => prev.filter((id) => id !== studentId));
   }
 
+  function clearBuilder() {
+    setNewGroupName("");
+    setGroupBuilderStudentIds([]);
+    setEditingGroupId("");
+    setDragOverBuilder(false);
+  }
+
+  function startEditingGroup(group) {
+    setEditingGroupId(group.id);
+    setNewGroupName(group.name || "");
+    setGroupBuilderStudentIds(
+      Array.isArray(group.studentIds) ? group.studentIds : []
+    );
+  }
+
   async function saveGroup() {
     if (!classroom?.id) return;
 
@@ -64,17 +87,20 @@ export default function StudentGroupsBuilder({
       return;
     }
 
-    const groupId = slugifyGroupName(name);
-    if (!groupId) {
+    const nextGroupId = isEditing ? editingGroupId : slugifyGroupName(name);
+    if (!nextGroupId) {
       alert("Please use a valid group name.");
       return;
     }
 
-    const duplicate = studentGroups.find(
-      (group) =>
-        group.id === groupId ||
+    const duplicate = studentGroups.find((group) => {
+      if (isEditing && group.id === editingGroupId) return false;
+
+      return (
+        group.id === nextGroupId ||
         String(group.name).toLowerCase() === name.toLowerCase()
-    );
+      );
+    });
 
     if (duplicate) {
       alert("A group with that name already exists.");
@@ -85,18 +111,24 @@ export default function StudentGroupsBuilder({
       setIsSavingGroup(true);
 
       const classRef = doc(db, "classrooms", classroom.id);
+
+      if (isEditing && editingGroup && nextGroupId !== editingGroup.id) {
+        await updateDoc(classRef, {
+          [`studentGroups.${editingGroup.id}`]: deleteField(),
+        });
+      }
+
       await updateDoc(classRef, {
-        [`studentGroups.${groupId}`]: {
+        [`studentGroups.${nextGroupId}`]: {
           name,
           studentIds: groupBuilderStudentIds,
         },
       });
 
-      setNewGroupName("");
-      setGroupBuilderStudentIds([]);
-      setManagerGroupId(groupId);
-      setResetGroupId(groupId);
-      setResultsGroupId(groupId);
+      setManagerGroupId(nextGroupId);
+      setResetGroupId(nextGroupId);
+      setResultsGroupId(nextGroupId);
+      clearBuilder();
     } catch (error) {
       console.error("Error saving group:", error);
       alert("There was a problem saving the group.");
@@ -116,6 +148,10 @@ export default function StudentGroupsBuilder({
       await updateDoc(classRef, {
         [`studentGroups.${groupId}`]: deleteField(),
       });
+
+      if (editingGroupId === groupId) {
+        clearBuilder();
+      }
     } catch (error) {
       console.error("Error deleting group:", error);
       alert("There was a problem deleting the group.");
@@ -126,7 +162,9 @@ export default function StudentGroupsBuilder({
     <>
       <div className="tdash__group-builder">
         <div className="tdash__field">
-          <label className="tdash__label">Group Name</label>
+          <label className="tdash__label">
+            {isEditing ? "Edit Group Name" : "Group Name"}
+          </label>
           <input
             className="tdash__input"
             value={newGroupName}
@@ -154,7 +192,9 @@ export default function StudentGroupsBuilder({
           </div>
 
           <div className="tdash__group-column">
-            <div className="tdash__mini-title">Drop Into Group</div>
+            <div className="tdash__mini-title">
+              {isEditing ? "Edit Group Students" : "Drop Into Group"}
+            </div>
 
             <div
               className={`tdash__drop-zone ${
@@ -205,8 +245,25 @@ export default function StudentGroupsBuilder({
             onClick={saveGroup}
             disabled={isSavingGroup}
           >
-            {isSavingGroup ? "Saving..." : "Save Group"}
+            {isSavingGroup
+              ? isEditing
+                ? "Saving Changes..."
+                : "Saving..."
+              : isEditing
+              ? "Save Changes"
+              : "Save Group"}
           </button>
+
+          {isEditing && (
+            <button
+              className="tdash__ghost-btn"
+              type="button"
+              onClick={clearBuilder}
+              disabled={isSavingGroup}
+            >
+              Cancel Edit
+            </button>
+          )}
         </div>
       </div>
 
@@ -222,13 +279,23 @@ export default function StudentGroupsBuilder({
                 </div>
               </div>
 
-              <button
-                className="tdash__danger-btn"
-                type="button"
-                onClick={() => deleteGroup(group.id)}
-              >
-                Delete
-              </button>
+              <div className="tdash__actions">
+                <button
+                  className="tdash__ghost-btn"
+                  type="button"
+                  onClick={() => startEditingGroup(group)}
+                >
+                  Edit
+                </button>
+
+                <button
+                  className="tdash__danger-btn"
+                  type="button"
+                  onClick={() => deleteGroup(group.id)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         ) : (

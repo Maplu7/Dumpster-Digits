@@ -1,70 +1,47 @@
-import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export async function buyShopItem(studentId, item) {
-  if (!studentId || !item?.id || !item?.price) {
-    throw new Error("Missing student or item info.");
+  const studentRef = doc(db, "students", String(studentId));
+  const snap = await getDoc(studentRef);
+
+  if (!snap.exists()) {
+    throw new Error("Student not found.");
   }
 
-  const studentRef = doc(db, "students", String(studentId));
+  const data = snap.data();
+  const currentCoins = Number(data.coins || 0);
+  const ownedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
 
-  await runTransaction(db, async (transaction) => {
-    const snap = await transaction.get(studentRef);
+  if (ownedItems.includes(item.id)) {
+    await equipShopItem(studentId, item.id, item.image, item.category);
+    return;
+  }
 
-    if (!snap.exists()) {
-      throw new Error("Student not found.");
-    }
+  if (currentCoins < item.price) {
+    throw new Error("Not enough coins.");
+  }
 
-    const data = snap.data();
-    const currentCoins = Number(data.coins || 0);
-    const ownedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
-
-    if (ownedItems.includes(item.id)) {
-      transaction.update(studentRef, {
-        equippedItemId: item.id,
-        equippedItemImage: item.image,
-        updatedAt: serverTimestamp(),
-      });
-      return;
-    }
-
-    if (currentCoins < item.price) {
-      throw new Error("Not enough coins.");
-    }
-
-    transaction.update(studentRef, {
-      coins: currentCoins - item.price,
-      ownedItems: [...ownedItems, item.id],
-      equippedItemId: item.id,
-      equippedItemImage: item.image,
-      updatedAt: serverTimestamp(),
-    });
+  await updateDoc(studentRef, {
+    coins: currentCoins - item.price,
+    ownedItems: [...ownedItems, item.id],
+    equippedItemId: item.id,
+    equippedItemImage: item.image,
+    equippedItemCategory: item.category || "pfp",
   });
 }
 
-export async function equipShopItem(studentId, itemId, itemImage) {
-  if (!studentId || !itemId) return;
-
+export async function equipShopItem(
+  studentId,
+  itemId,
+  itemImage,
+  itemCategory = "pfp"
+) {
   const studentRef = doc(db, "students", String(studentId));
 
-  await runTransaction(db, async (transaction) => {
-    const snap = await transaction.get(studentRef);
-
-    if (!snap.exists()) {
-      throw new Error("Student not found.");
-    }
-
-    const data = snap.data();
-    const ownedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
-
-    if (!ownedItems.includes(itemId)) {
-      throw new Error("Item not owned.");
-    }
-
-    transaction.update(studentRef, {
-      equippedItemId: itemId,
-      equippedItemImage: itemImage || data.equippedItemImage || null,
-      updatedAt: serverTimestamp(),
-    });
+  await updateDoc(studentRef, {
+    equippedItemId: itemId,
+    equippedItemImage: itemImage,
+    equippedItemCategory: itemCategory,
   });
 }

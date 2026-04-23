@@ -112,7 +112,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
 .button-row button:nth-child(1) {
@@ -134,6 +134,35 @@
 
 .button-row button.active {
   box-shadow: 0 0 0 3px rgba(255, 231, 180, 0.7);
+}
+
+.button-row button.enter-flash {
+  animation: loginEnterFlash 0.26s ease;
+}
+
+@keyframes loginEnterFlash {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 3px rgba(255, 231, 180, 0.7),
+      0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+  40% {
+    transform: translateY(-4px) scale(1.08);
+    box-shadow:
+      0 0 0 4px rgba(255, 245, 200, 0.95),
+      0 0 20px rgba(255, 255, 255, 0.55),
+      0 0 38px rgba(255, 214, 102, 0.45);
+    filter: brightness(1.18);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 3px rgba(255, 231, 180, 0.7),
+      0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
 }
 
 .login-msg {

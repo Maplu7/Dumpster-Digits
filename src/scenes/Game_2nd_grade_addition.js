@@ -1,417 +1,338 @@
-import { Trash } from '../GameObjects/Trash.js'; //can copy the path
-import { TrashCan } from '../GameObjects/TrashCan.js';
-import { saveAssignmentResult } from "../saveAssignmentResult";
-import { showFinishScreen } from "./utils/showFinishScreen";
+import Phaser from "phaser";
+import { Trash } from "../GameObjects/Trash.js";
+import { TrashCan } from "../GameObjects/TrashCan.js";
+import { BaseMathGameScene } from "./BaseMathGameScene";
 
-export class Game_2nd_grade_addition extends Phaser.Scene {
+export class Game_2nd_grade_addition extends BaseMathGameScene {
   constructor() {
-    super('Game');
-
+    super("Game");
   }
 
-  /*Frame Dimensions: width: 1536,
-                      height: 793*/
+  buildAdditionProblems(topNumber) {
+    return Array.from({ length: 11 }, (_, i) => ({
+      question: `${topNumber}+${i}`,
+      answer: topNumber + i,
+    }));
+  }
+
+  pickFiveUniqueAnswerProblems(problemPool) {
+    const shuffled = Phaser.Utils.Array.Shuffle([...problemPool]);
+    const selected = [];
+    const usedAnswers = new Set();
+
+    for (const problem of shuffled) {
+      const answerKey = String(problem.answer);
+      if (usedAnswers.has(answerKey)) continue;
+
+      usedAnswers.add(answerKey);
+      selected.push(problem);
+
+      if (selected.length === 5) break;
+    }
+
+    return selected;
+  }
 
   create() {
+    this.initSharedGameConfig({
+      gameKey: "2nd_addition",
+      assignmentTitle: "2nd Grade Addition",
+    });
 
-    this.gameKey = "2nd_addition";
-    this.assignmentTitle = "2nd Grade Addition";
-
-    this.saveResults = async () => {
-  const studentId = this.studentId || this.registry.get("studentId");
-
-  return await saveAssignmentResult({
-    studentId,
-    gameKey: this.gameKey,
-    assignmentTitle: this.assignmentTitle,
-    totalWrongGuesses: this.numWrong || 0,
-    numGuessesPerAnswer: this.numGuessesPerAnswer || [],
-  });
-};
+    this.problems1 = this.buildAdditionProblems(1);
+    this.problems2 = this.buildAdditionProblems(2);
+    this.problems3 = this.buildAdditionProblems(3);
+    this.problems4 = this.buildAdditionProblems(4);
+    this.problems5 = this.buildAdditionProblems(5);
+    this.problems6 = this.buildAdditionProblems(6);
+    this.problems7 = this.buildAdditionProblems(7);
+    this.problems8 = this.buildAdditionProblems(8);
+    this.problems9 = this.buildAdditionProblems(9);
+    this.problems10 = this.buildAdditionProblems(10);
+    this.problems11 = this.buildAdditionProblems(11);
+    this.problems12 = this.buildAdditionProblems(12);
+    this.problems13 = this.buildAdditionProblems(13);
+    this.problems14 = this.buildAdditionProblems(14);
+    this.problems15 = this.buildAdditionProblems(15);
+    this.problems16 = this.buildAdditionProblems(16);
+    this.problems17 = this.buildAdditionProblems(17);
+    this.problems18 = this.buildAdditionProblems(18);
+    this.problems19 = this.buildAdditionProblems(19);
+    this.problems20 = this.buildAdditionProblems(20);
+    this.problems21 = this.buildAdditionProblems(21);
+    this.problems22 = this.buildAdditionProblems(22);
+    this.problems23 = this.buildAdditionProblems(23);
+    this.problems24 = this.buildAdditionProblems(24);
+    this.problems25 = this.buildAdditionProblems(25);
+    this.problems26 = this.buildAdditionProblems(26);
+    this.problems27 = this.buildAdditionProblems(27);
+    this.problems28 = this.buildAdditionProblems(28);
+    this.problems29 = this.buildAdditionProblems(29);
+    this.problems30 = this.buildAdditionProblems(30);
+    this.problems31 = this.buildAdditionProblems(31);
+    this.problems32 = this.buildAdditionProblems(32);
+    this.problems33 = this.buildAdditionProblems(33);
+    this.problems34 = this.buildAdditionProblems(34);
+    this.problems35 = this.buildAdditionProblems(35);
+    this.problems36 = this.buildAdditionProblems(36);
+    this.problems37 = this.buildAdditionProblems(37);
+    this.problems38 = this.buildAdditionProblems(38);
+    this.problems39 = this.buildAdditionProblems(39);
+    this.problems40 = this.buildAdditionProblems(40);
+    this.problems41 = this.buildAdditionProblems(41);
+    this.problems42 = this.buildAdditionProblems(42);
+    this.problems43 = this.buildAdditionProblems(43);
+    this.problems44 = this.buildAdditionProblems(44);
+    this.problems45 = this.buildAdditionProblems(45);
+    this.problems46 = this.buildAdditionProblems(46);
+    this.problems47 = this.buildAdditionProblems(47);
+    this.problems48 = this.buildAdditionProblems(48);
+    this.problems49 = this.buildAdditionProblems(49);
+    this.problems50 = this.buildAdditionProblems(50);
+    this.problems51 = this.buildAdditionProblems(51);
+    this.problems52 = this.buildAdditionProblems(52);
+    this.problems53 = this.buildAdditionProblems(53);
+    this.problems54 = this.buildAdditionProblems(54);
+    this.problems55 = this.buildAdditionProblems(55);
+    this.problems56 = this.buildAdditionProblems(56);
+    this.problems57 = this.buildAdditionProblems(57);
+    this.problems58 = this.buildAdditionProblems(58);
+    this.problems59 = this.buildAdditionProblems(59);
+    this.problems60 = this.buildAdditionProblems(60);
+    this.problems61 = this.buildAdditionProblems(61);
+    this.problems62 = this.buildAdditionProblems(62);
+    this.problems63 = this.buildAdditionProblems(63);
+    this.problems64 = this.buildAdditionProblems(64);
+    this.problems65 = this.buildAdditionProblems(65);
+    this.problems66 = this.buildAdditionProblems(66);
+    this.problems67 = this.buildAdditionProblems(67);
+    this.problems68 = this.buildAdditionProblems(68);
+    this.problems69 = this.buildAdditionProblems(69);
+    this.problems70 = this.buildAdditionProblems(70);
+    this.problems71 = this.buildAdditionProblems(71);
+    this.problems72 = this.buildAdditionProblems(72);
+    this.problems73 = this.buildAdditionProblems(73);
+    this.problems74 = this.buildAdditionProblems(74);
+    this.problems75 = this.buildAdditionProblems(75);
+    this.problems76 = this.buildAdditionProblems(76);
+    this.problems77 = this.buildAdditionProblems(77);
+    this.problems78 = this.buildAdditionProblems(78);
+    this.problems79 = this.buildAdditionProblems(79);
+    this.problems80 = this.buildAdditionProblems(80);
+    this.problems81 = this.buildAdditionProblems(81);
+    this.problems82 = this.buildAdditionProblems(82);
+    this.problems83 = this.buildAdditionProblems(83);
+    this.problems84 = this.buildAdditionProblems(84);
+    this.problems85 = this.buildAdditionProblems(85);
+    this.problems86 = this.buildAdditionProblems(86);
+    this.problems87 = this.buildAdditionProblems(87);
+    this.problems88 = this.buildAdditionProblems(88);
+    this.problems89 = this.buildAdditionProblems(89);
+    this.problems90 = this.buildAdditionProblems(90);
+    this.problems91 = this.buildAdditionProblems(91);
+    this.problems92 = this.buildAdditionProblems(92);
+    this.problems93 = this.buildAdditionProblems(93);
+    this.problems94 = this.buildAdditionProblems(94);
+    this.problems95 = this.buildAdditionProblems(95);
+    this.problems96 = this.buildAdditionProblems(96);
+    this.problems97 = this.buildAdditionProblems(97);
+    this.problems98 = this.buildAdditionProblems(98);
+    this.problems99 = this.buildAdditionProblems(99);
+    this.problems100 = this.buildAdditionProblems(100);
 
     this.problems = [
-      { question: "1+0", answer: 1 },
-      { question: "1+1", answer: 2 },
-      { question: "1+2", answer: 3 },
-      { question: "1+3", answer: 4 },
-      { question: "1+4", answer: 5 },
-      { question: "1+5", answer: 6 },
-      { question: "1+6", answer: 7 },
-      { question: "1+7", answer: 8 },
-      { question: "1+8", answer: 9 },
-      { question: "1+9", answer: 10 },
-      { question: "1+10", answer: 11 }
-    ]; //2D array for questions and their respective answers
-
-    this.twosProblems = [
-      { question: "2+0", answer: 2 },
-      { question: "2+1", answer: 3 },
-      { question: "2+2", answer: 4 },
-      { question: "2+3", answer: 5 },
-      { question: "2+4", answer: 6 },
-      { question: "2+5", answer: 7 },
-      { question: "2+6", answer: 8 },
-      { question: "2+7", answer: 9 },
-      { question: "2+8", answer: 10 },
-      { question: "2+9", answer: 11 },
-      { question: "2+10", answer: 12 }
+      ...this.problems1,
+      ...this.problems2,
+      ...this.problems3,
+      ...this.problems4,
+      ...this.problems5,
+      ...this.problems6,
+      ...this.problems7,
+      ...this.problems8,
+      ...this.problems9,
+      ...this.problems10,
+      ...this.problems11,
+      ...this.problems12,
+      ...this.problems13,
+      ...this.problems14,
+      ...this.problems15,
+      ...this.problems16,
+      ...this.problems17,
+      ...this.problems18,
+      ...this.problems19,
+      ...this.problems20,
+      ...this.problems21,
+      ...this.problems22,
+      ...this.problems23,
+      ...this.problems24,
+      ...this.problems25,
+      ...this.problems26,
+      ...this.problems27,
+      ...this.problems28,
+      ...this.problems29,
+      ...this.problems30,
+      ...this.problems31,
+      ...this.problems32,
+      ...this.problems33,
+      ...this.problems34,
+      ...this.problems35,
+      ...this.problems36,
+      ...this.problems37,
+      ...this.problems38,
+      ...this.problems39,
+      ...this.problems40,
+      ...this.problems41,
+      ...this.problems42,
+      ...this.problems43,
+      ...this.problems44,
+      ...this.problems45,
+      ...this.problems46,
+      ...this.problems47,
+      ...this.problems48,
+      ...this.problems49,
+      ...this.problems50,
+      ...this.problems51,
+      ...this.problems52,
+      ...this.problems53,
+      ...this.problems54,
+      ...this.problems55,
+      ...this.problems56,
+      ...this.problems57,
+      ...this.problems58,
+      ...this.problems59,
+      ...this.problems60,
+      ...this.problems61,
+      ...this.problems62,
+      ...this.problems63,
+      ...this.problems64,
+      ...this.problems65,
+      ...this.problems66,
+      ...this.problems67,
+      ...this.problems68,
+      ...this.problems69,
+      ...this.problems70,
+      ...this.problems71,
+      ...this.problems72,
+      ...this.problems73,
+      ...this.problems74,
+      ...this.problems75,
+      ...this.problems76,
+      ...this.problems77,
+      ...this.problems78,
+      ...this.problems79,
+      ...this.problems80,
+      ...this.problems81,
+      ...this.problems82,
+      ...this.problems83,
+      ...this.problems84,
+      ...this.problems85,
+      ...this.problems86,
+      ...this.problems87,
+      ...this.problems88,
+      ...this.problems89,
+      ...this.problems90,
+      ...this.problems91,
+      ...this.problems92,
+      ...this.problems93,
+      ...this.problems94,
+      ...this.problems95,
+      ...this.problems96,
+      ...this.problems97,
+      ...this.problems98,
+      ...this.problems99,
+      ...this.problems100,
     ];
 
-    this.threesProblems = [
-      { question: "3+0", answer: 3 },
-      { question: "3+1", answer: 4 },
-      { question: "3+2", answer: 5 },
-      { question: "3+3", answer: 6 },
-      { question: "3+4", answer: 7 },
-      { question: "3+5", answer: 8 },
-      { question: "3+6", answer: 9 },
-      { question: "3+7", answer: 10 },
-      { question: "3+8", answer: 11 },
-      { question: "3+9", answer: 12 },
-      { question: "3+10", answer: 13 }
-    ];
+    this.configuredProblems = this.getConfiguredProblems(this.problems);
+    const selectedProblems = this.pickFiveUniqueAnswerProblems(
+      this.configuredProblems
+    );
+    this.assignFiveQuestionAndAnswerSlots(selectedProblems);
 
-    this.foursProblems = [
-      { question: "4+0", answer: 4 },
-      { question: "4+1", answer: 5 },
-      { question: "4+2", answer: 6 },
-      { question: "4+3", answer: 7 },
-      { question: "4+4", answer: 8 },
-      { question: "4+5", answer: 9 },
-      { question: "4+6", answer: 10 },
-      { question: "4+7", answer: 11 },
-      { question: "4+8", answer: 12 },
-      { question: "4+9", answer: 13 },
-      { question: "4+10", answer: 14 }
-    ];
+    for (let i = 1; i <= 7; i++) {
+      const y = 50 + (i - 1) * 100;
 
-    this.fivesProblems = [
-      { question: "5+0", answer: 5 },
-      { question: "5+1", answer: 6 },
-      { question: "5+2", answer: 7 },
-      { question: "5+3", answer: 8 },
-      { question: "5+4", answer: 9 },
-      { question: "5+5", answer: 10 },
-      { question: "5+6", answer: 11 },
-      { question: "5+7", answer: 12 },
-      { question: "5+8", answer: 13 },
-      { question: "5+9", answer: 14 },
-      { question: "5+10", answer: 15 }
-    ];
+      this[`campGroundRow${i}`] = this.add.group({
+        key: "camp",
+        repeat: 11,
+        setXY: { x: 90, y: y, stepX: 180 },
+        setScale: { x: 3, y: 6 },
+      });
+    }
 
-    this.sixesProblems = [
-      { question: "6+0", answer: 6 },
-      { question: "6+1", answer: 7 },
-      { question: "6+2", answer: 8 },
-      { question: "6+3", answer: 9 },
-      { question: "6+4", answer: 10 },
-      { question: "6+5", answer: 11 },
-      { question: "6+6", answer: 12 },
-      { question: "6+7", answer: 13 },
-      { question: "6+8", answer: 14 },
-      { question: "6+9", answer: 15 },
-      { question: "6+10", answer: 16 }
-    ];
+    this.add.image(1250, 100, "yellowTent", 0).setScale(3);
+    this.add.image(200, 100, "yellowTent", 1).setScale(3);
+    this.add.image(100, 300, "campFire", 3).setScale(3);
+    this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
+    this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
-    this.sevensProblems = [
-      { question: "7+0", answer: 7 },
-      { question: "7+1", answer: 8 },
-      { question: "7+2", answer: 9 },
-      { question: "7+3", answer: 10 },
-      { question: "7+4", answer: 11 },
-      { question: "7+5", answer: 12 },
-      { question: "7+6", answer: 13 },
-      { question: "7+7", answer: 14 },
-      { question: "7+8", answer: 15 },
-      { question: "7+9", answer: 16 },
-      { question: "7+10", answer: 17 }
-    ];
-
-    this.eightsProblems = [
-      { question: "8+0", answer: 8 },
-      { question: "8+1", answer: 9 },
-      { question: "8+2", answer: 10 },
-      { question: "8+3", answer: 11 },
-      { question: "8+4", answer: 12 },
-      { question: "8+5", answer: 13 },
-      { question: "8+6", answer: 14 },
-      { question: "8+7", answer: 15 },
-      { question: "8+8", answer: 16 },
-      { question: "8+9", answer: 17 },
-      { question: "8+10", answer: 18 }
-    ];
-
-    this.ninesProblems = [
-      { question: "9+0", answer: 9 },
-      { question: "9+1", answer: 10 },
-      { question: "9+2", answer: 11 },
-      { question: "9+3", answer: 12 },
-      { question: "9+4", answer: 13 },
-      { question: "9+5", answer: 14 },
-      { question: "9+6", answer: 15 },
-      { question: "9+7", answer: 16 },
-      { question: "9+8", answer: 17 },
-      { question: "9+9", answer: 18 },
-      { question: "9+10", answer: 19 }
-    ];
-
-    this.tensProblems = [
-      { question: "10+0", answer: 10 },
-      { question: "10+1", answer: 11 },
-      { question: "10+2", answer: 12 },
-      { question: "10+3", answer: 13 },
-      { question: "10+4", answer: 14 },
-      { question: "10+5", answer: 15 },
-      { question: "10+6", answer: 16 },
-      { question: "10+7", answer: 17 },
-      { question: "10+8", answer: 18 },
-      { question: "10+9", answer: 19 },
-      { question: "10+10", answer: 20 }
-    ];
-
-    // this.add.image(90, 50, 'camp').setScale(3);
-    this.campGroundR1 = this.add.group({
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 50, stepX: 180 },
-      setScale: { x: 3, y: 4 },
-
-    });
-
-    this.campGroundR2 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 200, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR3 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 300, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR4 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 400, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR5 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 500, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR6 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 600, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.campGroundR7 = this.add.group({ //a DYNAMIC physics group
-      key: 'camp',
-      repeat: 11,
-      setXY: { x: 90, y: 720, stepX: 180 },
-      setScale: { x: 3, y: 4 }
-      //develop 12 stars that will start ad 12X3, and will move by 70 horizontally each time
-    });
-
-    this.problem1 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem1);
-
-    this.problem2 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem2);
-
-    this.problem3 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem3);
-
-    this.problem4 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem4);
-
-    this.problem5 = Phaser.Utils.Array.GetRandom(this.problems);
-    Phaser.Utils.Array.Remove(this.problems, this.problem5);
-
-    //createes and array of randomized problems
-    this.possibleQuestions = [
-      this.problem1,
-      this.problem2,
-      this.problem3,
-      this.problem4,
-      this.problem5
-    ]
-
-    //each question is one of the random problems
-    this.question1 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question1);
-
-    this.question2 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question2);
-
-    this.question3 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question3);
-
-    this.question4 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question4);
-
-    this.question5 = Phaser.Utils.Array.GetRandom(this.possibleQuestions);
-    Phaser.Utils.Array.Remove(this.possibleQuestions, this.question5);
-
-    // creates an array of randomized answers
-    this.possibleAnswers = [
-      this.problem1,
-      this.problem2,
-      this.problem3,
-      this.problem4,
-      this.problem5
-    ]
-
-    //assign a random answer to one of the answer#
-    this.answer1 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer1);
-
-    this.answer2 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer2);
-
-    this.answer3 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer3);
-
-    this.answer4 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer4);
-
-    this.answer5 = Phaser.Utils.Array.GetRandom(this.possibleAnswers);
-    Phaser.Utils.Array.Remove(this.possibleAnswers, this.answer5);
-
-
-    // creates trashcans and their individual answers
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
     this.trashCan3 = new TrashCan(this, 740, 700, this.answer3).setScale(1);
     this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
 
-
-    // Createse trash and their individual questions
-    this.trash1 = new Trash(this, 100, 280, this.question1).setScale(0.6);
-    this.trash2 = new Trash(this, 440, 340, this.question2).setScale(0.6);
-    this.trash3 = new Trash(this, 740, 280, this.question3).setScale(0.6);
-    this.trash4 = new Trash(this, 1040, 340, this.question4).setScale(0.6);
-    this.trash5 = new Trash(this, 1340, 280, this.question5).setScale(0.6);
-    //this.replacementTrash = new Trash;
+    this.trash1 = new Trash(this, 550, 280, this.question1);
+    this.trash2 = new Trash(this, 650, 400, this.question2);
+    this.trash3 = new Trash(this, 750, 280, this.question3);
+    this.trash4 = new Trash(this, 850, 400, this.question4);
+    this.trash5 = new Trash(this, 950, 280, this.question5);
 
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
       { guessedAnswer: this.trash2, numGuess: 0 },
       { guessedAnswer: this.trash3, numGuess: 0 },
       { guessedAnswer: this.trash4, numGuess: 0 },
-      { guessedAnswer: this.trash5, numGuess: 0 }
+      { guessedAnswer: this.trash5, numGuess: 0 },
     ];
 
-    //////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////
-    this.numCorrect = 0; //Will keep track of number of right guesses
-    this.numWrong = 0; //Will keep track of number of wrong guesses
-    //this.triesUsed = 0;
-    //this.numTries1 = 0;
-    //this.numTriesUsed = this.add.text(20, 20, 'Num Tries: 3', {fontSize: '40px', fill: "#ffffff"});
+    this.numCorrect = 0;
+    this.numWrong = 0;
+    this.triesUsed = 0;
 
+    this.trashGroup = this.physics.add.group();
+    this.trashGroup.add(this.trash1);
+    this.trashGroup.add(this.trash2);
+    this.trashGroup.add(this.trash3);
+    this.trashGroup.add(this.trash4);
+    this.trashGroup.add(this.trash5);
 
-    //March 3
-    // Will trigger when a piece of trash is over a garbage can
-    this.physics.add.overlap(this.trash1, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash1, this.trashCan5,
-      this.putInTrash, null, this);
+    this.trashCanGroup = this.physics.add.group();
+    this.trashCanGroup.add(this.trashCan1);
+    this.trashCanGroup.add(this.trashCan2);
+    this.trashCanGroup.add(this.trashCan3);
+    this.trashCanGroup.add(this.trashCan4);
+    this.trashCanGroup.add(this.trashCan5);
 
-
-    this.physics.add.overlap(this.trash2, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash2, this.trashCan5,
-      this.putInTrash, null, this);
-
-    this.physics.add.overlap(this.trash3, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash3, this.trashCan5,
-      this.putInTrash, null, this);
-
-    this.physics.add.overlap(this.trash4, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash4, this.trashCan5,
-      this.putInTrash, null, this);
-
-    this.physics.add.overlap(this.trash5, this.trashCan1,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan2,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan3,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan4,
-      this.putInTrash, null, this);
-    this.physics.add.overlap(this.trash5, this.trashCan5,
-      this.putInTrash, null, this);
-
-
-    /*this.testText = this.add.text(this.trash.x, this.trash.y, '3+4', {
-      fontSize: '15px', fill: '#ffffff'
-    }); //Obviously this only attaches text to one piece of trash
-        //it would be annoying/time consuming to do this for each and every
-        //possible equation that could appear.*/
-
+    this.physics.add.overlap(
+      this.trashGroup,
+      this.trashCanGroup,
+      this.putInTrash,
+      null,
+      this
+    );
   }
 
-
   putInTrash(trash, trashCan) {
-    // if this can is already solved, ignore
+    if (this.introActive) return;
     if (trashCan && trashCan._disabled) return;
-
-    // stop overlap-per-frame spam
     if (trash._lockedOnCan) return;
     trash._lockedOnCan = true;
 
-    // unlock only after leaving all cans
     const unlockWhenLeaving = () => {
-      const cans = [this.trashCan1, this.trashCan2, this.trashCan3, this.trashCan4, this.trashCan5]
-        .filter((c) => c && c.active);
+      const cans = [
+        this.trashCan1,
+        this.trashCan2,
+        this.trashCan3,
+        this.trashCan4,
+        this.trashCan5,
+      ].filter((c) => c && c.active);
 
       const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
 
       if (!stillOverAny) {
         trash._lockedOnCan = false;
 
-        // restore tint if not dragging
         if (trash && trash.active && trash.trashMath && !trash._dragging) {
           trash.trashMath.clearTint();
         }
@@ -420,92 +341,55 @@ export class Game_2nd_grade_addition extends Phaser.Scene {
       }
     };
 
-    // Check if the trash can is the correct one
     if (trash.answer === trashCan.answer) {
-      this.correct?.destroy();
-      this.correct = this.add.text(30, 200, "That is Correct!", {
-        fontSize: "80px",
-        fill: "#ffffff",
-      });
+      this.playFeedbackSound(true);
+      this.clearCenteredFeedback();
+      this.showCenteredFeedback("That is Correct!", true);
 
-      // destorying trash, and trash can
       if (trashCan.markCorrect) trashCan.markCorrect();
 
-      // remove trash
       trash.destroy();
       trashCan.destroy();
 
       this.numCorrect += 1;
-      this.time.delayedCall(550, this.onCorrect, [], this);
+      this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
       if (this.numCorrect === 5) {
-        // keep hidden during play; toast shows final number
-        this.time.delayedCall(1000, this.onFinish, [], this);
+        this.time.delayedCall(
+          this.feedbackDuration + 250,
+          this.onFinish,
+          [],
+          this
+        );
       }
 
       return;
     }
 
-    // Wrong (count once)
     this.numWrong += 1;
-
-    // keep hidden, but update stored number for toast
 
     if (trash === this.trash1) {
       this.numGuessesPerAnswer[0].numGuess++;
-    }
-    else if (trash === this.trash2) {
+    } else if (trash === this.trash2) {
       this.numGuessesPerAnswer[1].numGuess++;
-    }
-    else if (trash === this.trash3) {
+    } else if (trash === this.trash3) {
       this.numGuessesPerAnswer[2].numGuess++;
-    }
-    else if (trash == this.trash4) {
+    } else if (trash === this.trash4) {
       this.numGuessesPerAnswer[3].numGuess++;
-    }
-    else if (trash == this.trash5) {
+    } else if (trash === this.trash5) {
       this.numGuessesPerAnswer[4].numGuess++;
-    };
+    }
 
-    this.wrongText?.destroy();
-    this.wrongText = this.add.text(30, 200, "Try again!", {
-      fontSize: "80px",
-      fill: "#ffffff",
-    });
+    this.playFeedbackSound(false);
+    this.clearCenteredFeedback();
+    this.showCenteredFeedback("Try again!", false);
 
-    this.time.delayedCall(550, () => this.wrongText?.destroy());
+    this.time.delayedCall(
+      this.feedbackDuration,
+      () => this.clearCenteredFeedback()
+    );
     this.triesUsed += 1;
 
-    // allow another wrong count only after leaving cans
     unlockWhenLeaving();
   }
-
-  onCorrect() {
-    this.correct.destroy();
-  };
-
-
-async onFinish() {
-  let coinsEarned = 0;
-
-  try {
-    const rewardResult = await this.saveResults();
-    console.log("rewardResult:", rewardResult); // 👈 keep this for testing
-    coinsEarned = rewardResult?.coinReward || 0;
-  } catch (error) {
-    console.error("Save failed:", error);
-  }
-
-  showFinishScreen(this, {
-    title: "Congratulations!",
-    subtitle: `You earned ${coinsEarned} coins!`,
-    formatLine: (trash, guessCount) =>
-      "Wrong guesses for " +
-      trash.question +
-      " has " +
-      trash.answer +
-      ": " +
-      guessCount,
-  });
-}
 }

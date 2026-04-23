@@ -7,12 +7,11 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { getAssignmentsForGrade } from "../assignmentService";
+import { subscribeAssignmentsForGrade } from "../assignmentService";
 import { getAssignmentTheme } from "./appTheme";
 import StarTwinkleOverlay from "./StarTwinkleOverlay";
 import LayeredSkyScene from "../components/LayeredSkyScene";
 import useAmbience from "../hooks/useAmbience";
-
 
 function getPreviewProblem(gameKey) {
   switch (gameKey) {
@@ -80,8 +79,29 @@ export default function Assignments({
   const [completedMap, setCompletedMap] = useState({});
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 200);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 
   useEffect(() => {
     if (usingExternalData) {
@@ -99,66 +119,73 @@ export default function Assignments({
       return;
     }
 
+    let unsubscribeAssignments = null;
     let unsubscribeResults = null;
     let unsubscribeClassroom = null;
 
-    async function loadAssignmentsAndWatch() {
-      setLoading(true);
+    setLoading(true);
 
-      const items = await getAssignmentsForGrade(student?.grade);
+    unsubscribeAssignments = subscribeAssignmentsForGrade(
+      student?.grade,
+      (items) => {
+        const sortedItems = Array.isArray(items)
+          ? [...items].sort(
+              (a, b) =>
+                getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
+            )
+          : [];
 
-      const sortedItems = Array.isArray(items)
-        ? [...items].sort(
-            (a, b) =>
-              getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
-          )
-        : [];
-
-      setAssignments(sortedItems);
-
-      if (!student?.id) {
+        setAssignments(sortedItems);
         setLoading(false);
-        return;
+      },
+      (error) => {
+        console.error("Error watching assignments:", error);
+        setLoading(false);
       }
+    );
 
-      const resultsRef = collection(
-        db,
-        "students",
-        String(student.id),
-        "assignmentResults"
-      );
-
-      unsubscribeResults = onSnapshot(resultsRef, (snapshot) => {
-        const completed = {};
-        snapshot.forEach((docSnap) => {
-          const gameKey = docSnap.data()?.gameKey;
-          if (gameKey) completed[gameKey] = true;
-        });
-        setCompletedMap(completed);
-      });
-
-      const classQ = query(
-        collection(db, "classrooms"),
-        where("studentID", "array-contains", String(student.id))
-      );
-
-      unsubscribeClassroom = onSnapshot(classQ, (snapshot) => {
-        if (!snapshot.empty) {
-          const classData = snapshot.docs[0].data();
-          const studentLocks =
-            classData?.studentAssignments?.[String(student.id)] || {};
-          setLockMap(studentLocks);
-        } else {
-          setLockMap({});
-        }
-
-        setLoading(false);
-      });
+    if (!student?.id) {
+      return () => {
+        if (unsubscribeAssignments) unsubscribeAssignments();
+      };
     }
 
-    loadAssignmentsAndWatch();
+    const resultsRef = collection(
+      db,
+      "students",
+      String(student.id),
+      "assignmentResults"
+    );
+
+    unsubscribeResults = onSnapshot(resultsRef, (snapshot) => {
+      const completed = {};
+      snapshot.forEach((docSnap) => {
+        const gameKey = docSnap.data()?.gameKey;
+        if (gameKey) completed[gameKey] = true;
+      });
+      setCompletedMap(completed);
+    });
+
+    const classQ = query(
+      collection(db, "classrooms"),
+      where("studentID", "array-contains", String(student.id))
+    );
+
+    unsubscribeClassroom = onSnapshot(classQ, (snapshot) => {
+      if (!snapshot.empty) {
+        const classData = snapshot.docs[0].data();
+        const studentLocks =
+          classData?.studentAssignments?.[String(student.id)] || {};
+        setLockMap(studentLocks);
+      } else {
+        setLockMap({});
+      }
+
+      setLoading(false);
+    });
 
     return () => {
+      if (unsubscribeAssignments) unsubscribeAssignments();
       if (unsubscribeResults) unsubscribeResults();
       if (unsubscribeClassroom) unsubscribeClassroom();
     };
@@ -268,6 +295,17 @@ export default function Assignments({
           </div>
         )}
       </div>
+
+      {showScrollTop && (
+        <button
+          className="scroll-top-btn"
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+          title="Scroll to top"
+        >
+          ↑
+        </button>
+      )}
     </div>
   );
 }
