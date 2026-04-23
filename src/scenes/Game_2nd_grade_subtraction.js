@@ -39,31 +39,30 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
       assignmentTitle: "2nd Grade Subtraction",
     });
 
-    this.problems1 = this.buildSubtractionProblems(1);
-    this.problems2 = this.buildSubtractionProblems(2);
-    this.problems3 = this.buildSubtractionProblems(3);
-    this.problems4 = this.buildSubtractionProblems(4);
-    this.problems5 = this.buildSubtractionProblems(5);
-    this.problems6 = this.buildSubtractionProblems(6);
-    this.problems7 = this.buildSubtractionProblems(7);
-    this.problems8 = this.buildSubtractionProblems(8);
-    this.problems9 = this.buildSubtractionProblems(9);
-    this.problems10 = this.buildSubtractionProblems(10);
+//-----------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+    function subtractionProblems() {
+      const allProblems = [];
 
-    this.problems = [
-      ...this.problems1,
-      ...this.problems2,
-      ...this.problems3,
-      ...this.problems4,
-      ...this.problems5,
-      ...this.problems6,
-      ...this.problems7,
-      ...this.problems8,
-      ...this.problems9,
-      ...this.problems10,
-    ];
+      for(let n = 100; n >= 0; n--)
+      {
+        for(let j = n; j >= 0; j--)
+        {
+          allProblems.push({
+            answer: `${n - j}`,
+            question: `${n}-${j}`
+          })
+        }
+      }
+      return allProblems;
+    };
 
-    this.configuredProblems = this.getConfiguredProblems(this.problems);
+    this.problemsSubtraction = subtractionProblems();
+
+    this.configuredProblems = this.getConfiguredProblems(this.problemsSubtraction);
+//-----------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
     const selectedProblems = this.pickFiveUniqueAnswerProblems(
       this.configuredProblems
     );
