@@ -128,7 +128,7 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
             const y = 50 + (i - 1) * 100;
 
             this[`campGroundRow${i}`] = this.add.group({
-                key: 'camp',
+                key: 'dirtGround',
                 repeat: 11,
                 setXY: { x: 90, y: y, stepX: 180 },
                 setScale: { x: 3, y: 6 }

@@ -193,12 +193,43 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       const y = 50 + (i - 1) * 100;
 
       this[`campGroundRow${i}`] = this.add.group({
-        key: "camp",
+        key: "dirtGround",
         repeat: 11,
         setXY: { x: 90, y: y, stepX: 180 },
         setScale: { x: 3, y: 6 },
       });
     }
+
+    const mushroomSpots = [
+      { x: 80, y: 70 },
+      { x: 220, y: 140 },
+      { x: 420, y: 90 },
+      { x: 620, y: 180 },
+      { x: 820, y: 70 },
+      { x: 1020, y: 160 },
+      { x: 1220, y: 100 },
+      { x: 1420, y: 180 },
+
+      { x: 150, y: 320 },
+      { x: 350, y: 420 },
+      { x: 550, y: 300 },
+      { x: 760, y: 430 },
+      { x: 980, y: 340 },
+      { x: 1180, y: 420 },
+      { x: 1380, y: 350 },
+
+      { x: 100, y: 560 },
+      { x: 280, y: 650 },
+      { x: 500, y: 580 },
+      { x: 700, y: 670 },
+      { x: 930, y: 590 },
+      { x: 1160, y: 660 },
+      { x: 1380, y: 600 }
+    ];
+
+    mushroomSpots.forEach(spot => {
+      this.add.image(spot.x, spot.y, "mushrooms").setScale(3);
+    });
 
     this.add.image(1250, 100, "yellowTent", 0).setScale(3);
     this.add.image(200, 100, "yellowTent", 1).setScale(3);
