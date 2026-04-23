@@ -8,17 +8,17 @@ import useAmbience from "../hooks/useAmbience";
 
 const PRICES = [200, 175, 70, 175, 200, 100, 130, 150, 70, 120, 160, 110];
 const IMAGES = [
-  "/raccacoonies/E9D4CA22-965B-43B3-9E3A-AA2EC31DFEE2_1_105_c.jpeg",
-  "/raccacoonies/angy.jpeg",
+  "/raccacoonies/happy.png",
+  "/raccacoonies/angy.png",
   "/raccacoonies/crying.jpeg",
-  "/raccacoonies/E6F5A42F-2434-43C6-9A81-E276C38D97BC_1_105_c.jpeg",
+  "/raccacoonies/woah.png",
   "/raccacoonies/bleh.jpeg",
   "/raccacoonies/thinking.jpeg",
   "/raccacoonies/confused.jpeg",
   "/raccacoonies/bleh_2.jpeg",
   "/raccacoonies/what.jpeg",
-  "/raccacoonies/playing_dead.jpeg",
-  "/raccacoonies/furious.jpeg",
+  "/raccacoonies/playing_dead.png",
+  "/raccacoonies/furious.png",
   "/raccacoonies/blush.jpeg",
 ];
 
