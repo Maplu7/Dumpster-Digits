@@ -281,46 +281,88 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       }
     };
 
-    if (trash.answer === trashCan.answer) {
-      this.playFeedbackSound(true);
-      this.clearCenteredFeedback();
-      this.showCenteredFeedback("That is Correct!", true);
+//---------------------------------------------------------------------------------
+//---------------------  RACCOON ANIMATION----------------------------------------
+//-------------------------------------------------------------------------------
 
-      if (trashCan.markCorrect) trashCan.markCorrect();
+  // Check if the trash can is the correct one
+    // raccacconie animation
+          this.anims.create ({
+          key: 'raccoonFeedback',
+          frames: this.anims.generateFrameNumbers ('raccoon', {start: 20, end: 27}),
+          frameRate: 7,
+          repeat: -1
+        });
 
-      trash.destroy();
-      trashCan.destroy();
+  if (trash.answer === trashCan.answer) {
+    this.correct?.destroy();
+    this.correct = this.add.text(30, 200, "That is Correct!", {
+      fontSize: "80px",
+      fill: "#ffffff",
+    });
 
-      this.numCorrect += 1;
-      this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
+    this.raccoon = this.add.sprite(trashCan.x,trashCan.y, 'raccoon', 20).setScale(4); //UPDATE
+    this.emoteCorrect = this.add.sprite(this.raccoon.x, this.raccoon.y - 70, 'heartEmote').setScale(3); //UPDATE
+    
+    // destorying trash, and trash can
+    if (trashCan.markCorrect) trashCan.markCorrect();
+    this.raccoon.play('raccoonFeedback'); //UPDATE
 
-      if (this.numCorrect === 5) {
-        this.time.delayedCall(this.feedbackDuration + 250, this.onFinish, [], this);
-      }
+    trash.destroy();
+   trashCan.destroy();
 
-      return;
+    this.numCorrect += 1;
+    this.time.delayedCall(550, this.onCorrect, [], this);
+
+    if (this.numCorrect === 5) {
+      // keep hidden during play; toast shows final number
+      this.time.delayedCall(550, this.onFinish, [], this);
     }
 
-    this.numWrong += 1;
+    return;
+  };//END OF IS_CORRECT code
+  
 
-    if (trash === this.trash1) {
-      this.numGuessesPerAnswer[0].numGuess++;
-    } else if (trash === this.trash2) {
-      this.numGuessesPerAnswer[1].numGuess++;
-    } else if (trash === this.trash3) {
-      this.numGuessesPerAnswer[2].numGuess++;
-    } else if (trash === this.trash4) {
-      this.numGuessesPerAnswer[3].numGuess++;
-    } else if (trash === this.trash5) {
-      this.numGuessesPerAnswer[4].numGuess++;
-    }
+  // Wrong (count once)
+  this.numWrong += 1;
 
-    this.playFeedbackSound(false);
-    this.clearCenteredFeedback();
-    this.showCenteredFeedback("Try again!", false);
+  this.raccoonWrong = this.add.sprite(trashCan.x, trashCan.y, 'raccoon', 20).setScale(4); //UPDATE VVV
+  this.emoteWrong = this.add.sprite(this.raccoonWrong.x, this.raccoonWrong.y - 70, 'brokenHeartEmote').setScale(3);
+  
+  // keep hidden, but update stored number for toast
+  if(trash === this.trash1){
+    this.numGuessesPerAnswer[0].numGuess++;
+  }
+  else if(trash === this.trash2){
+    this.numGuessesPerAnswer[1].numGuess++;
+  }
+  else if(trash === this.trash3){
+    this.numGuessesPerAnswer[2].numGuess++;
+  }
+  else if(trash == this.trash4){
+    this.numGuessesPerAnswer[3].numGuess++;
+  }
+  else if(trash == this.trash5){
+    this.numGuessesPerAnswer[4].numGuess++;
+  };
 
-    this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
-    this.triesUsed += 1;
+  this.raccoonWrong.play('raccoonFeedback'); //UPDATE
+  
+  this.wrongText?.destroy();
+  this.wrongText = this.add.text(30, 200, "Try again!", {
+    fontSize: "80px",
+    fill: "#ffffff",
+  });
+  
+
+  this.time.delayedCall(550, () => this.wrongText?.destroy());
+
+  this.time.delayedCall(800, () => this.emoteWrong?.destroy()); //UPDATE
+  this.time.delayedCall(800, () => this.raccoonWrong?.destroy()); //UPDATE
+  this.triesUsed += 1;
+//------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
 
     unlockWhenLeaving();
   }
