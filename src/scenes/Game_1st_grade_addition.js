@@ -8,10 +8,88 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     }
 
     /*Frame Dimensions: width: 1536,
-                        height: 793*/
+                        height: 793//---------------------------------------------------------------------------------
+//---------------------  RACCOON ANIMATION----------------------------------------
+//-------------------------------------------------------------------------------
 
-    create() {
-        this.initSharedGameConfig({
+  // Check if the trash can is the correct one
+    // raccacconie animation
+          this.anims.create ({
+          key: 'raccoonFeedback',
+          frames: this.anims.generateFrameNumbers ('raccoon', {start: 20, end: 27}),
+          frameRate: 7,
+          repeat: -1
+        });
+
+  if (trash.answer === trashCan.answer) {
+    this.correct?.destroy();
+    this.correct = this.add.text(30, 200, "That is Correct!", {
+      fontSize: "80px",
+      fill: "#ffffff",
+    });
+
+    this.raccoon = this.add.sprite(trashCan.x,trashCan.y, 'raccoon', 20).setScale(4); //UPDATE
+    this.emoteCorrect = this.add.sprite(this.raccoon.x, this.raccoon.y - 70, 'heartEmote').setScale(3); //UPDATE
+    
+    // destorying trash, and trash can
+    if (trashCan.markCorrect) trashCan.markCorrect();
+    this.raccoon.play('raccoonFeedback'); //UPDATE
+
+    trash.destroy();
+   trashCan.destroy();
+
+    this.numCorrect += 1;
+    this.time.delayedCall(550, this.onCorrect, [], this);
+
+    if (this.numCorrect === 5) {
+      // keep hidden during play; toast shows final number
+      this.time.delayedCall(550, this.onFinish, [], this);
+    }
+
+    return;
+  };//END OF IS_CORRECT code
+  
+
+  // Wrong (count once)
+  this.numWrong += 1;
+
+  this.raccoonWrong = this.add.sprite(trashCan.x, trashCan.y, 'raccoon', 20).setScale(4); //UPDATE VVV
+  this.emoteWrong = this.add.sprite(this.raccoonWrong.x, this.raccoonWrong.y - 70, 'brokenHeartEmote').setScale(3);
+  
+  // keep hidden, but update stored number for toast
+  if(trash === this.trash1){
+    this.numGuessesPerAnswer[0].numGuess++;
+  }
+  else if(trash === this.trash2){
+    this.numGuessesPerAnswer[1].numGuess++;
+  }
+  else if(trash === this.trash3){
+    this.numGuessesPerAnswer[2].numGuess++;
+  }
+  else if(trash == this.trash4){
+    this.numGuessesPerAnswer[3].numGuess++;
+  }
+  else if(trash == this.trash5){
+    this.numGuessesPerAnswer[4].numGuess++;
+  };
+
+  this.raccoonWrong.play('raccoonFeedback'); //UPDATE
+  
+  this.wrongText?.destroy();
+  this.wrongText = this.add.text(30, 200, "Try again!", {
+    fontSize: "80px",
+    fill: "#ffffff",
+  });
+  
+
+  this.time.delayedCall(550, () => this.wrongText?.destroy());
+
+  this.time.delayedCall(800, () => this.emoteWrong?.destroy()); //UPDATE
+  this.time.delayedCall(800, () => this.raccoonWrong?.destroy()); //UPDATE
+  this.triesUsed += 1;
+//------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
             gameKey: "1st_addition",
             assignmentTitle: "1st Grade Addition",
         });
@@ -260,46 +338,89 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
             }
         };
 
-        if (trash.answer === trashCan.answer) {
-            this.playFeedbackSound(true);
-            this.clearCenteredFeedback();
-            this.showCenteredFeedback("That is Correct!", true);
 
-            if (trashCan.markCorrect) trashCan.markCorrect();
+//---------------------------------------------------------------------------------
+//---------------------  RACCOON ANIMATION----------------------------------------
+//-------------------------------------------------------------------------------
 
-            trash.destroy();
-            trashCan.destroy();
+  // Check if the trash can is the correct one
+    // raccacconie animation
+          this.anims.create ({
+          key: 'raccoonFeedback',
+          frames: this.anims.generateFrameNumbers ('raccoon', {start: 20, end: 27}),
+          frameRate: 7,
+          repeat: -1
+        });
 
-            this.numCorrect += 1;
-            this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
+  if (trash.answer === trashCan.answer) {
+    this.correct?.destroy();
+    this.correct = this.add.text(30, 200, "That is Correct!", {
+      fontSize: "80px",
+      fill: "#ffffff",
+    });
 
-            if (this.numCorrect === 5) {
-                this.time.delayedCall(this.feedbackDuration + 250, this.onFinish, [], this);
-            }
+    this.raccoon = this.add.sprite(trashCan.x,trashCan.y, 'raccoon', 20).setScale(4); //UPDATE
+    this.emoteCorrect = this.add.sprite(this.raccoon.x, this.raccoon.y - 70, 'heartEmote').setScale(3); //UPDATE
+    
+    // destorying trash, and trash can
+    if (trashCan.markCorrect) trashCan.markCorrect();
+    this.raccoon.play('raccoonFeedback'); //UPDATE
 
-            return;
-        }
+    trash.destroy();
+   trashCan.destroy();
 
-        this.numWrong += 1;
+    this.numCorrect += 1;
+    this.time.delayedCall(550, this.onCorrect, [], this);
 
-        if (trash === this.trash1) {
-            this.numGuessesPerAnswer[0].numGuess++;
-        } else if (trash === this.trash2) {
-            this.numGuessesPerAnswer[1].numGuess++;
-        } else if (trash === this.trash3) {
-            this.numGuessesPerAnswer[2].numGuess++;
-        } else if (trash === this.trash4) {
-            this.numGuessesPerAnswer[3].numGuess++;
-        } else if (trash === this.trash5) {
-            this.numGuessesPerAnswer[4].numGuess++;
-        }
+    if (this.numCorrect === 5) {
+      // keep hidden during play; toast shows final number
+      this.time.delayedCall(550, this.onFinish, [], this);
+    }
 
-        this.playFeedbackSound(false);
-        this.clearCenteredFeedback();
-        this.showCenteredFeedback("Try again!", false);
+    return;
+  };//END OF IS_CORRECT code
+  
 
-        this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
-        this.triesUsed += 1;
+  // Wrong (count once)
+  this.numWrong += 1;
+
+  this.raccoonWrong = this.add.sprite(trashCan.x, trashCan.y, 'raccoon', 20).setScale(4); //UPDATE VVV
+  this.emoteWrong = this.add.sprite(this.raccoonWrong.x, this.raccoonWrong.y - 70, 'brokenHeartEmote').setScale(3);
+  
+  // keep hidden, but update stored number for toast
+  if(trash === this.trash1){
+    this.numGuessesPerAnswer[0].numGuess++;
+  }
+  else if(trash === this.trash2){
+    this.numGuessesPerAnswer[1].numGuess++;
+  }
+  else if(trash === this.trash3){
+    this.numGuessesPerAnswer[2].numGuess++;
+  }
+  else if(trash == this.trash4){
+    this.numGuessesPerAnswer[3].numGuess++;
+  }
+  else if(trash == this.trash5){
+    this.numGuessesPerAnswer[4].numGuess++;
+  };
+
+  this.raccoonWrong.play('raccoonFeedback'); //UPDATE
+  
+  this.wrongText?.destroy();
+  this.wrongText = this.add.text(30, 200, "Try again!", {
+    fontSize: "80px",
+    fill: "#ffffff",
+  });
+  
+
+  this.time.delayedCall(550, () => this.wrongText?.destroy());
+
+  this.time.delayedCall(800, () => this.emoteWrong?.destroy()); //UPDATE
+  this.time.delayedCall(800, () => this.raccoonWrong?.destroy()); //UPDATE
+  this.triesUsed += 1;
+//------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
 
         unlockWhenLeaving();
     }
