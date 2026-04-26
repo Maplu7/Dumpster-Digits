@@ -1,12 +1,15 @@
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: none;
+position: relative;
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+overflow: hidden;
+backdrop-filter: none;
 }
 
 .login-container {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,6 +21,7 @@
   font-size: 90px;
   text-align: center;
   margin: 0;
+  line-height: 0.95;
 
   background: linear-gradient(135deg, #00c2ff, #7cff00, #ff7a00, #ff003c);
   -webkit-background-clip: text;
@@ -25,18 +29,21 @@
   color: transparent;
 
   animation: hueRotate 5s linear infinite;
+  text-shadow: 0 0 15px rgba(0, 194, 255, 0.4);
 }
 
-.game-title {
-  text-shadow: 0 0 15px rgba(0, 194, 255, 0.4);
+@keyframes hueRotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
 }
 
 .login-wrapper {
   width: 420px;
   max-width: 90%;
-  /* background: rgba(255, 255, 255, 0.10);
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  /* box-shadow: 0 0 20px rgba(0, 0, 0, 0.15); */
   color: white;
   border-radius: 15px;
   padding: 30px 40px;
@@ -58,6 +65,10 @@
   margin: 0 0 18px;
 }
 
+.login-wrapper form {
+  width: 100%;
+}
+
 .login-wrapper .input-box {
   position: relative;
   width: 100%;
@@ -69,7 +80,6 @@
   width: 100%;
   height: 100%;
   background: transparent;
-  border: none;
   outline: none;
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 40px;
@@ -89,6 +99,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 16px;
+  color: white;
 }
 
 .button-row {
@@ -103,10 +114,8 @@
   font-family: "Fjalla One", sans-serif;
   width: 150px;
   height: 60px;
-
   border-radius: 20px;
   border: 3px solid rgba(255, 255, 255, 0.8);
-
   cursor: pointer;
   font-size: 20px;
   color: #fff;
@@ -117,7 +126,11 @@
   justify-content: center;
   text-align: center;
 
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .button-row button:nth-child(1) {
@@ -137,6 +150,42 @@
   transform: translateY(2px) scale(0.98);
 }
 
+.button-row button.active {
+  box-shadow: 0 0 0 3px rgba(255, 231, 180, 0.7);
+}
+
+.button-row button.enter-flash {
+  animation: loginEnterFlash 0.26s ease;
+}
+
+@keyframes loginEnterFlash {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 3px rgba(255, 231, 180, 0.7),
+      0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+
+  40% {
+    transform: translateY(-4px) scale(1.08);
+    box-shadow:
+      0 0 0 4px rgba(255, 245, 200, 0.95),
+      0 0 20px rgba(255, 255, 255, 0.55),
+      0 0 38px rgba(255, 214, 102, 0.45);
+    filter: brightness(1.18);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 3px rgba(255, 231, 180, 0.7),
+      0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+}
+
+.login-msg,
 .msg {
   margin-top: 16px;
   font-size: 14px;

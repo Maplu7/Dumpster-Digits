@@ -1,0 +1,303 @@
+.layered-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------------- SKY BACKGROUNDS ---------------- */
+
+.layered-scene__sky-glow {
+  position: absolute;
+  inset: 0;
+}
+
+/* SHOP */
+.layered-scene--shop .layered-scene__sky-glow {
+  background:
+    radial-gradient(circle at 50% 10%, rgba(255, 229, 186, 0.08), transparent 22%),
+    radial-gradient(circle at 14% 20%, rgba(152, 184, 255, 0.06), transparent 22%),
+    radial-gradient(circle at 84% 14%, rgba(255, 177, 122, 0.06), transparent 20%),
+    linear-gradient(to bottom, rgba(8, 10, 24, 0.04), rgba(8, 10, 24, 0.12));
+}
+
+/* GRADE 1 (softer + warmer) */
+.layered-scene--assignments-grade1 .layered-scene__sky-glow {
+  background:
+    radial-gradient(circle at 52% 10%, rgba(255, 232, 184, 0.09), transparent 22%),
+    radial-gradient(circle at 20% 16%, rgba(255, 196, 146, 0.07), transparent 18%),
+    radial-gradient(circle at 82% 18%, rgba(188, 175, 255, 0.05), transparent 20%),
+    linear-gradient(to bottom, rgba(18, 14, 34, 0.05), rgba(18, 14, 34, 0.12));
+}
+
+/* GRADE 2 (slightly brighter / cooler) */
+.layered-scene--assignments-grade2 .layered-scene__sky-glow {
+  background:
+    radial-gradient(circle at 52% 10%, rgba(205, 230, 255, 0.09), transparent 22%),
+    radial-gradient(circle at 20% 16%, rgba(255, 209, 159, 0.06), transparent 18%),
+    radial-gradient(circle at 82% 18%, rgba(170, 194, 255, 0.07), transparent 20%),
+    linear-gradient(to bottom, rgba(10, 16, 34, 0.06), rgba(10, 16, 34, 0.15));
+}
+
+/* ---------------- AURORA ---------------- */
+
+.layered-scene__aurora {
+  position: absolute;
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  animation: auroraFloat 14s ease-in-out infinite alternate;
+}
+
+/* grade differences */
+.layered-scene--assignments-grade1 .layered-scene__aurora {
+  opacity: 0.12;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__aurora {
+  opacity: 0.2;
+}
+
+.layered-scene__aurora--one {
+  top: 4%;
+  left: -8%;
+  width: 52%;
+  height: 18%;
+  background: linear-gradient(
+    90deg,
+    rgba(124, 210, 255, 0.18),
+    rgba(190, 160, 255, 0.12),
+    rgba(255, 206, 140, 0.10)
+  );
+}
+
+.layered-scene__aurora--two {
+  top: 10%;
+  right: -10%;
+  width: 48%;
+  height: 16%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 196, 140, 0.14),
+    rgba(255, 156, 178, 0.10),
+    rgba(125, 198, 255, 0.14)
+  );
+}
+
+/* ---------------- STARS ---------------- */
+
+.layered-scene__stars {
+  position: absolute;
+  inset: 0;
+}
+
+.layered-scene__star {
+  position: absolute;
+  border-radius: 999px;
+  opacity: 0;
+  background: radial-gradient(
+    circle,
+    rgba(255, 247, 228, 0.95),
+    rgba(255, 226, 176, 0)
+  );
+  animation: twinkle ease-in-out infinite;
+}
+
+/* ---------------- CLOUDS ---------------- */
+
+.layered-scene__cloud {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(20px);
+  opacity: 0.1;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0)
+  );
+  animation: driftCloud 28s linear infinite;
+}
+
+/* positions differ per grade */
+.layered-scene--assignments-grade1 .layered-scene__cloud--1 {
+  top: 14%;
+  left: -20%;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__cloud--1 {
+  top: 10%;
+  left: -16%;
+}
+
+.layered-scene__cloud--1 {
+  width: 260px;
+  height: 90px;
+}
+
+.layered-scene__cloud--2 {
+  top: 18%;
+  right: -14%;
+  width: 320px;
+  height: 110px;
+}
+
+.layered-scene__cloud--3 {
+  top: 28%;
+  left: 15%;
+  width: 220px;
+  height: 74px;
+}
+
+/* ---------------- HILLS ---------------- */
+
+.layered-scene__hills {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  border-radius: 50% 50% 0 0;
+}
+
+.layered-scene__hills--back {
+  bottom: 0;
+  height: 30%;
+  background: linear-gradient(to top, rgba(18, 26, 46, 0.28), transparent);
+}
+
+.layered-scene__hills--mid {
+  bottom: -2%;
+  height: 22%;
+}
+
+.layered-scene__hills--front {
+  bottom: -4%;
+  height: 16%;
+}
+
+/* ---------------- FIREFLIES ---------------- */
+
+.layered-scene__fireflies {
+  position: absolute;
+  inset: 0;
+}
+
+.layered-scene__firefly {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 170, 1),
+    rgba(255, 204, 94, 0)
+  );
+  opacity: 0;
+  animation: floatBug ease-in-out infinite;
+}
+
+/* ---------------- LANTERN (DIFFERENT PER GRADE) ---------------- */
+
+/* GRADE 1 (slightly lower) */
+.layered-scene--assignments-grade1 .layered-scene__lantern-glow {
+  left: 2%;
+  bottom: 18%;
+}
+
+/* GRADE 2 (slightly higher) */
+.layered-scene--assignments-grade2 .layered-scene__lantern-glow {
+  left: 1.6%;
+  bottom: 22%;
+}
+
+.layered-scene__lantern-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 225, 146, 0.25),
+    rgba(255, 145, 52, 0)
+  );
+  filter: blur(12px);
+  animation: lanternPulse 3.5s ease-in-out infinite;
+}
+
+.layered-scene__lantern-core {
+  position: absolute;
+  left: 5%;
+  bottom: 25%;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fff5d4, transparent);
+}
+
+/* ---------------- FLOOR LIGHT (UNCHANGED POSITION) ---------------- */
+
+.layered-scene__flashlight-glow {
+  position: absolute;
+  left: 1.6%;
+  bottom: 1.8%;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 225, 130, 0.24),
+    rgba(255, 142, 44, 0)
+  );
+  filter: blur(12px);
+}
+
+.layered-scene__flashlight-core {
+  position: absolute;
+  left: 3.9%;
+  bottom: 6.1%;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fff7ce, transparent);
+}
+
+/* ---------------- FOG ---------------- */
+
+.layered-scene__fog {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 60px;
+  filter: blur(28px);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 225, 205, 0.08),
+    transparent
+  );
+}
+
+/* ---------------- ANIMATIONS ---------------- */
+
+@keyframes twinkle {
+  0% { opacity: 0; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+@keyframes driftCloud {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(120px); }
+}
+
+@keyframes floatBug {
+  0% { opacity: 0; transform: translateY(10px); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+@keyframes auroraFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(10px); }
+}
+
+@keyframes lanternPulse {
+  0% { transform: scale(0.96); }
+  100% { transform: scale(1.05); }
+}

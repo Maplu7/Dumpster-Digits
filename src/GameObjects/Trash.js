@@ -8,15 +8,24 @@ export class Trash extends Phaser.GameObjects.Container
         //any piece of trash the above code 
         //needs to be replaced and instead
         //be for a container
+        this.piecesOfTrash = [
+          0,
+          1,
+          2
+        ];
 
-        this.trashMath = scene.add.sprite(0, 0, 'trash').setScale(0.8);
-        this.text = scene.add.text(this.trashMath.x - 30, this.trashMath.y, problem.question, {
-          fontSize: '25px', fill: '#ffffff'
-        });
+
+
+        this.trashMath = scene.add.image(0, 0, 'usedItems', Phaser.Utils.Array.GetRandom(this.piecesOfTrash)).setScale(4);
+
+        this.text = scene.add.text(this.trashMath.x, this.trashMath.y, problem.answer, {
+          fontSize: '23px',fontStyle: 'bold', fontFamily: 'Verdana', fill: '#000000'
+        }).setOrigin(0.5);
 
         this.add([this.trashMath, this.text]) // Adds trash and text to the container
 
-        this.correctAnswer = problem.answer;
+        this.answer = problem.answer;
+        this.question = problem.question;
 
           scene.add.existing(this);
           scene.physics.add.existing(this);
@@ -31,6 +40,7 @@ export class Trash extends Phaser.GameObjects.Container
         //currently dragX and dragY represent trash's postion (0,0)
         //so trying to drag it immedietly postions it to the (0, 0)
         //position rather than properly follow the cursor
+        
         this.trashMath.on('drag', (pointer) => {
             this.setPosition(pointer.worldX, pointer.worldY);
         });
@@ -45,22 +55,16 @@ export class Trash extends Phaser.GameObjects.Container
             this.clearTint();
         });
 
-        this.body.allowGravity = false;
     }
 
+    setSpriteScale(scale) 
+    {
+      this.trashMath.setScale(scale);
+    }
 
-    /*
- this.trash1.on('dragstart', function(pointer) {
-        this.physics.add.collider(this.trash1, this.trashCans);
-        if(this.physics.overlap(this.trash1, this.trashCans)) {
-          this.trash1.x = pointer.prevPosition.x;
-          this.trash1.y = pointerPosition.y;
-        }
-        this.setTint(0x00e6e6);
-      })
-      this. trash1.on('dragend', function(pointer){
-        this.clearTint();
-      });
-    */
+    setTextScale(scale)
+    {
+      this.text.setFontSize(scale);
+    }
 
 }

@@ -1,16 +1,260 @@
-.gamePage {
-  min-height: 100vh;
-  position: relative;
-  padding: 16px;
-
-  background-image: url("/backgroundLogin.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-#game-container {
-  width: 800px;
-  height: 600px;
-  margin: 0 auto;
+.game-page {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #6aad11;
+}
+
+.game-canvas-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.game-canvas-wrap canvas {
+  display: block;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+}
+
+.game-loading-text {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2200;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(32, 19, 8, 0.72);
+  color: #fff3d1;
+  font-family: "Fjalla One", sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.22),
+    0 0 10px rgba(255, 231, 180, 0.16);
+}
+
+.game-profile-shell {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(255, 255, 255, 0.98),
+    rgba(255, 247, 232, 0.96)
+  );
+  backdrop-filter: blur(8px);
+  transform-origin: center;
+  animation: gameProfileFloat 4.8s ease-in-out infinite;
+  transition:
+    width 0.28s ease,
+    height 0.28s ease,
+    border-radius 0.28s ease,
+    padding 0.28s ease,
+    box-shadow 0.28s ease,
+    background 0.28s ease;
+}
+
+.game-profile-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0.08) 38%,
+    rgba(255, 255, 255, 0) 60%
+  );
+}
+
+.game-profile-shell--pfp {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.game-profile-shell--customize {
+  width: 154px;
+  height: 118px;
+  border-radius: 30px;
+  padding: 7px;
+}
+
+.game-profile-image {
+  position: relative;
+  z-index: 2;
+  display: block;
+  max-width: none;
+  transition:
+    width 0.28s ease,
+    height 0.28s ease,
+    transform 0.28s ease,
+    border-radius 0.28s ease;
+}
+
+.game-profile-image--pfp {
+  width: 94px;
+  height: 94px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.game-profile-image--customize {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 22px;
+  transform: scale(0.98);
+}
+
+@keyframes gameProfileFloat {
+  0% {
+    transform: translateY(0px) rotate(-1.2deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0.8deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(-1.2deg);
+  }
+}
+
+.game-finish-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.game-finish-btn {
+  pointer-events: auto;
+  position: absolute;
+  left: 50%;
+  top: 82%;
+  transform: translateX(-50%) rotate(-1deg);
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-family: "Fjalla One", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffe7b4 0%, #f7c98a 100%);
+  color: #5d3616;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(255, 231, 180, 0.25);
+  transition: all 0.2s ease;
+  animation: polaroidFloat 4s ease-in-out infinite;
+}
+
+.game-finish-btn:hover {
+  transform: translateX(-50%) translateY(-3px) rotate(0deg) scale(1.04);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.24),
+    0 0 18px rgba(255, 214, 140, 0.28);
+  filter: brightness(1.04);
+}
+
+.game-finish-btn:active {
+  transform: translateX(-50%) translateY(0) rotate(-0.5deg) scale(0.98);
+}
+
+@keyframes polaroidFloat {
+  0% {
+    transform: translateX(-50%) translateY(0px) rotate(-1.5deg);
+  }
+  25% {
+    transform: translateX(-50%) translateY(-4px) rotate(-0.8deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-8px) rotate(0.6deg);
+  }
+  75% {
+    transform: translateX(-50%) translateY(-4px) rotate(-0.4deg);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0px) rotate(-1.5deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .game-profile-shell--pfp {
+    width: 95px;
+    height: 95px;
+  }
+
+  .game-profile-shell--customize {
+    width: 124px;
+    height: 96px;
+    border-radius: 24px;
+  }
+
+  .game-profile-image--pfp {
+    width: 74px;
+    height: 74px;
+  }
+
+  .game-finish-btn {
+    top: 80%;
+  }
+}
+
+@media (max-width: 600px) {
+  .game-profile-shell {
+    top: 16px;
+    left: 16px;
+  }
+
+  .game-profile-shell--pfp {
+    width: 80px;
+    height: 80px;
+  }
+
+  .game-profile-shell--customize {
+    width: 108px;
+    height: 84px;
+    border-radius: 20px;
+  }
+
+  .game-profile-image--pfp {
+    width: 62px;
+    height: 62px;
+  }
+
+  .game-finish-btn {
+    top: 78%;
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+
+  .game-loading-text {
+    font-size: 15px;
+  }
 }

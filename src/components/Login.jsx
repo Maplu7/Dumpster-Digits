@@ -2,43 +2,93 @@ import React, { useState } from "react";
 import "./Login.css";
 import { FaUser, FaLock } from "react-icons/fa";
 import { loginStudent, loginTeacher } from "../authService";
+import CampfireScene from "../components/CampfireScene";
 
 const Login = ({ onLogin, onTeacherLogin }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
-  const [isTeacher, setIsTeacher] = useState(false);
+
+  const [loginMode, setLoginMode] = useState("student");
+  const [isLoading, setIsLoading] = useState(false);
+  const [enterFlash, setEnterFlash] = useState(false);
+  const [fireBoost, setFireBoost] = useState(0);
+
+  function pulseFire(strength = 1) {
+    setFireBoost((n) => n + strength);
+  }
+
+  function triggerEnterEffects() {
+    setEnterFlash(true);
+    pulseFire(2);
+
+    window.clearTimeout(triggerEnterEffects._timer);
+    triggerEnterEffects._timer = window.setTimeout(() => {
+      setEnterFlash(false);
+    }, 260);
+  }
+
+  async function handleStudentLogin() {
+    if (isLoading) return;
+
+    pulseFire();
+    setMsg("Logging in as student...");
+    setIsLoading(true);
+
+    try {
+      const { student } = await loginStudent(userId, password);
+      setMsg("");
+      onLogin(student);
+    } catch (error) {
+      console.error("Student login failed:", error);
+      setMsg(error.message || "Student login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleTeacherLogin() {
+    if (isLoading) return;
+
+    pulseFire();
+    setMsg("Logging in as teacher...");
+    setIsLoading(true);
+
+    try {
+      const { teacher } = await loginTeacher(userId, password);
+      setMsg("");
+      onTeacherLogin(teacher);
+    } catch (error) {
+      console.error("Teacher login failed:", error);
+      setMsg(error.message || "Teacher login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isLoading) return;
 
-    if (isTeacher) {
-      setMsg("Logging in as teacher...");
+    triggerEnterEffects();
 
-      try {
-        const { teacher } = await loginTeacher(userId, password);
-        setMsg("");
-        onTeacherLogin(teacher);
-      } catch (error) {
-        console.error("Teacher login failed:", error);
-        setMsg(error.message || "Teacher login failed.");
-      }
+    if (loginMode === "teacher") {
+      await handleTeacherLogin();
     } else {
-      setMsg("Logging in as student...");
+      await handleStudentLogin();
+    }
+  }
 
-      try {
-        const { student } = await loginStudent(userId, password);
-        setMsg("");
-        onLogin(student);
-      } catch (error) {
-        console.error("Student login failed:", error);
-        setMsg(error.message || "Student login failed.");
-      }
+  function handleInputKeyDown(e) {
+    if (e.key === "Enter") {
+      handleSubmit(e);
     }
   }
 
   return (
     <div className="login-page">
+      <CampfireScene boost={fireBoost} />
+
       <div className="login-container">
         <h1 className="game-title">DUMPSTER DIGITS</h1>
 
@@ -47,10 +97,14 @@ const Login = ({ onLogin, onTeacherLogin }) => {
             <div className="input-box">
               <input
                 type="text"
-                placeholder="ID Number"
+                placeholder={
+                  loginMode === "teacher" ? "Teacher ID" : "Student ID"
+                }
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 required
+                disabled={isLoading}
               />
               <FaUser className="icon" />
             </div>
@@ -58,25 +112,55 @@ const Login = ({ onLogin, onTeacherLogin }) => {
             <div className="input-box">
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={
+                  loginMode === "teacher"
+                    ? "Teacher Password"
+                    : "Birthday (MMDD)"
+                }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 required
+                disabled={isLoading}
               />
               <FaLock className="icon" />
             </div>
 
             <div className="button-row">
               <button
-                type="submit"
-                onClick={() => setIsTeacher(false)}
+                type="button"
+                onClick={async () => {
+                  if (isLoading) return;
+                  setLoginMode("student");
+                  triggerEnterEffects();
+                  await handleStudentLogin();
+                }}
+                className={[
+                  loginMode === "student" ? "active" : "",
+                  enterFlash && loginMode === "student" ? "enter-flash" : "",
+                ]
+                  .join(" ")
+                  .trim()}
+                disabled={isLoading}
               >
                 Student
               </button>
 
               <button
-                type="submit"
-                onClick={() => setIsTeacher(true)}
+                type="button"
+                onClick={async () => {
+                  if (isLoading) return;
+                  setLoginMode("teacher");
+                  triggerEnterEffects();
+                  await handleTeacherLogin();
+                }}
+                className={[
+                  loginMode === "teacher" ? "active" : "",
+                  enterFlash && loginMode === "teacher" ? "enter-flash" : "",
+                ]
+                  .join(" ")
+                  .trim()}
+                disabled={isLoading}
               >
                 Teacher
               </button>
