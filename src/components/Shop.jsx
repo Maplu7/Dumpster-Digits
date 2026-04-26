@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
+import React, { useEffect, useMemo, useState } from "react";
+import { arrayRemove, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { buyShopItem, equipShopItem } from "../shopService";
 import LayeredSkyScene from "../components/LayeredSkyScene";
-import "./Shop.css";
 import useAmbience from "../hooks/useAmbience";
+import "./Shop.css";
 
 const PRICES = [200, 175, 70, 175, 200, 100, 130, 150, 70, 120, 160, 110];
+
 const IMAGES = [
   "/raccacoonies/happy.png",
   "/raccacoonies/angy.png",
@@ -60,71 +61,90 @@ const outfitItems = [
     image: "/raccacoonies/ARGG.png",
     category: "outfit",
   },
-
   {
     id: "knight",
     name: "Knight",
-    image: "/raccacoonies/knight.png",
     price: 1500,
+    image: "/raccacoonies/knight.png",
     category: "outfit",
   },
-
   {
     id: "fairy",
     name: "Fairy",
-    image: "/raccacoonies/fairy.png",
     price: 1500,
+    image: "/raccacoonies/fairy.png",
     category: "outfit",
   },
   {
     id: "princess",
     name: "Princess",
-    image: "/raccacoonies/princess.png",
     price: 1500,
+    image: "/raccacoonies/princess.png",
     category: "outfit",
   },
   {
     id: "sleepy",
     name: "Sleepy",
-    image: "/raccacoonies/eppy.png",
     price: 1500,
+    image: "/raccacoonies/eppy.png",
     category: "outfit",
   },
   {
     id: "wizard",
     name: "Wizard",
-    image: "/raccacoonies/wizard.png",
     price: 1500,
+    image: "/raccacoonies/wizard.png",
     category: "outfit",
   },
   {
     id: "sable",
     name: "Sable",
-    image: "/raccacoonies/sable.png",
     price: 1500,
+    image: "/raccacoonies/sable.png",
     category: "outfit",
   },
   {
     id: "dragon",
     name: "Dragon",
-    image: "/raccacoonies/dragon.png",
     price: 1500,
+    image: "/raccacoonies/dragon.png",
     category: "outfit",
   },
 ];
 
 const FALLBACK_IMAGE = "/raccacoonies/what.jpeg";
 
-const Shop = ({ student, onBack }) => {
+export default function Shop({ student, onBack }) {
   const [coins, setCoins] = useState(0);
   const [ownedItems, setOwnedItems] = useState([]);
-  const [equippedItemId, setEquippedItemId] = useState(null);
-  const [equippedItemCategory, setEquippedItemCategory] = useState("pfp");
-  const [equippedItemImage, setEquippedItemImage] = useState(FALLBACK_IMAGE);
+  const [newUnlockedItems, setNewUnlockedItems] = useState([]);
+
+  const [equippedPfp, setEquippedPfp] = useState("");
+  const [equippedOutfit, setEquippedOutfit] = useState("");
+
   const [busyItemId, setBusyItemId] = useState(null);
   const [activeTab, setActiveTab] = useState("outfits");
+  const [previewItem, setPreviewItem] = useState(null);
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
+
+  const defaultPfp =
+    pfpItems.find((item) => item.name === "What Raccacoonie") || pfpItems[0];
+
+  const defaultOutfit = outfitItems[0];
+
+  const activeItems = activeTab === "outfits" ? outfitItems : pfpItems;
+
+  const equippedOutfitItem =
+    outfitItems.find((item) => item.id === equippedOutfit) || defaultOutfit;
+
+  const equippedPfpItem =
+    pfpItems.find((item) => item.id === equippedPfp) || defaultPfp;
+
+  const previewDisplayItem = useMemo(() => {
+    if (previewItem) return previewItem;
+    return activeTab === "outfits" ? equippedOutfitItem : equippedPfpItem;
+  }, [previewItem, activeTab, equippedOutfitItem, equippedPfpItem]);
 
   useEffect(() => {
     if (!student?.id) return;
@@ -135,23 +155,45 @@ const Shop = ({ student, onBack }) => {
       if (!snap.exists()) return;
 
       const data = snap.data();
-      setCoins(Number(data.coins || 0));
+
+      setCoins(Number(data.coins ?? 0));
       setOwnedItems(Array.isArray(data.ownedItems) ? data.ownedItems : []);
-      setEquippedItemId(data.equippedItemId ?? null);
-      setEquippedItemCategory(data.equippedItemCategory || "pfp");
-      setEquippedItemImage(data.equippedItemImage || FALLBACK_IMAGE);
+      setNewUnlockedItems(
+        Array.isArray(data.newUnlockedItems) ? data.newUnlockedItems : []
+      );
+
+      setEquippedPfp(data.equippedPfp || "");
+      setEquippedOutfit(data.equippedOutfit || "");
     });
 
     return () => unsubscribe();
-  }, [student]);
+  }, [student?.id]);
 
-  const defaultPfp = pfpItems.find((item) => item.name === "What Raccacoonie") || pfpItems[0];
-  const defaultOutfit = outfitItems[0];
+  function isOwned(item) {
+    return item.price === 0 || ownedItems.includes(item.id);
+  }
 
-  const equippedItem =
-    equippedItemCategory === "customize"
-      ? outfitItems.find((item) => item.id === equippedItemId) || defaultOutfit
-      : pfpItems.find((item) => item.id === equippedItemId) || defaultPfp;
+  function isEquipped(item) {
+    if (item.category === "outfit") return equippedOutfit === item.id;
+    return equippedPfp === item.id;
+  }
+
+  function getButtonLabel(item) {
+    if (busyItemId === item.id) return "Saving...";
+    if (isEquipped(item)) return "Wearing";
+    if (isOwned(item)) return "Wear";
+    if (coins < item.price) return "Not enough";
+    return "Buy + Wear";
+  }
+
+  async function clearNewGlow(itemId) {
+    if (!student?.id) return;
+    if (!newUnlockedItems.includes(itemId)) return;
+
+    await updateDoc(doc(db, "students", String(student.id)), {
+      newUnlockedItems: arrayRemove(itemId),
+    });
+  }
 
   async function handleItemClick(item) {
     if (!student?.id) return;
@@ -159,28 +201,18 @@ const Shop = ({ student, onBack }) => {
     try {
       setBusyItemId(item.id);
 
-      if (item.price === 0 || ownedItems.includes(item.id)) {
-        await equipShopItem(student.id, item.id, item.image, item.category);
-      } else {
+      if (!isOwned(item)) {
         await buyShopItem(student.id, item);
+        return;
       }
+
+      await equipShopItem(student.id, item);
+      await clearNewGlow(item.id);
     } catch (error) {
       alert(error.message || "Something went wrong.");
     } finally {
       setBusyItemId(null);
     }
-  }
-
-  function getButtonLabel(item) {
-    const isOwned = ownedItems.includes(item.id) || item.price === 0;
-    const isEquipped =
-      equippedItemId === item.id && equippedItemCategory === item.category;
-
-    if (busyItemId === item.id) return "Saving...";
-    if (isEquipped) return "Wearing";
-    if (isOwned) return "Wear";
-    if (coins < item.price) return "Not enough";
-    return "Buy";
   }
 
   return (
@@ -211,7 +243,10 @@ const Shop = ({ student, onBack }) => {
           <div className="shop-tabs">
             <button
               className={`shop-tab ${activeTab === "outfits" ? "active" : ""}`}
-              onClick={() => setActiveTab("outfits")}
+              onClick={() => {
+                setActiveTab("outfits");
+                setPreviewItem(null);
+              }}
               type="button"
             >
               Outfits
@@ -219,124 +254,93 @@ const Shop = ({ student, onBack }) => {
 
             <button
               className={`shop-tab ${activeTab === "emotes" ? "active" : ""}`}
-              onClick={() => setActiveTab("emotes")}
+              onClick={() => {
+                setActiveTab("emotes");
+                setPreviewItem(null);
+              }}
               type="button"
             >
               Emotes
             </button>
           </div>
 
-          {activeTab === "outfits" ? (
-            <div className="shop-grid shop-grid--outfits">
-              {outfitItems.map((item) => {
-                const isOwned = ownedItems.includes(item.id) || item.price === 0;
-                const isEquipped =
-                  equippedItemId === item.id &&
-                  equippedItemCategory === item.category;
+          <div
+            className={`shop-grid ${
+              activeTab === "outfits" ? "shop-grid--outfits" : ""
+            }`}
+          >
+            {activeItems.map((item) => {
+              const owned = isOwned(item);
+              const equipped = isEquipped(item);
+              const isNew = newUnlockedItems.includes(item.id);
 
-                return (
-                  <div key={item.id} className="shop-card shop-card--outfit">
-                    <div className="shop-item-art shop-item-art--image shop-item-art--outfit">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = FALLBACK_IMAGE;
-                        }}
-                      />
-                    </div>
-
-                    <h3>{item.name}</h3>
-
-                    <p>
-                      {item.price === 0 ? (
-                        "Free"
-                      ) : (
-                        <>
-                          <img
-                            src="/ui-assets/raccacoin.png"
-                            alt="coin"
-                            className="shop-coin"
-                            style={{
-                              width: 18,
-                              verticalAlign: "middle",
-                              marginRight: 6,
-                            }}
-                          />
-                          {item.price}
-                        </>
-                      )}
-                    </p>
-
-                    <button
-                      disabled={
-                        busyItemId === item.id ||
-                        (!isOwned && coins < item.price) ||
-                        isEquipped
-                      }
-                      onClick={() => handleItemClick(item)}
-                      type="button"
-                    >
-                      {getButtonLabel(item)}
-                    </button>
+              return (
+                <div
+                  key={item.id}
+                  className={`shop-card ${
+                    item.category === "outfit" ? "shop-card--outfit" : ""
+                  } ${isNew ? "shop-card--new" : ""} ${
+                    equipped ? "shop-card--equipped" : ""
+                  }`}
+                  onMouseEnter={() => setPreviewItem(item)}
+                  onMouseLeave={() => setPreviewItem(null)}
+                  onFocus={() => setPreviewItem(item)}
+                  onBlur={() => setPreviewItem(null)}
+                >
+                  <div
+                    className={`shop-item-art shop-item-art--image ${
+                      item.category === "outfit"
+                        ? "shop-item-art--outfit"
+                        : ""
+                    }`}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = FALLBACK_IMAGE;
+                      }}
+                    />
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="shop-grid">
-              {pfpItems.map((item) => {
-                const isOwned = ownedItems.includes(item.id);
-                const isEquipped =
-                  equippedItemId === item.id &&
-                  equippedItemCategory === item.category;
 
-                return (
-                  <div key={item.id} className="shop-card">
-                    <div className="shop-item-art shop-item-art--image">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = FALLBACK_IMAGE;
-                        }}
-                      />
-                    </div>
+                  <h3>{item.name}</h3>
 
-                    <h3>{item.name}</h3>
+                  <p>
+                    {item.price === 0 ? (
+                      "Free"
+                    ) : (
+                      <>
+                        <img
+                          src="/ui-assets/raccacoin.png"
+                          alt="coin"
+                          className="shop-coin"
+                          style={{
+                            width: 18,
+                            verticalAlign: "middle",
+                            marginRight: 6,
+                          }}
+                        />
+                        {item.price}
+                      </>
+                    )}
+                  </p>
 
-                    <p>
-                      <img
-                        src="/ui-assets/raccacoin.png"
-                        alt="coin"
-                        className="shop-coin"
-                        style={{
-                          width: 18,
-                          verticalAlign: "middle",
-                          marginRight: 6,
-                        }}
-                      />
-                      {item.price}
-                    </p>
-
-                    <button
-                      disabled={
-                        busyItemId === item.id ||
-                        (!isOwned && coins < item.price) ||
-                        isEquipped
-                      }
-                      onClick={() => handleItemClick(item)}
-                      type="button"
-                    >
-                      {getButtonLabel(item)}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  <button
+                    disabled={
+                      busyItemId === item.id ||
+                      (!owned && coins < item.price) ||
+                      equipped
+                    }
+                    onClick={() => handleItemClick(item)}
+                    type="button"
+                  >
+                    {getButtonLabel(item)}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="shop-right">
@@ -347,50 +351,39 @@ const Shop = ({ student, onBack }) => {
               <div className="stand-base" />
 
               <div
-                className={`preview-character ${activeTab === "outfits"
+                className={`preview-character ${
+                  activeTab === "outfits"
                     ? "preview-character--customize"
                     : "preview-character--pfp"
-                  }`}
+                }`}
               >
-                {activeTab === "outfits" ? (
-                  <img
-                    src={
-                      equippedItemCategory === "customize"
-                        ? equippedItemImage || defaultOutfit.image
-                        : defaultOutfit.image
-                    }
-                    alt="Outfit preview"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = FALLBACK_IMAGE;
-                    }}
-                  />
-                ) : (
-                  <img
-                    src={equippedItemImage || FALLBACK_IMAGE}
-                    alt="Raccacoonie preview"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = FALLBACK_IMAGE;
-                    }}
-                  />
-                )}
+                <img
+                  src={previewDisplayItem?.image || FALLBACK_IMAGE}
+                  alt="Preview"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = FALLBACK_IMAGE;
+                  }}
+                />
               </div>
 
               <div className="equipped-label">
-                {activeTab === "outfits"
-                  ? `Outfit: ${equippedItemCategory === "customize"
-                    ? equippedItem.name
-                    : defaultOutfit.name
-                  }`
-                  : `Wearing: ${equippedItem.name}`}
+                {previewItem
+                  ? `Preview: ${previewItem.name}`
+                  : activeTab === "outfits"
+                  ? `Outfit: ${equippedOutfitItem.name}`
+                  : `Wearing: ${equippedPfpItem.name}`}
               </div>
+
+              {previewItem && !isEquipped(previewItem) && (
+                <div className="equipped-label equipped-label--hint">
+                  Click {isOwned(previewItem) ? "Wear" : "Buy + Wear"} to save it.
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Shop;
+}

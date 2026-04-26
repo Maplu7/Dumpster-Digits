@@ -9,9 +9,11 @@ import {
   getDocs,
   doc,
   updateDoc,
+  writeBatch,
   onSnapshot,
   deleteDoc,
   serverTimestamp,
+  deleteField,
 } from "firebase/firestore";
 
 import StudentGroupsBuilder from "./StudentGroupsBuilder";
@@ -285,6 +287,133 @@ function getStudentRiskScore(results, assignmentsForClass, classroom, studentId)
   });
 
   return Math.min(100, score);
+}
+
+
+function normalizeStudentDoc(studentId, data = {}) {
+  return {
+    id: String(studentId),
+    name: data.name || `Student ${studentId}`,
+    grade: data.grade ?? null,
+    birthday: data.birthday ?? "",
+    coins: Number(data.coins ?? 0),
+
+    createdAt: data.createdAt ?? null,
+    lastActive: data.lastActive ?? null,
+
+    weakFamilies: data.weakFamilies || {},
+    adaptiveAssignments: Array.isArray(data.adaptiveAssignments)
+      ? data.adaptiveAssignments
+      : [],
+    ownedItems: Array.isArray(data.ownedItems) ? data.ownedItems : [],
+    equippedPfp: data.equippedPfp || "",
+    equippedOutfit: data.equippedOutfit || "",
+    equippedFrame: data.equippedFrame || "",
+    equippedBadge: data.equippedBadge || "",
+    equippedTrail: data.equippedTrail || "",
+    updatedAt: data.updatedAt ?? null,
+
+    settings: data.settings || {
+      muted: false,
+      volume: 0.35,
+    },
+
+    stats: data.stats || {
+      totalGamesPlayed: 0,
+      totalPerfectRuns: 0,
+      totalWrongGuesses: 0,
+    },
+
+    lastLoginAt: data.lastLoginAt ?? null,
+    lastPlayedAt: data.lastPlayedAt ?? null,
+    lastGameKey: data.lastGameKey || "",
+    displayNameColor: data.displayNameColor || "",
+
+    equippedPfp: data.equippedPfp || "",
+    equippedOutfit: data.equippedOutfit || "",
+    ...data,
+  };
+}
+
+function getProblemFamily(problemText = "") {
+  const text = String(problemText).toLowerCase();
+
+  if (text.includes("hundreds")) return "Hundreds Place";
+  if (text.includes("tens")) return "Tens Place";
+  if (text.includes("ones")) return "Ones Place";
+
+  if (text.includes("+")) {
+    const first = Number(text.split("+")[0]);
+    if (!Number.isNaN(first)) return `${first}s Addition`;
+  }
+
+  if (text.includes("-")) {
+    const second = Number(text.split("-")[1]);
+    if (!Number.isNaN(second)) return `Subtract ${second}s`;
+  }
+
+  if (text.includes("×") || text.includes("*")) {
+    const first = Number(text.split(/[×*]/)[0]);
+    if (!Number.isNaN(first)) return `${first}s Multiplication`;
+  }
+
+  return "Other";
+}
+
+function buildWeakFamilyStats(results = []) {
+  const stats = {};
+
+  function addProblem(problemText, wrongTries) {
+    const family = getProblemFamily(problemText);
+
+    if (!stats[family]) {
+      stats[family] = {
+        attempts: 0,
+        wrongTries: 0,
+        weakScore: 0,
+      };
+    }
+
+    stats[family].attempts += 1;
+    stats[family].wrongTries += Number(wrongTries || 0);
+    stats[family].weakScore = Math.round(
+      (stats[family].wrongTries / Math.max(1, stats[family].attempts)) * 100
+    );
+  }
+
+  results.forEach((attempt) => {
+    const answers = Array.isArray(attempt.answers) ? attempt.answers : [];
+
+    answers.forEach((answer) => {
+      addProblem(
+        answer.problem || answer.question || answer.prompt || "",
+        answer.wrongTries
+      );
+    });
+
+    if (attempt.problemBreakdown && typeof attempt.problemBreakdown === "object") {
+      Object.entries(attempt.problemBreakdown).forEach(([key, tries]) => {
+        addProblem(key.split("=")[0] || key, tries);
+      });
+    }
+  });
+
+  return stats;
+}
+
+function getAdaptiveProblemsForStudent(studentWeakFamilies = {}, problemBank = []) {
+  const weakFamilyNames = Object.entries(studentWeakFamilies)
+    .filter(([, stats]) => Number(stats.weakScore || 0) >= 50)
+    .sort(([, a], [, b]) => Number(b.weakScore || 0) - Number(a.weakScore || 0))
+    .map(([family]) => family);
+
+  if (!weakFamilyNames.length) return [];
+
+  return dedupeProblems(
+    problemBank.filter((problem) =>
+      weakFamilyNames.includes(getProblemFamily(problem.question))
+    )
+  ).slice(0, 20);
 }
 
 function getSeverityFromAssignment(hasAttempts, medianPercent, medianWrongTries, locked) {
@@ -860,6 +989,36 @@ export default function TeacherDash({ teacher, onLogout }) {
     };
   }, [editorAssignmentConfig, resolvedEditorPreviewProblems.length]);
 
+  const weakFamiliesByStudent = useMemo(() => {
+    const map = {};
+
+    students.forEach((student) => {
+      const results = allResultsByStudent[student.id] || [];
+
+      map[student.id] =
+        results.length === 0 ? {} : buildWeakFamilyStats(results);
+    });
+
+    return map;
+  }, [students, allResultsByStudent]);
+
+  const adaptiveAssignmentsByStudent = useMemo(() => {
+    const map = {};
+
+    students.forEach((student) => {
+      const weakFamilies = weakFamiliesByStudent[student.id] || {};
+
+      map[student.id] =
+        Object.keys(weakFamilies).length === 0
+          ? []
+          : getAdaptiveProblemsForStudent(
+            weakFamilies,
+            availableBuiltInProblems
+          );
+    });
+
+    return map;
+  }, [students, weakFamiliesByStudent, availableBuiltInProblems]);
   useEffect(() => {
     let unsubscribeClassroom = null;
     let unsubscribeStudents = () => { };
@@ -924,18 +1083,12 @@ export default function TeacherDash({ teacher, onLogout }) {
               studentRef,
               (studentSnap) => {
                 if (studentSnap.exists()) {
-                  studentMap[studentId] = {
-                    id: studentId,
-                    ...studentSnap.data(),
-                  };
+                  studentMap[studentId] = normalizeStudentDoc(
+                    studentId,
+                    studentSnap.data()
+                  );
                 } else {
-                  studentMap[studentId] = {
-                    id: studentId,
-                    name: `Student ${studentId}`,
-                    grade: null,
-                    birthday: null,
-                    coins: 0,
-                  };
+                  studentMap[studentId] = normalizeStudentDoc(studentId, {});
                 }
 
                 const rawClassGrade =
@@ -950,11 +1103,15 @@ export default function TeacherDash({ teacher, onLogout }) {
                   .map((id) => studentMap[id])
                   .filter(Boolean);
 
-                const filtered = Number.isNaN(parsedClassGrade)
-                  ? loadedStudents
-                  : loadedStudents.filter(
-                    (student) => Number(student.grade) === parsedClassGrade
-                  );
+                const filtered = loadedStudents.filter((student) => {
+                  const studentGrade = Number(student.grade);
+
+                  // Allow students with no grade OR matching grade
+                  if (Number.isNaN(parsedClassGrade)) return true;
+                  if (Number.isNaN(studentGrade)) return true;
+
+                  return studentGrade === parsedClassGrade;
+                });
 
                 filtered.sort((a, b) =>
                   String(a.name || a.id).localeCompare(String(b.name || b.id))
@@ -1060,7 +1217,7 @@ export default function TeacherDash({ teacher, onLogout }) {
 
           setAllResultsByStudent((prev) => ({
             ...prev,
-            [student.id]: results,
+            [student.id]: results.length ? results : [],
           }));
         },
         (error) => {
@@ -1160,23 +1317,6 @@ export default function TeacherDash({ teacher, onLogout }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function normalizeStudentDoc(studentId, data = {}) {
-  return {
-    id: studentId,
-    name: data.name || `Student ${studentId}`,
-    grade: data.grade ?? null,
-    birthday: data.birthday ?? "",
-    coins: Number(data.coins ?? 0),
-    createdAt: data.createdAt ?? null,
-    lastActive: data.lastActive ?? null,
-    weakFamilies: data.weakFamilies || {},
-    adaptiveAssignments: data.adaptiveAssignments || {},
-    equippedPfp: data.equippedPfp || "",
-    equippedOutfit: data.equippedOutfit || "",
-    ...data,
-  };
-}
-
   async function setAssignmentLockForStudent(studentId, assignmentId, lockedValue) {
     if (!classroom?.id || !studentId || !assignmentId) return;
 
@@ -1224,24 +1364,73 @@ export default function TeacherDash({ teacher, onLogout }) {
     }
   }
 
-  async function resetStudentAssignments(studentId, shouldResetCoins = false) {
+  async function resetStudentAssignments(studentId, resetCoinsToo = false) {
+    if (!studentId) return;
+
+    const safeStudentId = String(studentId).trim();
+
     const resultsRef = collection(
       db,
       "students",
-      String(studentId),
+      safeStudentId,
       "assignmentResults"
     );
 
     const snap = await getDocs(resultsRef);
 
-    await Promise.all(snap.docs.map((resultDoc) => deleteDoc(resultDoc.ref)));
+    await Promise.allSettled(
+      snap.docs.map((docSnap) => deleteDoc(docSnap.ref))
+    );
 
-    if (shouldResetCoins) {
-      const studentRef = doc(db, "students", String(studentId));
-      await updateDoc(studentRef, { coins: 0 });
+    const studentRef = doc(db, "students", safeStudentId);
+
+    const updates = {
+      weakFamilies: deleteField(),
+      adaptiveAssignments: deleteField(),
+      weakFamiliesUpdatedAt: deleteField(),
+
+      stats: {
+        totalGamesPlayed: 0,
+        totalPerfectRuns: 0,
+        totalWrongGuesses: 0,
+      },
+
+      lastPlayedAt: deleteField(),
+      lastGameKey: deleteField(),
+      lastActive: deleteField(),
+
+      completedAssignments: deleteField(),
+      completedGames: deleteField(),
+      assignmentProgress: deleteField(),
+      gameProgress: deleteField(),
+      problemStats: deleteField(),
+      problemBreakdown: deleteField(),
+
+      playCount: deleteField(),
+      timesPlayed: deleteField(),
+      totalPlays: deleteField(),
+      gamePlayCounts: deleteField(),
+      assignmentPlayCounts: deleteField(),
+      rewardHistory: deleteField(),
+      coinHistory: deleteField(),
+      coinsEarnedByGame: deleteField(),
+      firstCompletionRewards: deleteField(),
+      completedForCoins: deleteField(),
+      rewardedAssignments: deleteField(),
+      rewardedGames: deleteField(),
+      playedAssignments: deleteField(),
+      playedGames: deleteField(),
+
+      updatedAt: serverTimestamp(),
+      resetAt: serverTimestamp(),
+    };
+
+    if (resetCoinsToo) {
+      updates.coins = 0;
     }
-  }
 
+    await updateDoc(studentRef, updates);
+  }
 
   async function handleResetAssignments() {
     if (isResetting) return;
@@ -1249,35 +1438,171 @@ export default function TeacherDash({ teacher, onLogout }) {
     try {
       setIsResetting(true);
 
-      if (!resetTargetStudents.length) {
+      const targets = resetTargetStudents.filter((student) => student?.id);
+
+      if (!targets.length) {
         alert("Please choose a valid student, group, or class.");
         return;
       }
 
+      const resetIds = targets.map((student) => String(student.id));
+
+      // ✅ PASS resetCoinsToo into reset function
       const results = await Promise.allSettled(
-        resetTargetStudents.map((student) =>
-          resetStudentAssignments(student.id, resetCoinsToo)
+        resetIds.map((studentId) =>
+          resetStudentAssignments(studentId, resetCoinsToo)
         )
       );
 
-      const failed = results.filter((r) => r.status === "rejected");
+      const failed = results.filter((result) => result.status === "rejected");
 
       if (failed.length > 0) {
         console.error("FAILED STUDENTS:", failed);
-
-        alert(
-          `${failed.length} student(s) failed to reset.\nCheck console for details.`
-        );
+        alert(`${failed.length} student(s) failed to reset. Check console.`);
         return;
       }
 
-      alert("Reset complete!");
+      // ✅ Clear selected student results
+      if (resetIds.includes(String(selectedStudentId))) {
+        setStudentResults([]);
+      }
+
+      // ✅ Clear all cached results
+      setAllResultsByStudent((prev) => {
+        const next = { ...prev };
+        resetIds.forEach((id) => {
+          next[id] = [];
+        });
+        return next;
+      });
+
+      // ✅ Update local UI state correctly
+      setStudents((prev) =>
+        prev.map((student) =>
+          resetIds.includes(String(student.id))
+            ? {
+              ...student,
+
+              // 🔑 ONLY reset coins if checkbox is ON
+              coins: resetCoinsToo ? 0 : student.coins,
+
+              weakFamilies: {},
+              adaptiveAssignments: [],
+
+              stats: {
+                totalGamesPlayed: 0,
+                totalPerfectRuns: 0,
+                totalWrongGuesses: 0,
+              },
+
+              lastPlayedAt: null,
+              lastGameKey: "",
+              lastActive: null,
+
+              completedAssignments: [],
+              completedGames: [],
+              assignmentProgress: {},
+              gameProgress: {},
+              problemStats: {},
+              problemBreakdown: {},
+
+              playCount: 0,
+              timesPlayed: 0,
+              totalPlays: 0,
+              gamePlayCounts: {},
+              assignmentPlayCounts: {},
+              rewardHistory: {},
+              coinHistory: {},
+              coinsEarnedByGame: {},
+              firstCompletionRewards: {},
+              completedForCoins: {},
+              rewardedAssignments: {},
+              rewardedGames: {},
+              playedAssignments: {},
+              playedGames: {},
+            }
+            : student
+        )
+      );
+
+      // ✅ Clear ALL UI state (prevents ghost data)
+      setOpenAssignments({});
+      setOpenAttempts({});
+      setOpenClassAssignments({});
+      setOpenClassStudents({});
+      setDismissedAlerts(new Set());
+      setShowTeacherAlerts(false);
+      setShowPerfectRuns(false);
+
+      // 🔥 EXTRA: force clean state (fixes "old data after relog")
+      setTimeout(() => {
+        setAllResultsByStudent({});
+      }, 0);
+
+      alert("Factory reset complete!");
       setShowResetPanel(false);
     } catch (error) {
       console.error("Reset error:", error);
-      alert(error.message || "Reset failed.");
+      alert(error?.message || "Reset failed.");
     } finally {
       setIsResetting(false);
+    }
+  }
+
+  async function normalizeAllStudents() {
+    if (!students.length) {
+      alert("No students loaded yet.");
+      return;
+    }
+
+    try {
+      const batch = writeBatch(db);
+
+      students.forEach((student) => {
+        const studentRef = doc(db, "students", String(student.id));
+
+        batch.set(
+          studentRef,
+          {
+            name: student.name || `Student ${student.id}`,
+            grade: student.grade ?? resolvedGrade ?? null,
+            birthday: student.birthday ?? "",
+            coins: Number(student.coins ?? 0),
+          
+            ownedItems: Array.isArray(student.ownedItems) ? student.ownedItems : [],
+            equippedPfp: student.equippedPfp || "",
+            equippedOutfit: student.equippedOutfit || "",
+            equippedFrame: student.equippedFrame || "",
+            equippedBadge: student.equippedBadge || "",
+            equippedTrail: student.equippedTrail || "",
+            updatedAt: serverTimestamp(),
+
+            settings: student.settings || {
+              muted: false,
+              volume: 0.35,
+            },
+
+            stats: student.stats || {
+              totalGamesPlayed: 0,
+              totalPerfectRuns: 0,
+              totalWrongGuesses: 0,
+            },
+
+            lastLoginAt: student.lastLoginAt ?? null,
+            lastPlayedAt: student.lastPlayedAt ?? null,
+            lastGameKey: student.lastGameKey || "",
+            displayNameColor: student.displayNameColor || "",
+            lastNormalizedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+
+      await batch.commit();
+      alert("Student data normalized!");
+    } catch (error) {
+      console.error("Error normalizing students:", error);
+      alert("Could not normalize student data.");
     }
   }
 
@@ -1483,11 +1808,20 @@ export default function TeacherDash({ teacher, onLogout }) {
             </div>
 
             <button
-              className="tdash__reset-btn"
+              className={`tdash__reset-btn ${showResetPanel ? "tdash__reset-btn--active" : ""
+                }`}
               type="button"
               onClick={() => setShowResetPanel((prev) => !prev)}
             >
-              Reset
+              {showResetPanel ? "Close Reset" : "Reset"}
+            </button>
+
+            <button
+              className="tdash__ghost-btn"
+              type="button"
+              onClick={normalizeAllStudents}
+            >
+              Fix Student Data
             </button>
 
             <button
@@ -1950,6 +2284,8 @@ export default function TeacherDash({ teacher, onLogout }) {
           handleAddCustomProblem={handleAddCustomProblem}
           handleRemoveCustomProblem={handleRemoveCustomProblem}
           problemKey={problemKey}
+          weakFamilyStats={weakFamiliesByStudent[selectedStudentId] || {}}
+          adaptiveProblems={adaptiveAssignmentsByStudent[selectedStudentId] || []}
         />
 
         <section className="tdash__card">
@@ -2016,6 +2352,6 @@ export default function TeacherDash({ teacher, onLogout }) {
           </button>
         )}
       </main>
-    </div >
+    </div>
   );
 }
