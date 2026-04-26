@@ -90,10 +90,24 @@ const outfitItems = [
     price: 1500,
     category: "outfit",
   },
- {
+  {
     id: "wizard",
     name: "Wizard",
     image: "/raccacoonies/wizard.png",
+    price: 1500,
+    category: "outfit",
+  },
+  {
+    id: "sable",
+    name: "Sable",
+    image: "/raccacoonies/sable.png",
+    price: 1500,
+    category: "outfit",
+  },
+  {
+    id: "dragon",
+    name: "Dragon",
+    image: "/raccacoonies/dragon.png",
     price: 1500,
     category: "outfit",
   },
@@ -204,11 +218,11 @@ const Shop = ({ student, onBack }) => {
             </button>
 
             <button
-              className={`shop-tab ${activeTab === "pfps" ? "active" : ""}`}
-              onClick={() => setActiveTab("pfps")}
+              className={`shop-tab ${activeTab === "emotes" ? "active" : ""}`}
+              onClick={() => setActiveTab("emotes")}
               type="button"
             >
-              Pfps
+              Emotes
             </button>
           </div>
 
@@ -333,11 +347,10 @@ const Shop = ({ student, onBack }) => {
               <div className="stand-base" />
 
               <div
-                className={`preview-character ${
-                  activeTab === "outfits"
+                className={`preview-character ${activeTab === "outfits"
                     ? "preview-character--customize"
                     : "preview-character--pfp"
-                }`}
+                  }`}
               >
                 {activeTab === "outfits" ? (
                   <img
@@ -366,11 +379,10 @@ const Shop = ({ student, onBack }) => {
 
               <div className="equipped-label">
                 {activeTab === "outfits"
-                  ? `Outfit: ${
-                      equippedItemCategory === "customize"
-                        ? equippedItem.name
-                        : defaultOutfit.name
-                    }`
+                  ? `Outfit: ${equippedItemCategory === "customize"
+                    ? equippedItem.name
+                    : defaultOutfit.name
+                  }`
                   : `Wearing: ${equippedItem.name}`}
               </div>
             </div>

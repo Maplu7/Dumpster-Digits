@@ -8,15 +8,8 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     super("Game");
   }
 
-  buildAdditionProblems(topNumber) {
-    return Array.from({ length: 11 }, (_, i) => ({
-      question: `${topNumber}+${i}`,
-      answer: topNumber + i,
-    }));
-  }
-
   pickFiveUniqueAnswerProblems(problemPool) {
-    const shuffled = Phaser.Utils.Array.Shuffle([...problemPool]);
+    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
     const selected = [];
     const usedAnswers = new Set();
 
@@ -39,214 +32,28 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       assignmentTitle: "2nd Grade Addition",
     });
 
-    this.problems1 = this.buildAdditionProblems(1);
-    this.problems2 = this.buildAdditionProblems(2);
-    this.problems3 = this.buildAdditionProblems(3);
-    this.problems4 = this.buildAdditionProblems(4);
-    this.problems5 = this.buildAdditionProblems(5);
-    this.problems6 = this.buildAdditionProblems(6);
-    this.problems7 = this.buildAdditionProblems(7);
-    this.problems8 = this.buildAdditionProblems(8);
-    this.problems9 = this.buildAdditionProblems(9);
-    this.problems10 = this.buildAdditionProblems(10);
-    this.problems11 = this.buildAdditionProblems(11);
-    this.problems12 = this.buildAdditionProblems(12);
-    this.problems13 = this.buildAdditionProblems(13);
-    this.problems14 = this.buildAdditionProblems(14);
-    this.problems15 = this.buildAdditionProblems(15);
-    this.problems16 = this.buildAdditionProblems(16);
-    this.problems17 = this.buildAdditionProblems(17);
-    this.problems18 = this.buildAdditionProblems(18);
-    this.problems19 = this.buildAdditionProblems(19);
-    this.problems20 = this.buildAdditionProblems(20);
-    this.problems21 = this.buildAdditionProblems(21);
-    this.problems22 = this.buildAdditionProblems(22);
-    this.problems23 = this.buildAdditionProblems(23);
-    this.problems24 = this.buildAdditionProblems(24);
-    this.problems25 = this.buildAdditionProblems(25);
-    this.problems26 = this.buildAdditionProblems(26);
-    this.problems27 = this.buildAdditionProblems(27);
-    this.problems28 = this.buildAdditionProblems(28);
-    this.problems29 = this.buildAdditionProblems(29);
-    this.problems30 = this.buildAdditionProblems(30);
-    this.problems31 = this.buildAdditionProblems(31);
-    this.problems32 = this.buildAdditionProblems(32);
-    this.problems33 = this.buildAdditionProblems(33);
-    this.problems34 = this.buildAdditionProblems(34);
-    this.problems35 = this.buildAdditionProblems(35);
-    this.problems36 = this.buildAdditionProblems(36);
-    this.problems37 = this.buildAdditionProblems(37);
-    this.problems38 = this.buildAdditionProblems(38);
-    this.problems39 = this.buildAdditionProblems(39);
-    this.problems40 = this.buildAdditionProblems(40);
-    this.problems41 = this.buildAdditionProblems(41);
-    this.problems42 = this.buildAdditionProblems(42);
-    this.problems43 = this.buildAdditionProblems(43);
-    this.problems44 = this.buildAdditionProblems(44);
-    this.problems45 = this.buildAdditionProblems(45);
-    this.problems46 = this.buildAdditionProblems(46);
-    this.problems47 = this.buildAdditionProblems(47);
-    this.problems48 = this.buildAdditionProblems(48);
-    this.problems49 = this.buildAdditionProblems(49);
-    this.problems50 = this.buildAdditionProblems(50);
-    this.problems51 = this.buildAdditionProblems(51);
-    this.problems52 = this.buildAdditionProblems(52);
-    this.problems53 = this.buildAdditionProblems(53);
-    this.problems54 = this.buildAdditionProblems(54);
-    this.problems55 = this.buildAdditionProblems(55);
-    this.problems56 = this.buildAdditionProblems(56);
-    this.problems57 = this.buildAdditionProblems(57);
-    this.problems58 = this.buildAdditionProblems(58);
-    this.problems59 = this.buildAdditionProblems(59);
-    this.problems60 = this.buildAdditionProblems(60);
-    this.problems61 = this.buildAdditionProblems(61);
-    this.problems62 = this.buildAdditionProblems(62);
-    this.problems63 = this.buildAdditionProblems(63);
-    this.problems64 = this.buildAdditionProblems(64);
-    this.problems65 = this.buildAdditionProblems(65);
-    this.problems66 = this.buildAdditionProblems(66);
-    this.problems67 = this.buildAdditionProblems(67);
-    this.problems68 = this.buildAdditionProblems(68);
-    this.problems69 = this.buildAdditionProblems(69);
-    this.problems70 = this.buildAdditionProblems(70);
-    this.problems71 = this.buildAdditionProblems(71);
-    this.problems72 = this.buildAdditionProblems(72);
-    this.problems73 = this.buildAdditionProblems(73);
-    this.problems74 = this.buildAdditionProblems(74);
-    this.problems75 = this.buildAdditionProblems(75);
-    this.problems76 = this.buildAdditionProblems(76);
-    this.problems77 = this.buildAdditionProblems(77);
-    this.problems78 = this.buildAdditionProblems(78);
-    this.problems79 = this.buildAdditionProblems(79);
-    this.problems80 = this.buildAdditionProblems(80);
-    this.problems81 = this.buildAdditionProblems(81);
-    this.problems82 = this.buildAdditionProblems(82);
-    this.problems83 = this.buildAdditionProblems(83);
-    this.problems84 = this.buildAdditionProblems(84);
-    this.problems85 = this.buildAdditionProblems(85);
-    this.problems86 = this.buildAdditionProblems(86);
-    this.problems87 = this.buildAdditionProblems(87);
-    this.problems88 = this.buildAdditionProblems(88);
-    this.problems89 = this.buildAdditionProblems(89);
-    this.problems90 = this.buildAdditionProblems(90);
-    this.problems91 = this.buildAdditionProblems(91);
-    this.problems92 = this.buildAdditionProblems(92);
-    this.problems93 = this.buildAdditionProblems(93);
-    this.problems94 = this.buildAdditionProblems(94);
-    this.problems95 = this.buildAdditionProblems(95);
-    this.problems96 = this.buildAdditionProblems(96);
-    this.problems97 = this.buildAdditionProblems(97);
-    this.problems98 = this.buildAdditionProblems(98);
-    this.problems99 = this.buildAdditionProblems(99);
-    this.problems100 = this.buildAdditionProblems(100);
+    function additionProblems() {
+      const allProblems = [];
 
-    this.problems = [
-      ...this.problems1,
-      ...this.problems2,
-      ...this.problems3,
-      ...this.problems4,
-      ...this.problems5,
-      ...this.problems6,
-      ...this.problems7,
-      ...this.problems8,
-      ...this.problems9,
-      ...this.problems10,
-      ...this.problems11,
-      ...this.problems12,
-      ...this.problems13,
-      ...this.problems14,
-      ...this.problems15,
-      ...this.problems16,
-      ...this.problems17,
-      ...this.problems18,
-      ...this.problems19,
-      ...this.problems20,
-      ...this.problems21,
-      ...this.problems22,
-      ...this.problems23,
-      ...this.problems24,
-      ...this.problems25,
-      ...this.problems26,
-      ...this.problems27,
-      ...this.problems28,
-      ...this.problems29,
-      ...this.problems30,
-      ...this.problems31,
-      ...this.problems32,
-      ...this.problems33,
-      ...this.problems34,
-      ...this.problems35,
-      ...this.problems36,
-      ...this.problems37,
-      ...this.problems38,
-      ...this.problems39,
-      ...this.problems40,
-      ...this.problems41,
-      ...this.problems42,
-      ...this.problems43,
-      ...this.problems44,
-      ...this.problems45,
-      ...this.problems46,
-      ...this.problems47,
-      ...this.problems48,
-      ...this.problems49,
-      ...this.problems50,
-      ...this.problems51,
-      ...this.problems52,
-      ...this.problems53,
-      ...this.problems54,
-      ...this.problems55,
-      ...this.problems56,
-      ...this.problems57,
-      ...this.problems58,
-      ...this.problems59,
-      ...this.problems60,
-      ...this.problems61,
-      ...this.problems62,
-      ...this.problems63,
-      ...this.problems64,
-      ...this.problems65,
-      ...this.problems66,
-      ...this.problems67,
-      ...this.problems68,
-      ...this.problems69,
-      ...this.problems70,
-      ...this.problems71,
-      ...this.problems72,
-      ...this.problems73,
-      ...this.problems74,
-      ...this.problems75,
-      ...this.problems76,
-      ...this.problems77,
-      ...this.problems78,
-      ...this.problems79,
-      ...this.problems80,
-      ...this.problems81,
-      ...this.problems82,
-      ...this.problems83,
-      ...this.problems84,
-      ...this.problems85,
-      ...this.problems86,
-      ...this.problems87,
-      ...this.problems88,
-      ...this.problems89,
-      ...this.problems90,
-      ...this.problems91,
-      ...this.problems92,
-      ...this.problems93,
-      ...this.problems94,
-      ...this.problems95,
-      ...this.problems96,
-      ...this.problems97,
-      ...this.problems98,
-      ...this.problems99,
-      ...this.problems100,
-    ];
+      for (let n = 0; n <= 100; n++) {
+        for (let j = 0; j <= 10; j++) {
+          allProblems.push({
+            question: `${n}+${j}`,
+            answer: n + j,
+          });
+        }
+      }
 
+      return allProblems;
+    }
+
+    this.problems = additionProblems();
     this.configuredProblems = this.getConfiguredProblems(this.problems);
+
     const selectedProblems = this.pickFiveUniqueAnswerProblems(
       this.configuredProblems
     );
+
     this.assignFiveQuestionAndAnswerSlots(selectedProblems);
 
     for (let i = 1; i <= 7; i++) {
@@ -277,6 +84,16 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     this.trash3 = new Trash(this, 750, 280, this.question3);
     this.trash4 = new Trash(this, 850, 400, this.question4);
     this.trash5 = new Trash(this, 950, 280, this.question5);
+
+    // ✅ SAVE ORIGINAL POSITIONS
+    [this.trash1, this.trash2, this.trash3, this.trash4, this.trash5].forEach((trash) => {
+      trash.startX = trash.x;
+      trash.startY = trash.y;
+      trash.originalX = trash.x;
+      trash.originalY = trash.y;
+      trash._lockedOnCan = false;
+      trash._dragging = false;
+    });
 
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
@@ -315,38 +132,24 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
 
   putInTrash(trash, trashCan) {
     if (this.introActive) return;
-    if (trashCan && trashCan._disabled) return;
+    if (!trash || !trash.active) return;
+    if (!trashCan || !trashCan.active) return;
+    if (trashCan._disabled) return;
     if (trash._lockedOnCan) return;
+
     trash._lockedOnCan = true;
 
-    const unlockWhenLeaving = () => {
-      const cans = [
-        this.trashCan1,
-        this.trashCan2,
-        this.trashCan3,
-        this.trashCan4,
-        this.trashCan5,
-      ].filter((c) => c && c.active);
-
-      const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
-
-      if (!stillOverAny) {
-        trash._lockedOnCan = false;
-
-        if (trash && trash.active && trash.trashMath && !trash._dragging) {
-          trash.trashMath.clearTint();
-        }
-      } else {
-        this.time.delayedCall(100, unlockWhenLeaving);
-      }
-    };
-
+    // ✅ CORRECT
     if (trash.answer === trashCan.answer) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
 
+      this.showRaccoonFeedback(trashCan, true);
+
       if (trashCan.markCorrect) trashCan.markCorrect();
+
+      this.popTrashCanConfetti(trashCan);
 
       trash.destroy();
       trashCan.destroy();
@@ -366,6 +169,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       return;
     }
 
+    // ❌ WRONG
     this.numWrong += 1;
 
     if (trash === this.trash1) {
@@ -384,12 +188,17 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
 
+    this.showRaccoonFeedback(trashCan, false);
+
+    // ✅ FIXED BEHAVIOR
+    trash._lockedOnCan = false;
+    this.resetDraggedTrash(trash);
+
     this.time.delayedCall(
       this.feedbackDuration,
       () => this.clearCenteredFeedback()
     );
-    this.triesUsed += 1;
 
-    unlockWhenLeaving();
+    this.triesUsed += 1;
   }
 }

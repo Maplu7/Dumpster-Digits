@@ -39,13 +39,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
 
     for (let n = 1; n <= 100; n++) {
       if (onesProblems[n]) allProblems.push(onesProblems[n]);
-    }
-
-    for (let n = 1; n <= 100; n++) {
       if (tensProblems[n]) allProblems.push(tensProblems[n]);
-    }
-
-    for (let n = 1; n <= 100; n++) {
       if (hundredsProblems[n]) allProblems.push(hundredsProblems[n]);
     }
 
@@ -58,7 +52,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     const usedExactProblems = new Set();
 
     for (const problem of shuffled) {
-      const key = `${String(problem?.question ?? "").trim()}::${String(problem?.answer ?? "").trim()}`;
+      const key = `${problem.question}::${problem.answer}`;
       if (usedExactProblems.has(key)) continue;
 
       usedExactProblems.add(key);
@@ -97,6 +91,9 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       assignmentTitle: "2nd Grade Place Value",
     });
 
+    //------------------------------------------------------------------------------------------------
+    // BACKGROUND
+    //------------------------------------------------------------------------------------------------
     for (let i = 1; i <= 7; i++) {
       const y = 50 + (i - 1) * 100;
 
@@ -113,6 +110,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.add.image(100, 300, "campFire", 3).setScale(3);
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
+    //------------------------------------------------------------------------------------------------
 
     this.problemsPlaceValues = this.buildPlaceValueProblems();
     this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);
@@ -123,21 +121,23 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
 
     this.assignPlaceValueSlots(selectedProblems);
 
-    // top draggable numbers
+    //------------------------------------------------------------------------------------------------
+    // TRASH + CANS
+    //------------------------------------------------------------------------------------------------
     this.trash1 = new Trash(this, 550, 280, this.trashProblem1);
     this.trash2 = new Trash(this, 650, 400, this.trashProblem2);
     this.trash3 = new Trash(this, 750, 280, this.trashProblem3);
     this.trash4 = new Trash(this, 850, 400, this.trashProblem4);
     this.trash5 = new Trash(this, 950, 280, this.trashProblem5);
 
-    // bottom cans with labels
     this.trashCan1 = new TrashCan(this, 100, 700, this.canProblem1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.canProblem2).setScale(1);
     this.trashCan3 = new TrashCan(this, 740, 700, this.canProblem3).setScale(1);
     this.trashCan4 = new TrashCan(this, 1040, 700, this.canProblem4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.canProblem5).setScale(1);
+    //------------------------------------------------------------------------------------------------
 
-    // store original problem data explicitly so matching is reliable
+    // attach problem data (IMPORTANT for matching)
     this.trash1.problemData = this.trashProblem1;
     this.trash2.problemData = this.trashProblem2;
     this.trash3.problemData = this.trashProblem3;
@@ -168,19 +168,21 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group();
-    this.trashGroup.add(this.trash1);
-    this.trashGroup.add(this.trash2);
-    this.trashGroup.add(this.trash3);
-    this.trashGroup.add(this.trash4);
-    this.trashGroup.add(this.trash5);
+    this.trashGroup = this.physics.add.group([
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ]);
 
-    this.trashCanGroup = this.physics.add.group();
-    this.trashCanGroup.add(this.trashCan1);
-    this.trashCanGroup.add(this.trashCan2);
-    this.trashCanGroup.add(this.trashCan3);
-    this.trashCanGroup.add(this.trashCan4);
-    this.trashCanGroup.add(this.trashCan5);
+    this.trashCanGroup = this.physics.add.group([
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5,
+    ]);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -195,6 +197,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     if (this.introActive) return;
     if (trashCan && trashCan._disabled) return;
     if (trash._lockedOnCan) return;
+
     trash._lockedOnCan = true;
 
     const unlockWhenLeaving = () => {
@@ -210,29 +213,31 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
 
       if (!stillOverAny) {
         trash._lockedOnCan = false;
-
-        if (trash && trash.active && trash.trashMath && !trash._dragging) {
-          trash.trashMath.clearTint();
-        }
       } else {
         this.time.delayedCall(100, unlockWhenLeaving);
       }
     };
 
-    const trashLabel = String(trash?.problemData?.question ?? "").trim();
-    const canLabel = String(trashCan?.problemData?.question ?? "").trim();
+    const trashLabel = String(trash.problemData?.question || "").trim();
+    const canLabel = String(trashCan.problemData?.question || "").trim();
 
+    // ✅ CORRECT (label-based match)
     if (trashLabel && canLabel && trashLabel === canLabel) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
 
+      this.showRaccoonFeedback(trashCan, true);
+
       if (trashCan.markCorrect) trashCan.markCorrect();
+
+      this.popTrashCanConfetti(trashCan);
 
       trash.destroy();
       trashCan.destroy();
 
       this.numCorrect += 1;
+
       this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
       if (this.numCorrect === 5) {
@@ -247,28 +252,26 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       return;
     }
 
+    // ❌ WRONG
     this.numWrong += 1;
 
-    if (trash === this.trash1) {
-      this.numGuessesPerAnswer[0].numGuess++;
-    } else if (trash === this.trash2) {
-      this.numGuessesPerAnswer[1].numGuess++;
-    } else if (trash === this.trash3) {
-      this.numGuessesPerAnswer[2].numGuess++;
-    } else if (trash === this.trash4) {
-      this.numGuessesPerAnswer[3].numGuess++;
-    } else if (trash === this.trash5) {
-      this.numGuessesPerAnswer[4].numGuess++;
-    }
+    if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess++;
+    else if (trash === this.trash2) this.numGuessesPerAnswer[1].numGuess++;
+    else if (trash === this.trash3) this.numGuessesPerAnswer[2].numGuess++;
+    else if (trash === this.trash4) this.numGuessesPerAnswer[3].numGuess++;
+    else if (trash === this.trash5) this.numGuessesPerAnswer[4].numGuess++;
 
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
 
+    this.showRaccoonFeedback(trashCan, false);
+
     this.time.delayedCall(
       this.feedbackDuration,
       () => this.clearCenteredFeedback()
     );
+
     this.triesUsed += 1;
 
     unlockWhenLeaving();

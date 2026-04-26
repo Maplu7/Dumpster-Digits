@@ -14,114 +14,22 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
             assignmentTitle: "1st Grade Subtraction",
         });
 
-        this.problems10 = [
-          {question: "10-0", answer: 10},
-          {question: "10-1", answer: 9},
-          {question: "10-2", answer: 8},
-          {question: "10-3", answer: 7},
-          {question: "10-4", answer: 6},
-          {question: "10-5", answer: 5},
-          {question: "10-6", answer: 4},
-          {question: "10-7", answer: 3},
-          {question: "10-8", answer: 2},
-          {question: "10-9", answer: 1},
-          {question: "10-10", answer: 0}
-        ];
+        function subtractionProblems() {
+            const allProblems = [];
 
-        this.problems9 = [
-          {question: "9-0", answer: 9},
-          {question: "9-1", answer: 8},
-          {question: "9-2", answer: 7},
-          {question: "9-3", answer: 6},
-          {question: "9-4", answer: 5},
-          {question: "9-5", answer: 4},
-          {question: "9-6", answer: 3},
-          {question: "9-7", answer: 2},
-          {question: "9-8", answer: 1},
-          {question: "9-9", answer: 0}
-        ];
+            for (let n = 10; n >= 1; n--) {
+                for (let j = 0; j <= n; j++) {
+                    allProblems.push({
+                        question: `${n}-${j}`,
+                        answer: n - j,
+                    });
+                }
+            }
 
-        this.problems8 = [
-          {question: "8-0", answer: 8},
-          {question: "8-1", answer: 7},
-          {question: "8-2", answer: 6},
-          {question: "8-3", answer: 5},
-          {question: "8-4", answer: 4},
-          {question: "8-5", answer: 3},
-          {question: "8-6", answer: 2},
-          {question: "8-7", answer: 1},
-          {question: "8-8", answer: 0}
-        ];
+            return allProblems;
+        }
 
-        this.problems7 = [
-          {question: "7-0", answer: 7},
-          {question: "7-1", answer: 6},
-          {question: "7-2", answer: 5},
-          {question: "7-3", answer: 4},
-          {question: "7-4", answer: 3},
-          {question: "7-5", answer: 2},
-          {question: "7-6", answer: 1},
-          {question: "7-7", answer: 0}
-        ];
-
-        this.problems6 = [
-          {question: "6-0", answer: 6},
-          {question: "6-1", answer: 5},
-          {question: "6-2", answer: 4},
-          {question: "6-3", answer: 3},
-          {question: "6-4", answer: 2},
-          {question: "6-5", answer: 1},
-          {question: "6-6", answer: 0}
-        ];
-
-        this.problems5 = [
-          {question: "5-0", answer: 5},
-          {question: "5-1", answer: 4},
-          {question: "5-2", answer: 3},
-          {question: "5-3", answer: 2},
-          {question: "5-4", answer: 1},
-          {question: "5-5", answer: 0}
-        ];
-
-        this.problems4 = [
-          {question: "4-0", answer: 4},
-          {question: "4-1", answer: 3},
-          {question: "4-2", answer: 2},
-          {question: "4-3", answer: 1},
-          {question: "4-4", answer: 0}
-        ];
-
-        this.problems3 = [
-          {question: "3-0", answer: 3},
-          {question: "3-1", answer: 2},
-          {question: "3-2", answer: 1},
-          {question: "3-3", answer: 0}
-        ];
-
-        this.problems2 = [
-          {question: "2-0", answer: 2},
-          {question: "2-1", answer: 1},
-          {question: "2-2", answer: 0}
-        ];
-
-        this.problems1 = [
-          {question: "1-0", answer: 1},
-          {question: "1-1", answer: 0}
-        ];
-
-        this.allProblems = [
-          ...this.problems10,
-          ...this.problems9,
-          ...this.problems8,
-          ...this.problems7,
-          ...this.problems6,
-          ...this.problems5,
-          ...this.problems4,
-          ...this.problems3,
-          ...this.problems2,
-          ...this.problems1,
-        ];
-
+        this.allProblems = subtractionProblems();
         this.configuredProblems = this.getConfiguredProblems(this.allProblems);
 
         for (let i = 1; i <= 7; i++) {
@@ -154,6 +62,15 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
         this.trash3 = new Trash(this, 750, 280, this.question3);
         this.trash4 = new Trash(this, 850, 400, this.question4);
         this.trash5 = new Trash(this, 950, 280, this.question5);
+
+        [this.trash1, this.trash2, this.trash3, this.trash4, this.trash5].forEach((trash) => {
+            trash.startX = trash.x;
+            trash.startY = trash.y;
+            trash.originalX = trash.x;
+            trash.originalY = trash.y;
+            trash._lockedOnCan = false;
+            trash._dragging = false;
+        });
 
         this.numGuessesPerAnswer = [
             { guessedAnswer: this.trash1, numGuess: 0 },
@@ -192,33 +109,23 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
 
     putInTrash(trash, trashCan) {
         if (this.introActive) return;
-        if (trashCan && trashCan._disabled) return;
+        if (!trash || !trash.active) return;
+        if (!trashCan || !trashCan.active) return;
+        if (trashCan._disabled) return;
         if (trash._lockedOnCan) return;
+
         trash._lockedOnCan = true;
-
-        const unlockWhenLeaving = () => {
-            const cans = [this.trashCan1, this.trashCan2, this.trashCan3, this.trashCan4, this.trashCan5]
-                .filter((c) => c && c.active);
-
-            const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
-
-            if (!stillOverAny) {
-                trash._lockedOnCan = false;
-
-                if (trash && trash.active && trash.trashMath && !trash._dragging) {
-                    trash.trashMath.clearTint();
-                }
-            } else {
-                this.time.delayedCall(100, unlockWhenLeaving);
-            }
-        };
 
         if (trash.answer === trashCan.answer) {
             this.playFeedbackSound(true);
             this.clearCenteredFeedback();
             this.showCenteredFeedback("That is Correct!", true);
 
+            this.showRaccoonFeedback(trashCan, true);
+
             if (trashCan.markCorrect) trashCan.markCorrect();
+
+            this.popTrashCanConfetti(trashCan);
 
             trash.destroy();
             trashCan.destroy();
@@ -251,9 +158,12 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
         this.clearCenteredFeedback();
         this.showCenteredFeedback("Try again!", false);
 
+        this.showRaccoonFeedback(trashCan, false);
+
+        trash._lockedOnCan = false;
+        this.resetDraggedTrash(trash);
+
         this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
         this.triesUsed += 1;
-
-        unlockWhenLeaving();
     }
 }

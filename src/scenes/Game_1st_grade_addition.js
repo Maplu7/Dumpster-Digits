@@ -7,169 +7,33 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
         super('Game');
     }
 
-    /*Frame Dimensions: width: 1536,
-                        height: 793*/
-
     create() {
         this.initSharedGameConfig({
             gameKey: "1st_addition",
             assignmentTitle: "1st Grade Addition",
         });
 
-        this.problems1 = [
-          {question: "1+0", answer: 1},
-          {question: "1+1", answer: 2},
-          {question: "1+2", answer: 3},
-          {question: "1+3", answer: 4},
-          {question: "1+4", answer: 5},
-          {question: "1+5", answer: 6},
-          {question: "1+6", answer: 7},
-          {question: "1+7", answer: 8},
-          {question: "1+8", answer: 9},
-          {question: "1+9", answer: 10},
-          {question: "1+10", answer: 11}
-        ];
+        //------------------------------------------------------------------------------------------------
+        // AUTO-GENERATED 1ST GRADE ADDITION PROBLEMS
+        //------------------------------------------------------------------------------------------------
+        function additionProblems() {
+            const allProblems = [];
 
-        this.problems2 = [
-          {question: "2+0", answer: 2},
-          {question: "2+1", answer: 3},
-          {question: "2+2", answer: 4},
-          {question: "2+3", answer: 5},
-          {question: "2+4", answer: 6},
-          {question: "2+5", answer: 7},
-          {question: "2+6", answer: 8},
-          {question: "2+7", answer: 9},
-          {question: "2+8", answer: 10},
-          {question: "2+9", answer: 11},
-          {question: "2+10", answer: 12}
-        ];
+            for (let n = 0; n <= 10; n++) {
+                for (let j = 0; j <= 10; j++) {
+                    allProblems.push({
+                        question: `${n}+${j}`,
+                        answer: n + j,
+                    });
+                }
+            }
 
-        this.problems3 = [
-          {question: "3+0", answer: 3},
-          {question: "3+1", answer: 4},
-          {question: "3+2", answer: 5},
-          {question: "3+3", answer: 6},
-          {question: "3+4", answer: 7},
-          {question: "3+5", answer: 8},
-          {question: "3+6", answer: 9},
-          {question: "3+7", answer: 10},
-          {question: "3+8", answer: 11},
-          {question: "3+9", answer: 12},
-          {question: "3+10", answer: 13}
-        ];
+            return allProblems;
+        }
 
-        this.problems4 = [
-          {question: "4+0", answer: 4},
-          {question: "4+1", answer: 5},
-          {question: "4+2", answer: 6},
-          {question: "4+3", answer: 7},
-          {question: "4+4", answer: 8},
-          {question: "4+5", answer: 9},
-          {question: "4+6", answer: 10},
-          {question: "4+7", answer: 11},
-          {question: "4+8", answer: 12},
-          {question: "4+9", answer: 13},
-          {question: "4+10", answer: 14}
-        ];
-
-        this.problems5 = [
-          {question: "5+0", answer: 5},
-          {question: "5+1", answer: 6},
-          {question: "5+2", answer: 7},
-          {question: "5+3", answer: 8},
-          {question: "5+4", answer: 9},
-          {question: "5+5", answer: 10},
-          {question: "5+6", answer: 11},
-          {question: "5+7", answer: 12},
-          {question: "5+8", answer: 13},
-          {question: "5+9", answer: 14},
-          {question: "5+10", answer: 15}
-        ];
-
-        this.problems6 = [
-          {question: "6+0", answer: 6},
-          {question: "6+1", answer: 7},
-          {question: "6+2", answer: 8},
-          {question: "6+3", answer: 9},
-          {question: "6+4", answer: 10},
-          {question: "6+5", answer: 11},
-          {question: "6+6", answer: 12},
-          {question: "6+7", answer: 13},
-          {question: "6+8", answer: 14},
-          {question: "6+9", answer: 15},
-          {question: "6+10", answer: 16}
-        ];
-
-        this.problems7 = [
-          {question: "7+0", answer: 7},
-          {question: "7+1", answer: 8},
-          {question: "7+2", answer: 9},
-          {question: "7+3", answer: 10},
-          {question: "7+4", answer: 11},
-          {question: "7+5", answer: 12},
-          {question: "7+6", answer: 13},
-          {question: "7+7", answer: 14},
-          {question: "7+8", answer: 15},
-          {question: "7+9", answer: 16},
-          {question: "7+10", answer: 17}
-        ];
-
-        this.problems8 = [
-          {question: "8+0", answer: 8},
-          {question: "8+1", answer: 9},
-          {question: "8+2", answer: 10},
-          {question: "8+3", answer: 11},
-          {question: "8+4", answer: 12},
-          {question: "8+5", answer: 13},
-          {question: "8+6", answer: 14},
-          {question: "8+7", answer: 15},
-          {question: "8+8", answer: 16},
-          {question: "8+9", answer: 17},
-          {question: "8+10", answer: 18}
-        ];
-
-        this.problems9 = [
-          {question: "9+0", answer: 9},
-          {question: "9+1", answer: 10},
-          {question: "9+2", answer: 11},
-          {question: "9+3", answer: 12},
-          {question: "9+4", answer: 13},
-          {question: "9+5", answer: 14},
-          {question: "9+6", answer: 15},
-          {question: "9+7", answer: 16},
-          {question: "9+8", answer: 17},
-          {question: "9+9", answer: 18},
-          {question: "9+10", answer: 19}
-        ];
-
-        this.problems10 = [
-          {question: "10+0", answer: 10},
-          {question: "10+1", answer: 11},
-          {question: "10+2", answer: 12},
-          {question: "10+3", answer: 13},
-          {question: "10+4", answer: 14},
-          {question: "10+5", answer: 15},
-          {question: "10+6", answer: 16},
-          {question: "10+7", answer: 17},
-          {question: "10+8", answer: 18},
-          {question: "10+9", answer: 19},
-          {question: "10+10", answer: 20}
-        ];
-
-        this.allProblems = [
-          ...this.problems1,
-          ...this.problems2,
-          ...this.problems3,
-          ...this.problems4,
-          ...this.problems5,
-          ...this.problems6,
-          ...this.problems7,
-          ...this.problems8,
-          ...this.problems9,
-          ...this.problems10,
-        ];
-
+        this.allProblems = additionProblems();
         this.configuredProblems = this.getConfiguredProblems(this.allProblems);
+        //------------------------------------------------------------------------------------------------
 
         for (let i = 1; i <= 7; i++) {
             const y = 50 + (i - 1) * 100;
@@ -202,12 +66,21 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
         this.trash4 = new Trash(this, 850, 400, this.question4);
         this.trash5 = new Trash(this, 950, 280, this.question5);
 
+        [this.trash1, this.trash2, this.trash3, this.trash4, this.trash5].forEach((trash) => {
+            trash.startX = trash.x;
+            trash.startY = trash.y;
+            trash.originalX = trash.x;
+            trash.originalY = trash.y;
+            trash._lockedOnCan = false;
+            trash._dragging = false;
+        });
+
         this.numGuessesPerAnswer = [
-          { guessedAnswer: this.trash1, numGuess: 0 },
-          { guessedAnswer: this.trash2, numGuess: 0 },
-          { guessedAnswer: this.trash3, numGuess: 0 },
-          { guessedAnswer: this.trash4, numGuess: 0 },
-          { guessedAnswer: this.trash5, numGuess: 0 }
+            { guessedAnswer: this.trash1, numGuess: 0 },
+            { guessedAnswer: this.trash2, numGuess: 0 },
+            { guessedAnswer: this.trash3, numGuess: 0 },
+            { guessedAnswer: this.trash4, numGuess: 0 },
+            { guessedAnswer: this.trash5, numGuess: 0 }
         ];
 
         this.numCorrect = 0;
@@ -229,23 +102,33 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
         this.trashCanGroup.add(this.trashCan5);
 
         this.physics.add.overlap(
-          this.trashGroup,
-          this.trashCanGroup,
-          this.putInTrash,
-          null,
-          this
+            this.trashGroup,
+            this.trashCanGroup,
+            this.putInTrash,
+            null,
+            this
         );
     }
 
     putInTrash(trash, trashCan) {
         if (this.introActive) return;
-        if (trashCan && trashCan._disabled) return;
+        if (!trash || !trash.active) return;
+        if (!trashCan || !trashCan.active) return;
+        if (trashCan._disabled) return;
         if (trash._lockedOnCan) return;
+
         trash._lockedOnCan = true;
 
         const unlockWhenLeaving = () => {
-            const cans = [this.trashCan1, this.trashCan2, this.trashCan3, this.trashCan4, this.trashCan5]
-              .filter((c) => c && c.active);
+            if (!trash || !trash.active) return;
+
+            const cans = [
+                this.trashCan1,
+                this.trashCan2,
+                this.trashCan3,
+                this.trashCan4,
+                this.trashCan5
+            ].filter((c) => c && c.active);
 
             const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
 
@@ -260,12 +143,17 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
             }
         };
 
+        // ✅ CORRECT
         if (trash.answer === trashCan.answer) {
             this.playFeedbackSound(true);
             this.clearCenteredFeedback();
             this.showCenteredFeedback("That is Correct!", true);
 
+            this.showRaccoonFeedback(trashCan, true);
+
             if (trashCan.markCorrect) trashCan.markCorrect();
+
+            this.popTrashCanConfetti(trashCan);
 
             trash.destroy();
             trashCan.destroy();
@@ -280,6 +168,7 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
             return;
         }
 
+        // ❌ WRONG
         this.numWrong += 1;
 
         if (trash === this.trash1) {
@@ -298,9 +187,12 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
         this.clearCenteredFeedback();
         this.showCenteredFeedback("Try again!", false);
 
+      
+        this.showRaccoonFeedback(trashCan, false);
+        trash._lockedOnCan = false;
+        this.resetDraggedTrash(trash);
+
         this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
         this.triesUsed += 1;
-
-        unlockWhenLeaving();
     }
 }

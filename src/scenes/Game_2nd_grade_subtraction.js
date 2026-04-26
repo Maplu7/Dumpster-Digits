@@ -8,15 +8,8 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
     super("Game");
   }
 
-  buildSubtractionProblems(topNumber) {
-    return Array.from({ length: topNumber + 1 }, (_, i) => ({
-      question: `${topNumber}-${i}`,
-      answer: topNumber - i,
-    }));
-  }
-
   pickFiveUniqueAnswerProblems(problemPool) {
-    const shuffled = Phaser.Utils.Array.Shuffle([...problemPool]);
+    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
     const selected = [];
     const usedAnswers = new Set();
 
@@ -39,34 +32,28 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
       assignmentTitle: "2nd Grade Subtraction",
     });
 
-    this.problems1 = this.buildSubtractionProblems(1);
-    this.problems2 = this.buildSubtractionProblems(2);
-    this.problems3 = this.buildSubtractionProblems(3);
-    this.problems4 = this.buildSubtractionProblems(4);
-    this.problems5 = this.buildSubtractionProblems(5);
-    this.problems6 = this.buildSubtractionProblems(6);
-    this.problems7 = this.buildSubtractionProblems(7);
-    this.problems8 = this.buildSubtractionProblems(8);
-    this.problems9 = this.buildSubtractionProblems(9);
-    this.problems10 = this.buildSubtractionProblems(10);
+    function subtractionProblems() {
+      const allProblems = [];
 
-    this.problems = [
-      ...this.problems1,
-      ...this.problems2,
-      ...this.problems3,
-      ...this.problems4,
-      ...this.problems5,
-      ...this.problems6,
-      ...this.problems7,
-      ...this.problems8,
-      ...this.problems9,
-      ...this.problems10,
-    ];
+      for (let n = 0; n <= 100; n++) {
+        for (let j = 0; j <= n; j++) {
+          allProblems.push({
+            question: `${n}-${j}`,
+            answer: n - j,
+          });
+        }
+      }
 
+      return allProblems;
+    }
+
+    this.problems = subtractionProblems();
     this.configuredProblems = this.getConfiguredProblems(this.problems);
+
     const selectedProblems = this.pickFiveUniqueAnswerProblems(
       this.configuredProblems
     );
+
     this.assignFiveQuestionAndAnswerSlots(selectedProblems);
 
     for (let i = 1; i <= 7; i++) {
@@ -98,6 +85,16 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
     this.trash4 = new Trash(this, 850, 400, this.question4);
     this.trash5 = new Trash(this, 950, 280, this.question5);
 
+    // ✅ SAVE ORIGINAL POSITIONS
+    [this.trash1, this.trash2, this.trash3, this.trash4, this.trash5].forEach((trash) => {
+      trash.startX = trash.x;
+      trash.startY = trash.y;
+      trash.originalX = trash.x;
+      trash.originalY = trash.y;
+      trash._lockedOnCan = false;
+      trash._dragging = false;
+    });
+
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
       { guessedAnswer: this.trash2, numGuess: 0 },
@@ -110,19 +107,21 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group();
-    this.trashGroup.add(this.trash1);
-    this.trashGroup.add(this.trash2);
-    this.trashGroup.add(this.trash3);
-    this.trashGroup.add(this.trash4);
-    this.trashGroup.add(this.trash5);
+    this.trashGroup = this.physics.add.group([
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ]);
 
-    this.trashCanGroup = this.physics.add.group();
-    this.trashCanGroup.add(this.trashCan1);
-    this.trashCanGroup.add(this.trashCan2);
-    this.trashCanGroup.add(this.trashCan3);
-    this.trashCanGroup.add(this.trashCan4);
-    this.trashCanGroup.add(this.trashCan5);
+    this.trashCanGroup = this.physics.add.group([
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5,
+    ]);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -135,38 +134,24 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
 
   putInTrash(trash, trashCan) {
     if (this.introActive) return;
-    if (trashCan && trashCan._disabled) return;
+    if (!trash || !trash.active) return;
+    if (!trashCan || !trashCan.active) return;
+    if (trashCan._disabled) return;
     if (trash._lockedOnCan) return;
+
     trash._lockedOnCan = true;
 
-    const unlockWhenLeaving = () => {
-      const cans = [
-        this.trashCan1,
-        this.trashCan2,
-        this.trashCan3,
-        this.trashCan4,
-        this.trashCan5,
-      ].filter((c) => c && c.active);
-
-      const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
-
-      if (!stillOverAny) {
-        trash._lockedOnCan = false;
-
-        if (trash && trash.active && trash.trashMath && !trash._dragging) {
-          trash.trashMath.clearTint();
-        }
-      } else {
-        this.time.delayedCall(100, unlockWhenLeaving);
-      }
-    };
-
+    // ✅ CORRECT
     if (trash.answer === trashCan.answer) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
 
+      this.showRaccoonFeedback(trashCan, true);
+
       if (trashCan.markCorrect) trashCan.markCorrect();
+
+      this.popTrashCanConfetti(trashCan);
 
       trash.destroy();
       trashCan.destroy();
@@ -186,6 +171,7 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
       return;
     }
 
+    // ❌ WRONG
     this.numWrong += 1;
 
     if (trash === this.trash1) {
@@ -204,12 +190,17 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
 
+    this.showRaccoonFeedback(trashCan, false);
+
+    // ✅ FIX
+    trash._lockedOnCan = false;
+    this.resetDraggedTrash(trash);
+
     this.time.delayedCall(
       this.feedbackDuration,
       () => this.clearCenteredFeedback()
     );
-    this.triesUsed += 1;
 
-    unlockWhenLeaving();
+    this.triesUsed += 1;
   }
 }
