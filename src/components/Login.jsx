@@ -8,10 +8,11 @@ const Login = ({ onLogin, onTeacherLogin }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
-  const [fireBoost, setFireBoost] = useState(0);
+
   const [loginMode, setLoginMode] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
   const [enterFlash, setEnterFlash] = useState(false);
+  const [fireBoost, setFireBoost] = useState(0);
 
   function pulseFire(strength = 1) {
     setFireBoost((n) => n + strength);
@@ -78,18 +79,6 @@ const Login = ({ onLogin, onTeacherLogin }) => {
     }
   }
 
-  async function handleStudentButton() {
-    if (isLoading) return;
-    setLoginMode("student");
-    await handleStudentLogin();
-  }
-
-  async function handleTeacherButton() {
-    if (isLoading) return;
-    setLoginMode("teacher");
-    await handleTeacherLogin();
-  }
-
   function handleInputKeyDown(e) {
     if (e.key === "Enter") {
       handleSubmit(e);
@@ -108,7 +97,9 @@ const Login = ({ onLogin, onTeacherLogin }) => {
             <div className="input-box">
               <input
                 type="text"
-                placeholder={loginMode === "teacher" ? "Teacher ID" : "Student ID"}
+                placeholder={
+                  loginMode === "teacher" ? "Teacher ID" : "Student ID"
+                }
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 onKeyDown={handleInputKeyDown}
@@ -138,11 +129,18 @@ const Login = ({ onLogin, onTeacherLogin }) => {
             <div className="button-row">
               <button
                 type="button"
-                onClick={handleStudentButton}
+                onClick={async () => {
+                  if (isLoading) return;
+                  setLoginMode("student");
+                  triggerEnterEffects();
+                  await handleStudentLogin();
+                }}
                 className={[
                   loginMode === "student" ? "active" : "",
                   enterFlash && loginMode === "student" ? "enter-flash" : "",
-                ].join(" ").trim()}
+                ]
+                  .join(" ")
+                  .trim()}
                 disabled={isLoading}
               >
                 Student
@@ -150,11 +148,18 @@ const Login = ({ onLogin, onTeacherLogin }) => {
 
               <button
                 type="button"
-                onClick={handleTeacherButton}
+                onClick={async () => {
+                  if (isLoading) return;
+                  setLoginMode("teacher");
+                  triggerEnterEffects();
+                  await handleTeacherLogin();
+                }}
                 className={[
                   loginMode === "teacher" ? "active" : "",
                   enterFlash && loginMode === "teacher" ? "enter-flash" : "",
-                ].join(" ").trim()}
+                ]
+                  .join(" ")
+                  .trim()}
                 disabled={isLoading}
               >
                 Teacher

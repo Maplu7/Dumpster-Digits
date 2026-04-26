@@ -382,6 +382,10 @@
 }
 
 .tdash__student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  
   max-height: 300px;
   overflow-y: auto;
   padding-right: 4px;

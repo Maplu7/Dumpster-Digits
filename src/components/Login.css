@@ -1,10 +1,10 @@
-.login-page {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+position: relative;
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+overflow: hidden;
+backdrop-filter: none;
 }
 
 .login-container {
@@ -27,6 +27,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+
   animation: hueRotate 5s linear infinite;
   text-shadow: 0 0 15px rgba(0, 194, 255, 0.4);
 }
@@ -51,6 +52,17 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.login-wrapper h1 {
+  font-size: 40px;
+  font-family: "Fjalla One", sans-serif;
+  text-align: center;
+  background: white;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 18px;
 }
 
 .login-wrapper form {
@@ -108,11 +120,17 @@
   font-size: 20px;
   color: #fff;
   font-weight: 400;
+
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .button-row button:nth-child(1) {
@@ -148,6 +166,7 @@
       0 0 0 rgba(255, 255, 255, 0);
     filter: brightness(1);
   }
+
   40% {
     transform: translateY(-4px) scale(1.08);
     box-shadow:
@@ -156,6 +175,7 @@
       0 0 38px rgba(255, 214, 102, 0.45);
     filter: brightness(1.18);
   }
+
   100% {
     transform: scale(1);
     box-shadow:
@@ -165,7 +185,8 @@
   }
 }
 
-.login-msg {
+.login-msg,
+.msg {
   margin-top: 16px;
   font-size: 14px;
   color: white;
