@@ -14,7 +14,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     });
 
     // -----------------------------
-    // PROBLEM GENERATION (clean + efficient)
+    // PROBLEM GENERATION
     // -----------------------------
     const problems = [];
 
@@ -32,7 +32,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
     // -----------------------------
-    // GROUND ROWS (GRAPHICS)
+    // BACKGROUND GROUND ROWS
     // -----------------------------
     for (let i = 1; i <= 7; i++) {
       this.add.group({
@@ -50,6 +50,9 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       });
     }
 
+    // -----------------------------
+    // MUSHROOMS
+    // -----------------------------
     const mushroomSpots = [
       { x: 80, y: 70 },
       { x: 220, y: 140 },
@@ -74,31 +77,6 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       { x: 700, y: 670 },
       { x: 930, y: 590 },
       { x: 1160, y: 660 },
-      { x: 1380, y: 600 }
-    ];
-
-    mushroomSpots.forEach(spot => {
-      this.add.image(spot.x, spot.y, "mushrooms").setScale(3);
-    });
-
-        setScale: { x: 3, y: 6 },
-      });
-    }
-
-    // -----------------------------
-    // MUSHROOMS (GRAPHICS)
-    // -----------------------------
-    const mushroomSpots = [
-      { x: 80, y: 70 }, { x: 220, y: 140 }, { x: 420, y: 90 },
-      { x: 620, y: 180 }, { x: 820, y: 70 }, { x: 1020, y: 160 },
-      { x: 1220, y: 100 }, { x: 1420, y: 180 },
-
-      { x: 150, y: 320 }, { x: 350, y: 420 }, { x: 550, y: 300 },
-      { x: 760, y: 430 }, { x: 980, y: 340 }, { x: 1180, y: 420 },
-      { x: 1380, y: 350 },
-
-      { x: 100, y: 560 }, { x: 280, y: 650 }, { x: 500, y: 580 },
-      { x: 700, y: 670 }, { x: 930, y: 590 }, { x: 1160, y: 660 },
       { x: 1380, y: 600 },
     ];
 
@@ -116,7 +94,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     this.add.image(1480, 280, "trees", 2).setScale(2);
 
     // -----------------------------
-    // CANS = PROBLEMS
+    // TRASH CANS = QUESTIONS
     // -----------------------------
     this.trashCan1 = new TrashCan(this, 100, 700, this.question1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.question2);
@@ -153,7 +131,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     });
 
     // -----------------------------
-    // STATE FLAGS (important fix)
+    // IMPORTANT STATE FLAGS
     // -----------------------------
     [
       this.trash1,
@@ -166,8 +144,8 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       trash.startY = trash.y;
       trash.originalX = trash.x;
       trash.originalY = trash.y;
+
       trash._lockedOnCan = false;
-      trash._dragging = false;
       trash._wrongCooldown = false;
       trash._resettingHome = false;
     });
@@ -188,7 +166,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     this.triesUsed = 0;
 
     // -----------------------------
-    // PHYSICS
+    // PHYSICS GROUPS
     // -----------------------------
     this.trashGroup = this.physics.add.group([
       this.trash1,
@@ -216,18 +194,22 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
   }
 
   incrementWrongGuess(trash) {
-    if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess++;
-    else if (trash === this.trash2) this.numGuessesPerAnswer[1].numGuess++;
-    else if (trash === this.trash3) this.numGuessesPerAnswer[2].numGuess++;
-    else if (trash === this.trash4) this.numGuessesPerAnswer[3].numGuess++;
-    else if (trash === this.trash5) this.numGuessesPerAnswer[4].numGuess++;
+    const found = this.numGuessesPerAnswer.find(
+      (entry) => entry.guessedAnswer === trash
+    );
+
+    if (found) {
+      found.numGuess++;
+    }
   }
 
   putInTrash(trash, trashCan) {
     if (this.introActive) return;
     if (!trash?.active || !trashCan?.active) return;
     if (trashCan._disabled) return;
-    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) return;
+    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) {
+      return;
+    }
 
     trash._lockedOnCan = true;
 
@@ -235,11 +217,13 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       trash.body.setVelocity(0, 0);
     }
 
-    // ✅ CORRECT
-    if (trash.answer === trashCan.answer) {
-      this.playFeedbackSound(true);
-      this.clearCenteredFeedback();
-      this.showCenteredFeedback("That is Correct!", true);
+    // -----------------------------
+    // CORRECT ANSWER
+    // -----------------------------
+    if (Number(trash.answer) === Number(trashCan.answer)) {
+      this.playFeedbackSound?.(true);
+      this.clearCenteredFeedback?.();
+      this.showCenteredFeedback?.("That is Correct!", true);
       this.showRaccoonFeedback?.(trashCan, true);
 
       trashCan.markCorrect?.();
@@ -264,21 +248,35 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
       return;
     }
 
-    // ❌ WRONG
+    // -----------------------------
+    // WRONG ANSWER
+    // -----------------------------
     this.numWrong++;
     this.triesUsed++;
     this.incrementWrongGuess(trash);
 
+    trash._lockedOnCan = false;
     trash._wrongCooldown = true;
     trash._resettingHome = true;
-    trash._lockedOnCan = false;
 
-    this.playFeedbackSound(false);
-    this.clearCenteredFeedback();
-    this.showCenteredFeedback("Try again!", false);
+    this.playFeedbackSound?.(false);
+    this.clearCenteredFeedback?.();
+    this.showCenteredFeedback?.("Try again!", false);
     this.showRaccoonFeedback?.(trashCan, false);
 
-    trash.snapHome?.() || this.resetDraggedTrash?.(trash);
+    if (typeof trash.snapHome === "function") {
+      trash.snapHome();
+    } else if (typeof this.resetDraggedTrash === "function") {
+      this.resetDraggedTrash(trash);
+    } else {
+      this.tweens.add({
+        targets: trash,
+        x: trash.startX,
+        y: trash.startY,
+        duration: 350,
+        ease: "Back.easeOut",
+      });
+    }
 
     this.time.delayedCall(500, () => {
       if (!trash?.active) return;
@@ -293,7 +291,7 @@ export class Game_2nd_grade_addition extends BaseMathGameScene {
     });
 
     this.time.delayedCall(this.feedbackDuration, () => {
-      this.clearCenteredFeedback();
+      this.clearCenteredFeedback?.();
     });
   }
 }
