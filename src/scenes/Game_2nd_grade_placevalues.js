@@ -16,21 +16,11 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       const tens = Math.floor(n / 10) % 10;
       const hundreds = Math.floor(n / 100);
 
-      allProblems.push({
-        answer: n,
-        question: `${ones} → 1s`,
-      });
-
-      allProblems.push({
-        answer: n,
-        question: `${tens} → 10s`,
-      });
+      allProblems.push({ answer: n, question: `${ones} → 1s` });
+      allProblems.push({ answer: n, question: `${tens} → 10s` });
 
       if (hundreds > 0) {
-        allProblems.push({
-          answer: n,
-          question: `${hundreds} → 100s`,
-        });
+        allProblems.push({ answer: n, question: `${hundreds} → 100s` });
       }
     }
 
@@ -55,42 +45,11 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       if (selected.length === 5) break;
     }
 
-    if (selected.length === 0) {
-      console.warn("[Place Value] No problems found.");
-      return [];
-    }
-
-    while (selected.length < 5) {
-      const clone = selected[selected.length % selected.length];
-
-      selected.push({
-        ...clone,
-        __duplicateSlot: true,
-      });
+    while (selected.length < 5 && selected.length > 0) {
+      selected.push({ ...selected[selected.length % selected.length] });
     }
 
     return selected.slice(0, 5);
-  }
-
-  assignPlaceValueSlots(selectedProblems) {
-    const trashOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-    const canOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-
-    [
-      this.trashProblem1,
-      this.trashProblem2,
-      this.trashProblem3,
-      this.trashProblem4,
-      this.trashProblem5,
-    ] = trashOrder;
-
-    [
-      this.canProblem1,
-      this.canProblem2,
-      this.canProblem3,
-      this.canProblem4,
-      this.canProblem5,
-    ] = canOrder;
   }
 
   create() {
@@ -108,10 +67,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
           y: 50 + (i - 1) * 100,
           stepX: 180,
         },
-        setScale: {
-          x: 3,
-          y: 6,
-        },
+        setScale: { x: 3, y: 6 },
       });
     }
 
@@ -148,57 +104,57 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
 
     this.add.image(1250, 100, "yellowTent", 0).setScale(3);
     this.add.image(200, 100, "yellowTent", 1).setScale(3);
+   this.add.image(100, 300, "campBags", 3).setScale(3);
+    this.add.image(1400, 200, "campChairStriped", 0).setScale(2);
+    this.add.image(1480, 280, "campChairStriped", 2).setScale(2);
     this.add.image(100, 300, "campBags", 3).setScale(3);
     this.add.image(1400, 200, "campChairStriped", 0).setScale(2);
     this.add.image(1480, 280, "campChairStriped", 2).setScale(2);
 
     this.problemsPlaceValues = this.buildPlaceValueProblems();
-    this.configuredProblems = this.getConfiguredProblems(
-      this.problemsPlaceValues
-    );
+    this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);
 
     const selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
       this.configuredProblems
     );
 
-    this.assignPlaceValueSlots(selectedProblems);
+    const trashOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+    const canOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
 
     this.trashItems = [
-      new Trash(this, 550, 280, this.trashProblem1),
-      new Trash(this, 650, 400, this.trashProblem2),
-      new Trash(this, 750, 280, this.trashProblem3),
-      new Trash(this, 850, 400, this.trashProblem4),
-      new Trash(this, 950, 280, this.trashProblem5),
+      new Trash(this, 550, 280, trashOrder[0]),
+      new Trash(this, 650, 400, trashOrder[1]),
+      new Trash(this, 750, 280, trashOrder[2]),
+      new Trash(this, 850, 400, trashOrder[3]),
+      new Trash(this, 950, 280, trashOrder[4]),
     ];
 
     this.trashCans = [
-      new TrashCan(this, 100, 700, this.canProblem1).setScale(1),
-      new TrashCan(this, 440, 700, this.canProblem2).setScale(1),
-      new TrashCan(this, 740, 700, this.canProblem3).setScale(1),
-      new TrashCan(this, 1040, 700, this.canProblem4).setScale(1),
-      new TrashCan(this, 1340, 700, this.canProblem5).setScale(1),
+      new TrashCan(this, 100, 700, canOrder[0]).setScale(1),
+      new TrashCan(this, 440, 700, canOrder[1]).setScale(1),
+      new TrashCan(this, 740, 700, canOrder[2]).setScale(1),
+      new TrashCan(this, 1040, 700, canOrder[3]).setScale(1),
+      new TrashCan(this, 1340, 700, canOrder[4]).setScale(1),
     ];
 
     this.trashItems.forEach((trash, index) => {
-      trash.problemData = selectedProblems[index];
+      // IMPORTANT: use trashOrder[index], not selectedProblems[index]
+      trash.problemData = trashOrder[index];
+
       trash.startX = trash.x;
       trash.startY = trash.y;
       trash.originalX = trash.x;
       trash.originalY = trash.y;
+
       trash._lockedOnCan = false;
       trash._dragging = false;
+      trash._wrongCooldown = false;
+      trash._resettingHome = false;
     });
 
-    const canProblems = [
-      this.canProblem1,
-      this.canProblem2,
-      this.canProblem3,
-      this.canProblem4,
-      this.canProblem5,
-    ];
-
     this.trashCans.forEach((can, index) => {
-      can.problemData = canProblems[index];
+      // IMPORTANT: use canOrder[index], not selectedProblems[index]
+      can.problemData = canOrder[index];
       can.setTextScale?.(20);
     });
 
@@ -226,11 +182,12 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     );
   }
 
-  problemMatches(trash, trashCan) {
-    const trashLabel = String(trash?.problemData?.question || "").trim();
-    const canLabel = String(trashCan?.problemData?.question || "").trim();
+  problemKey(problem) {
+    return `${String(problem?.question || "").trim()}::${Number(problem?.answer)}`;
+  }
 
-    return Boolean(trashLabel && canLabel && trashLabel === canLabel);
+  problemMatches(trash, trashCan) {
+    return this.problemKey(trash?.problemData) === this.problemKey(trashCan?.problemData);
   }
 
   incrementWrongGuess(trash) {
@@ -245,7 +202,10 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     if (this.introActive) return;
     if (!trash?.active || !trashCan?.active) return;
     if (trashCan._disabled) return;
+
     if (trash._lockedOnCan) return;
+    if (trash._wrongCooldown) return;
+    if (trash._resettingHome) return;
 
     trash._lockedOnCan = true;
     trash._dragging = false;
@@ -287,15 +247,36 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.triesUsed += 1;
     this.incrementWrongGuess(trash);
 
+    trash._wrongCooldown = true;
+    trash._resettingHome = true;
+
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
     this.showRaccoonFeedback(trashCan, false);
 
+    trash._lockedOnCan = false;
+
+    if (typeof trash.snapHome === "function") {
+      trash.snapHome();
+    } else {
+      this.resetDraggedTrash(trash);
+    }
+
+    this.time.delayedCall(500, () => {
+      if (!trash || !trash.active) return;
+
+      trash._wrongCooldown = false;
+      trash._resettingHome = false;
+
+      if (trash.body) {
+        trash.body.enable = true;
+        trash.body.setVelocity(0, 0);
+      }
+    });
+
     this.time.delayedCall(this.feedbackDuration, () => {
       this.clearCenteredFeedback();
     });
-
-    this.polishWrongAnswer(trash);
   }
 }
