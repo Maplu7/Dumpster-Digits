@@ -26,7 +26,6 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
 
     this.problems = problems;
     this.configuredProblems = this.getConfiguredProblems(this.problems);
-
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
     for (let i = 1; i <= 7; i++) {
@@ -51,36 +50,81 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
-    this.trashItems = [
-      new Trash(this, 550, 280, this.question1),
-      new Trash(this, 650, 400, this.question2),
-      new Trash(this, 750, 280, this.question3),
-      new Trash(this, 850, 400, this.question4),
-      new Trash(this, 950, 280, this.question5),
-    ];
+    // CANS = PROBLEMS
+    this.trashCan1 = new TrashCan(this, 100, 700, this.question1).setScale(1);
+    this.trashCan2 = new TrashCan(this, 440, 700, this.question2).setScale(1);
+    this.trashCan3 = new TrashCan(this, 740, 700, this.question3).setScale(1);
+    this.trashCan4 = new TrashCan(this, 1040, 700, this.question4).setScale(1);
+    this.trashCan5 = new TrashCan(this, 1340, 700, this.question5).setScale(1);
 
-    this.trashCans = [
-      new TrashCan(this, 100, 700, this.answer1).setScale(1),
-      new TrashCan(this, 440, 700, this.answer2).setScale(1),
-      new TrashCan(this, 740, 700, this.answer3).setScale(1),
-      new TrashCan(this, 1040, 700, this.answer4).setScale(1),
-      new TrashCan(this, 1340, 700, this.answer5).setScale(1),
-    ];
+    // TRASH = ANSWERS
+    this.trash1 = new Trash(this, 550, 280, {
+      question: String(this.answer1.answer),
+      answer: this.answer1.answer,
+    });
 
-    this.numGuessesPerAnswer = this.trashItems.map((trash) => ({
-      guessedAnswer: trash,
-      numGuess: 0,
-    }));
+    this.trash2 = new Trash(this, 650, 400, {
+      question: String(this.answer2.answer),
+      answer: this.answer2.answer,
+    });
+
+    this.trash3 = new Trash(this, 750, 280, {
+      question: String(this.answer3.answer),
+      answer: this.answer3.answer,
+    });
+
+    this.trash4 = new Trash(this, 850, 400, {
+      question: String(this.answer4.answer),
+      answer: this.answer4.answer,
+    });
+
+    this.trash5 = new Trash(this, 950, 280, {
+      question: String(this.answer5.answer),
+      answer: this.answer5.answer,
+    });
+
+    [
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ].forEach((trash) => {
+      trash.startX = trash.x;
+      trash.startY = trash.y;
+      trash.originalX = trash.x;
+      trash.originalY = trash.y;
+      trash._lockedOnCan = false;
+      trash._dragging = false;
+      trash._wrongCooldown = false;
+      trash._resettingHome = false;
+    });
+
+    this.numGuessesPerAnswer = [
+      { guessedAnswer: this.trash1, numGuess: 0 },
+      { guessedAnswer: this.trash2, numGuess: 0 },
+      { guessedAnswer: this.trash3, numGuess: 0 },
+      { guessedAnswer: this.trash4, numGuess: 0 },
+      { guessedAnswer: this.trash5, numGuess: 0 },
+    ];
 
     this.numCorrect = 0;
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.setupGamePolish(this.trashItems, this.trashCans);
-    this.setupUnifiedDragSystem(this.trashItems);
+    this.trashGroup = this.physics.add.group();
+    this.trashGroup.add(this.trash1);
+    this.trashGroup.add(this.trash2);
+    this.trashGroup.add(this.trash3);
+    this.trashGroup.add(this.trash4);
+    this.trashGroup.add(this.trash5);
 
-    this.trashGroup = this.physics.add.group(this.trashItems);
-    this.trashCanGroup = this.physics.add.group(this.trashCans);
+    this.trashCanGroup = this.physics.add.group();
+    this.trashCanGroup.add(this.trashCan1);
+    this.trashCanGroup.add(this.trashCan2);
+    this.trashCanGroup.add(this.trashCan3);
+    this.trashCanGroup.add(this.trashCan4);
+    this.trashCanGroup.add(this.trashCan5);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -92,18 +136,22 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
   }
 
   incrementWrongGuess(trash) {
-    const index = this.trashItems.findIndex((item) => item === trash);
-
-    if (index >= 0 && this.numGuessesPerAnswer[index]) {
-      this.numGuessesPerAnswer[index].numGuess += 1;
-    }
+    if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess++;
+    else if (trash === this.trash2) this.numGuessesPerAnswer[1].numGuess++;
+    else if (trash === this.trash3) this.numGuessesPerAnswer[2].numGuess++;
+    else if (trash === this.trash4) this.numGuessesPerAnswer[3].numGuess++;
+    else if (trash === this.trash5) this.numGuessesPerAnswer[4].numGuess++;
   }
 
   putInTrash(trash, trashCan) {
     if (this.introActive) return;
-    if (!trash?.active || !trashCan?.active) return;
+    if (!trash || !trash.active) return;
+    if (!trashCan || !trashCan.active) return;
     if (trashCan._disabled) return;
+
     if (trash._lockedOnCan) return;
+    if (trash._wrongCooldown) return;
+    if (trash._resettingHome) return;
 
     trash._lockedOnCan = true;
     trash._dragging = false;
@@ -120,7 +168,6 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
 
       trashCan.markCorrect?.();
       this.popTrashCanConfetti(trashCan);
-      this.polishCorrectAnswer(trashCan);
 
       trash.destroy();
       trashCan.destroy();
@@ -145,15 +192,36 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     this.triesUsed += 1;
     this.incrementWrongGuess(trash);
 
+    trash._wrongCooldown = true;
+    trash._resettingHome = true;
+
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
     this.showRaccoonFeedback(trashCan, false);
 
+    trash._lockedOnCan = false;
+
+    if (typeof trash.snapHome === "function") {
+      trash.snapHome();
+    } else {
+      this.resetDraggedTrash(trash);
+    }
+
+    this.time.delayedCall(500, () => {
+      if (!trash || !trash.active) return;
+
+      trash._wrongCooldown = false;
+      trash._resettingHome = false;
+
+      if (trash.body) {
+        trash.body.enable = true;
+        trash.body.setVelocity(0, 0);
+      }
+    });
+
     this.time.delayedCall(this.feedbackDuration, () => {
       this.clearCenteredFeedback();
     });
-
-    this.polishWrongAnswer(trash);
   }
 }
