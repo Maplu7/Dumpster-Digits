@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./TeacherDash.css";
 import { db } from "../firebase";
 
 import {
   collection,
+  collectionGroup,
   query,
   where,
   getDocs,
@@ -11,7 +12,6 @@ import {
   updateDoc,
   writeBatch,
   onSnapshot,
-  deleteDoc,
   serverTimestamp,
   deleteField,
 } from "firebase/firestore";
@@ -479,6 +479,19 @@ export default function TeacherDash({ teacher, onLogout }) {
   const [showResetPanel, setShowResetPanel] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetCoinsToo, setResetCoinsToo] = useState(false);
+  const [justResetStudents, setJustResetStudents] = useState(new Set());
+  const justResetStudentsRef = useRef(new Set());
+
+  function markStudentsAsJustReset(studentIds = []) {
+    const next = new Set(studentIds.map((id) => String(id)));
+    justResetStudentsRef.current = next;
+    setJustResetStudents(next);
+  }
+
+  function clearJustResetStudents() {
+    justResetStudentsRef.current = new Set();
+    setJustResetStudents(new Set());
+  }
 
   const [resultsViewMode, setResultsViewMode] = useState("student");
   const [resultsGroupId, setResultsGroupId] = useState("");
@@ -607,7 +620,11 @@ export default function TeacherDash({ teacher, onLogout }) {
       const locked =
         classroom?.studentAssignments?.[selectedStudent.id]?.[assignment.gameKey] ?? false;
 
-      const attempts = getAttemptsForGame(studentResults, assignment.gameKey);
+      const safeStudentResults = justResetStudents.has(selectedStudent.id)
+        ? []
+        : studentResults;
+
+      const attempts = getAttemptsForGame(safeStudentResults, assignment.gameKey);
       const latestAttempt = attempts[0] || null;
 
       const medianPercent = attempts.length
@@ -656,14 +673,16 @@ export default function TeacherDash({ teacher, onLogout }) {
 
       return b.attempts.length - a.attempts.length;
     });
-  }, [assignmentsForClass, classroom, selectedStudent, studentResults]);
+  }, [assignmentsForClass, classroom, selectedStudent, studentResults, justResetStudents]);
 
   const classAssignmentProgress = useMemo(() => {
     const list = resultsViewMode === "class" ? students : resultsTargetStudents;
 
     const progressItems = assignmentsForClass.map((assignment) => {
       const rows = list.map((student) => {
-        const studentResultsForView = allResultsByStudent[student.id] || [];
+        const studentResultsForView = justResetStudents.has(String(student.id))
+          ? []
+          : allResultsByStudent[student.id] || [];
         const attempts = getAttemptsForGame(studentResultsForView, assignment.gameKey);
         const latestAttempt = attempts[0] || null;
 
@@ -733,6 +752,7 @@ export default function TeacherDash({ teacher, onLogout }) {
     students,
     allResultsByStudent,
     classroom,
+    justResetStudents,
   ]);
 
   const classResultsSummary = useMemo(() => {
@@ -789,7 +809,9 @@ export default function TeacherDash({ teacher, onLogout }) {
     const alerts = [];
 
     students.forEach((student) => {
-      const results = allResultsByStudent[student.id] || [];
+      const results = justResetStudents.has(String(student.id))
+        ? []
+        : allResultsByStudent[student.id] || [];
 
       const studentRiskScore = getStudentRiskScore(
         results,
@@ -891,7 +913,7 @@ export default function TeacherDash({ teacher, onLogout }) {
     });
 
     return sortAlertsByUrgency(alerts);
-  }, [students, allResultsByStudent, assignmentsForClass, classroom]);
+  }, [students, allResultsByStudent, assignmentsForClass, classroom, justResetStudents]);
 
   const urgentAlerts = useMemo(
     () =>
@@ -912,8 +934,12 @@ export default function TeacherDash({ teacher, onLogout }) {
   );
 
   const recentPerfectRuns = useMemo(() => {
-    return getRecentPerfectRuns(allResultsByStudent, students).slice(0, 8);
-  }, [allResultsByStudent, students]);
+    const safeStudents = students.filter(
+      (student) => !justResetStudents.has(String(student.id))
+    );
+
+    return getRecentPerfectRuns(allResultsByStudent, safeStudents).slice(0, 8);
+  }, [allResultsByStudent, students, justResetStudents]);
 
   const editorAssignmentConfig = useMemo(() => {
     return classroom?.assignmentEditor?.[editorGameKey] || {
@@ -993,32 +1019,42 @@ export default function TeacherDash({ teacher, onLogout }) {
     const map = {};
 
     students.forEach((student) => {
-      const results = allResultsByStudent[student.id] || [];
+      const studentId = String(student.id);
 
-      map[student.id] =
-        results.length === 0 ? {} : buildWeakFamilyStats(results);
+      if (justResetStudents.has(studentId)) {
+        map[studentId] = {};
+        return;
+      }
+
+      const results = allResultsByStudent[studentId] || [];
+      map[studentId] = results.length === 0 ? {} : buildWeakFamilyStats(results);
     });
 
     return map;
-  }, [students, allResultsByStudent]);
+  }, [students, allResultsByStudent, justResetStudents]);
 
   const adaptiveAssignmentsByStudent = useMemo(() => {
     const map = {};
 
     students.forEach((student) => {
-      const weakFamilies = weakFamiliesByStudent[student.id] || {};
+      const studentId = String(student.id);
 
-      map[student.id] =
+      if (justResetStudents.has(studentId)) {
+        map[studentId] = [];
+        return;
+      }
+
+      const weakFamilies = weakFamiliesByStudent[studentId] || {};
+      map[studentId] =
         Object.keys(weakFamilies).length === 0
           ? []
-          : getAdaptiveProblemsForStudent(
-            weakFamilies,
-            availableBuiltInProblems
-          );
+          : getAdaptiveProblemsForStudent(weakFamilies, availableBuiltInProblems);
     });
 
     return map;
-  }, [students, weakFamiliesByStudent, availableBuiltInProblems]);
+  }, [students, weakFamiliesByStudent, availableBuiltInProblems, justResetStudents]);
+
+
   useEffect(() => {
     let unsubscribeClassroom = null;
     let unsubscribeStudents = () => { };
@@ -1103,15 +1139,11 @@ export default function TeacherDash({ teacher, onLogout }) {
                   .map((id) => studentMap[id])
                   .filter(Boolean);
 
-                const filtered = loadedStudents.filter((student) => {
-                  const studentGrade = Number(student.grade);
-
-                  // Allow students with no grade OR matching grade
-                  if (Number.isNaN(parsedClassGrade)) return true;
-                  if (Number.isNaN(studentGrade)) return true;
-
-                  return studentGrade === parsedClassGrade;
-                });
+                const filtered = Number.isNaN(parsedClassGrade)
+                  ? loadedStudents
+                  : loadedStudents.filter(
+                    (student) => Number(student.grade) === parsedClassGrade
+                  );
 
                 filtered.sort((a, b) =>
                   String(a.name || a.id).localeCompare(String(b.name || b.id))
@@ -1178,7 +1210,12 @@ export default function TeacherDash({ teacher, onLogout }) {
           ...docSnap.data(),
         }));
 
-        setStudentResults(results);
+        if (justResetStudentsRef.current.has(String(selectedStudentId))) {
+          setStudentResults([]);
+          return;
+        }
+
+        setStudentResults(Array.isArray(results) ? results : []);
       },
       (error) => {
         console.error("Error watching student assignment results:", error);
@@ -1215,9 +1252,15 @@ export default function TeacherDash({ teacher, onLogout }) {
             ...docSnap.data(),
           }));
 
+          const safeStudentId = String(student.id);
+
           setAllResultsByStudent((prev) => ({
             ...prev,
-            [student.id]: results.length ? results : [],
+            [safeStudentId]: justResetStudentsRef.current.has(safeStudentId)
+              ? []
+              : Array.isArray(results)
+                ? results
+                : [],
           }));
         },
         (error) => {
@@ -1364,25 +1407,133 @@ export default function TeacherDash({ teacher, onLogout }) {
     }
   }
 
-  async function resetStudentAssignments(studentId, resetCoinsToo = false) {
-    if (!studentId) return;
-
+  function getStudentIdVariants(studentId) {
     const safeStudentId = String(studentId).trim();
+    const variants = [safeStudentId];
+    const numericId = Number(safeStudentId);
 
-    const resultsRef = collection(
+    if (!Number.isNaN(numericId)) {
+      variants.push(numericId);
+    }
+
+    return [...new Set(variants)];
+  }
+
+  async function collectDocsFromQuery(queryRef) {
+    const snap = await getDocs(queryRef);
+    return snap.docs;
+  }
+
+  async function collectResetDocsForStudent(studentId) {
+    const safeStudentId = String(studentId).trim();
+    const studentIdVariants = getStudentIdVariants(safeStudentId);
+
+    const directResultsRef = collection(
       db,
       "students",
       safeStudentId,
       "assignmentResults"
     );
 
-    const snap = await getDocs(resultsRef);
-
-    await Promise.allSettled(
-      snap.docs.map((docSnap) => deleteDoc(docSnap.ref))
+    const directSummaryRef = collection(
+      db,
+      "students",
+      safeStudentId,
+      "assignmentGameSummary"
     );
 
+    const collectionsToCheck = [
+      collectDocsFromQuery(directResultsRef),
+      collectDocsFromQuery(directSummaryRef),
+    ];
+
+    for (const variant of studentIdVariants) {
+      collectionsToCheck.push(
+        collectDocsFromQuery(
+          query(collection(db, "assignmentResults"), where("studentId", "==", variant))
+        )
+      );
+
+      collectionsToCheck.push(
+        collectDocsFromQuery(
+          query(
+            collection(db, "assignmentGameSummary"),
+            where("studentId", "==", variant)
+          )
+        )
+      );
+
+      collectionsToCheck.push(
+        collectDocsFromQuery(
+          query(collectionGroup(db, "assignmentResults"), where("studentId", "==", variant))
+        )
+      );
+
+      collectionsToCheck.push(
+        collectDocsFromQuery(
+          query(
+            collectionGroup(db, "assignmentGameSummary"),
+            where("studentId", "==", variant)
+          )
+        )
+      );
+    }
+
+    const docsByPath = new Map();
+    const settled = await Promise.allSettled(collectionsToCheck);
+
+    settled.forEach((result) => {
+      if (result.status !== "fulfilled") {
+        console.warn("One reset query failed:", result.reason);
+        return;
+      }
+
+      result.value.forEach((docSnap) => {
+        docsByPath.set(docSnap.ref.path, docSnap);
+      });
+    });
+
+    return [...docsByPath.values()];
+  }
+
+  async function commitResetBatch(studentRef, updates, docsToDelete) {
+    const uniqueDocs = [...new Map(docsToDelete.map((docSnap) => [docSnap.ref.path, docSnap])).values()];
+
+    let batch = writeBatch(db);
+    let operationCount = 0;
+
+    function maybeCommitBatch(force = false) {
+      if (!force && operationCount < 400) return Promise.resolve();
+      if (operationCount === 0) return Promise.resolve();
+
+      const batchToCommit = batch;
+      batch = writeBatch(db);
+      operationCount = 0;
+      return batchToCommit.commit();
+    }
+
+    for (const docSnap of uniqueDocs) {
+      batch.delete(docSnap.ref);
+      operationCount += 1;
+      await maybeCommitBatch(false);
+    }
+
+    batch.set(studentRef, updates, { merge: true });
+    operationCount += 1;
+
+    await maybeCommitBatch(true);
+
+    return uniqueDocs.length;
+  }
+
+  async function resetStudentAssignments(studentId, resetCoinsToo = false) {
+    if (!studentId) return 0;
+
+    const safeStudentId = String(studentId).trim();
     const studentRef = doc(db, "students", safeStudentId);
+    const docsToDelete = await collectResetDocsForStudent(safeStudentId);
+
+    const resetVersion = Date.now();
 
     const updates = {
       weakFamilies: deleteField(),
@@ -1394,6 +1545,10 @@ export default function TeacherDash({ teacher, onLogout }) {
         totalPerfectRuns: 0,
         totalWrongGuesses: 0,
       },
+
+      totalGamesPlayed: 0,
+      totalPerfectRuns: 0,
+      totalWrongGuesses: 0,
 
       lastPlayedAt: deleteField(),
       lastGameKey: deleteField(),
@@ -1421,6 +1576,7 @@ export default function TeacherDash({ teacher, onLogout }) {
       playedAssignments: deleteField(),
       playedGames: deleteField(),
 
+      resetVersion,
       updatedAt: serverTimestamp(),
       resetAt: serverTimestamp(),
     };
@@ -1429,7 +1585,13 @@ export default function TeacherDash({ teacher, onLogout }) {
       updates.coins = 0;
     }
 
-    await updateDoc(studentRef, updates);
+    const deletedCount = await commitResetBatch(studentRef, updates, docsToDelete);
+
+    console.log(
+      `Factory reset ${safeStudentId}: deleted ${deletedCount} saved result/summary docs`
+    );
+
+    return deletedCount;
   }
 
   async function handleResetAssignments() {
@@ -1446,8 +1608,8 @@ export default function TeacherDash({ teacher, onLogout }) {
       }
 
       const resetIds = targets.map((student) => String(student.id));
+      markStudentsAsJustReset(resetIds);
 
-      // ✅ PASS resetCoinsToo into reset function
       const results = await Promise.allSettled(
         resetIds.map((studentId) =>
           resetStudentAssignments(studentId, resetCoinsToo)
@@ -1457,17 +1619,17 @@ export default function TeacherDash({ teacher, onLogout }) {
       const failed = results.filter((result) => result.status === "rejected");
 
       if (failed.length > 0) {
-        console.error("FAILED STUDENTS:", failed);
+        failed.forEach((fail, index) => {
+          console.error(`RESET FAILED ${index + 1}:`, fail.reason);
+        });
         alert(`${failed.length} student(s) failed to reset. Check console.`);
         return;
       }
 
-      // ✅ Clear selected student results
       if (resetIds.includes(String(selectedStudentId))) {
         setStudentResults([]);
       }
 
-      // ✅ Clear all cached results
       setAllResultsByStudent((prev) => {
         const next = { ...prev };
         resetIds.forEach((id) => {
@@ -1476,36 +1638,28 @@ export default function TeacherDash({ teacher, onLogout }) {
         return next;
       });
 
-      // ✅ Update local UI state correctly
       setStudents((prev) =>
         prev.map((student) =>
           resetIds.includes(String(student.id))
             ? {
               ...student,
-
-              // 🔑 ONLY reset coins if checkbox is ON
               coins: resetCoinsToo ? 0 : student.coins,
-
               weakFamilies: {},
               adaptiveAssignments: [],
-
               stats: {
                 totalGamesPlayed: 0,
                 totalPerfectRuns: 0,
                 totalWrongGuesses: 0,
               },
-
               lastPlayedAt: null,
               lastGameKey: "",
               lastActive: null,
-
               completedAssignments: [],
               completedGames: [],
               assignmentProgress: {},
               gameProgress: {},
               problemStats: {},
               problemBreakdown: {},
-
               playCount: 0,
               timesPlayed: 0,
               totalPlays: 0,
@@ -1525,7 +1679,6 @@ export default function TeacherDash({ teacher, onLogout }) {
         )
       );
 
-      // ✅ Clear ALL UI state (prevents ghost data)
       setOpenAssignments({});
       setOpenAttempts({});
       setOpenClassAssignments({});
@@ -1534,16 +1687,16 @@ export default function TeacherDash({ teacher, onLogout }) {
       setShowTeacherAlerts(false);
       setShowPerfectRuns(false);
 
-      // 🔥 EXTRA: force clean state (fixes "old data after relog")
-      setTimeout(() => {
-        setAllResultsByStudent({});
-      }, 0);
-
       alert("Factory reset complete!");
       setShowResetPanel(false);
+
+      setTimeout(() => {
+        clearJustResetStudents();
+      }, 5000);
     } catch (error) {
       console.error("Reset error:", error);
       alert(error?.message || "Reset failed.");
+      clearJustResetStudents();
     } finally {
       setIsResetting(false);
     }
@@ -1568,7 +1721,7 @@ export default function TeacherDash({ teacher, onLogout }) {
             grade: student.grade ?? resolvedGrade ?? null,
             birthday: student.birthday ?? "",
             coins: Number(student.coins ?? 0),
-          
+
             ownedItems: Array.isArray(student.ownedItems) ? student.ownedItems : [],
             equippedPfp: student.equippedPfp || "",
             equippedOutfit: student.equippedOutfit || "",
@@ -1782,7 +1935,13 @@ export default function TeacherDash({ teacher, onLogout }) {
   }
 
   function getStudentAttemptsForAssignment(studentId, gameKey) {
-    const results = allResultsByStudent[studentId] || [];
+    const safeStudentId = String(studentId);
+
+    if (justResetStudents.has(safeStudentId)) {
+      return [];
+    }
+
+    const results = allResultsByStudent[safeStudentId] || [];
     return getAttemptsForGame(results, gameKey);
   }
 

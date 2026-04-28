@@ -1,7 +1,12 @@
 import React, { useMemo, useState } from "react";
 import "./AssignmentEditor.css";
 
-function getPresetBadge(preset) {
+function safeNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function getPresetBadge(preset = {}) {
   if (preset.groupType === "recommended") return "Recommended";
   if (preset.adaptiveLevel === "easy") return "Easy";
   if (preset.adaptiveLevel === "practice") return "Practice";
@@ -11,14 +16,14 @@ function getPresetBadge(preset) {
   return "Set";
 }
 
-function getPresetTab(preset) {
+function getPresetTab(preset = {}) {
   if (preset.groupType === "recommended") return "recommended";
   if (preset.groupType === "full" || preset.adaptiveLevel === "full") return "full";
   return "families";
 }
 
 function getCleanPresetLabel(label = "") {
-  return String(label).replace(/^Recommended:\s*/i, "");
+  return String(label).replace(/^Recommended:\s*/i, "").trim();
 }
 
 function getFamilyName(problem) {
@@ -76,6 +81,17 @@ function getDifficultyIcon(difficulty) {
   return "✨";
 }
 
+function getWeakLabel(stats) {
+  const wrong = safeNumber(stats?.wrong);
+  const students = safeNumber(stats?.students);
+
+  if (wrong > 0 && students > 0) return `${wrong} wrong tries • ${students} students`;
+  if (wrong > 0) return `${wrong} wrong tries`;
+  if (students > 0) return `${students} students struggling`;
+
+  return "Needs practice";
+}
+
 export default function AssignmentEditor({
   assignmentsForClass = [],
   editorGameKey,
@@ -84,9 +100,9 @@ export default function AssignmentEditor({
   availablePresets = [],
   availableBuiltInProblems = [],
   editorSelectedCount = {},
-  editorCustomQuestion,
+  editorCustomQuestion = "",
   setEditorCustomQuestion,
-  editorCustomAnswer,
+  editorCustomAnswer = "",
   setEditorCustomAnswer,
   editorLastSavedAt,
   showAssignmentEditor,
@@ -98,9 +114,6 @@ export default function AssignmentEditor({
   handleAddCustomProblem,
   handleRemoveCustomProblem,
   problemKey,
-
-  // Optional future prop from TeacherDash:
-  // { "7s Family": { wrong: 12, students: 3 }, "Hundreds Place": { wrong: 8 } }
   weakFamilyStats = {},
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -122,7 +135,9 @@ export default function AssignmentEditor({
     ? editorAssignmentConfig.selectedPresetIds
     : [];
 
-  const selectedBuiltInProblems = Array.isArray(editorAssignmentConfig?.selectedBuiltInProblems)
+  const selectedBuiltInProblems = Array.isArray(
+    editorAssignmentConfig?.selectedBuiltInProblems
+  )
     ? editorAssignmentConfig.selectedBuiltInProblems
     : [];
 
@@ -130,19 +145,22 @@ export default function AssignmentEditor({
     ? editorAssignmentConfig.customProblems
     : [];
 
-  const safeProblemKey =
-    typeof problemKey === "function"
-      ? problemKey
-      : (problem) => `${problem?.question ?? ""}::${problem?.answer ?? ""}`;
+  const safeProblemKey = (problem) => {
+    try {
+      if (typeof problemKey === "function") return problemKey(problem);
+      return `${problem?.question ?? ""}::${problem?.answer ?? ""}`;
+    } catch {
+      return `${problem?.question ?? ""}::${problem?.answer ?? ""}`;
+    }
+  };
 
   const activeAssignment = assignmentsForClass.find(
     (assignment) => assignment.gameKey === editorGameKey
   );
 
-  const selectedBuiltInKeys = useMemo(
-    () => new Set(selectedBuiltInProblems.map((problem) => safeProblemKey(problem))),
-    [selectedBuiltInProblems, safeProblemKey]
-  );
+  const selectedBuiltInKeys = useMemo(() => {
+    return new Set(selectedBuiltInProblems.map((problem) => safeProblemKey(problem)));
+  }, [selectedBuiltInProblems]);
 
   const sortedPresets = useMemo(() => {
     const order = { recommended: 0, families: 1, full: 2 };
@@ -153,19 +171,19 @@ export default function AssignmentEditor({
 
       if (order[aTab] !== order[bTab]) return order[aTab] - order[bTab];
 
-      return String(a.label || "").localeCompare(String(b.label || ""));
+      return String(a.label || "").localeCompare(String(b.label || ""), undefined, {
+        numeric: true,
+      });
     });
   }, [availablePresets]);
 
-  const recommendedPresets = useMemo(
-    () => sortedPresets.filter((preset) => getPresetTab(preset) === "recommended"),
-    [sortedPresets]
-  );
+  const recommendedPresets = useMemo(() => {
+    return sortedPresets.filter((preset) => getPresetTab(preset) === "recommended");
+  }, [sortedPresets]);
 
-  const visiblePresets = useMemo(
-    () => sortedPresets.filter((preset) => getPresetTab(preset) === presetTab),
-    [sortedPresets, presetTab]
-  );
+  const visiblePresets = useMemo(() => {
+    return sortedPresets.filter((preset) => getPresetTab(preset) === presetTab);
+  }, [sortedPresets, presetTab]);
 
   const filteredBuiltIns = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -177,12 +195,14 @@ export default function AssignmentEditor({
       const answer = String(problem?.answer ?? "").toLowerCase();
       const family = getFamilyName(problem).toLowerCase();
       const difficulty = getDifficultyLabel(getDifficulty(problem)).toLowerCase();
+      const fullExpression = `${question} ${answer}`.toLowerCase();
 
       return (
         question.includes(term) ||
         answer.includes(term) ||
         family.includes(term) ||
-        difficulty.includes(term)
+        difficulty.includes(term) ||
+        fullExpression.includes(term)
       );
     });
   }, [availableBuiltInProblems, searchTerm]);
@@ -217,47 +237,79 @@ export default function AssignmentEditor({
 
   const strongestRecommended =
     recommendedPresets.find((preset) => preset.adaptiveLevel === "easy") ||
+    recommendedPresets.find((preset) => preset.groupType === "recommended") ||
     recommendedPresets[0];
+
+  const totalAvailableBuiltIns = availableBuiltInProblems.length;
+  const filteredCount = filteredBuiltIns.length;
 
   function handleSubmitCustomProblem(event) {
     event.preventDefault();
-    handleAddCustomProblem();
+    handleAddCustomProblem?.();
   }
 
   function quickAddRecommended() {
     if (!strongestRecommended) return;
+
     if (!selectedPresetIds.includes(strongestRecommended.id)) {
-      togglePreset(strongestRecommended.id);
+      togglePreset?.(strongestRecommended.id);
     }
   }
 
   function assignRecommendedToWholeClass() {
     recommendedPresets.forEach((preset) => {
-      if (!selectedPresetIds.includes(preset.id)) togglePreset(preset.id);
+      if (!selectedPresetIds.includes(preset.id)) {
+        togglePreset?.(preset.id);
+      }
+    });
+  }
+
+  function selectWeakFamilies() {
+    groupedByDifficulty.forEach(({ families }) => {
+      families.forEach(([family, problems]) => {
+        const stats = weakFamilyStats?.[family];
+        const isWeak =
+          !!stats ||
+          safeNumber(stats?.wrong) > 5 ||
+          /7s|8s|9s|challenge|hundreds/i.test(family);
+
+        if (!isWeak) return;
+
+        problems.forEach((problem) => {
+          const key = safeProblemKey(problem);
+          if (!selectedBuiltInKeys.has(key)) toggleBuiltInProblem?.(problem);
+        });
+      });
     });
   }
 
   function toggleWholeFamily(problems = []) {
-    const allSelected = problems.every((problem) =>
-      selectedBuiltInKeys.has(safeProblemKey(problem))
-    );
+    if (!Array.isArray(problems) || problems.length === 0) return;
+
+    const allSelected =
+      problems.length > 0 &&
+      problems.every((problem) => selectedBuiltInKeys.has(safeProblemKey(problem)));
 
     problems.forEach((problem) => {
       const selected = selectedBuiltInKeys.has(safeProblemKey(problem));
-      if (selected === allSelected) toggleBuiltInProblem(problem);
+      if (selected === allSelected) toggleBuiltInProblem?.(problem);
     });
   }
 
   function setProblemSelected(problem, shouldSelect) {
+    if (!problem) return;
+
     const key = safeProblemKey(problem);
     const selected = selectedBuiltInKeys.has(key);
 
-    if (selected !== shouldSelect) {
-      toggleBuiltInProblem(problem);
-    }
+    if (selected === shouldSelect) return;
+
+    toggleBuiltInProblem?.(problem);
   }
 
   function handleProblemPointerDown(problem) {
+    if (!problem) return;
+
     const key = safeProblemKey(problem);
     const isSelected = selectedBuiltInKeys.has(key);
     const mode = isSelected ? "deselect" : "select";
@@ -269,7 +321,7 @@ export default function AssignmentEditor({
   }
 
   function handleProblemPointerEnter(problem) {
-    if (!dragSelecting) return;
+    if (!dragSelecting || !problem) return;
 
     const key = safeProblemKey(problem);
 
@@ -284,8 +336,11 @@ export default function AssignmentEditor({
   }
 
   function stopDragging() {
+    if (!dragSelecting) return;
+
     setDragSelecting(false);
     setDragTouchedKeys(new Set());
+    setDragMode("select");
   }
 
   function toggleDifficulty(difficulty) {
@@ -300,6 +355,22 @@ export default function AssignmentEditor({
       ...prev,
       [family]: !prev[family],
     }));
+  }
+
+  function openAllFamilies() {
+    const next = {};
+
+    groupedByDifficulty.forEach(({ families }) => {
+      families.forEach(([family]) => {
+        next[family] = true;
+      });
+    });
+
+    setOpenFamilies(next);
+  }
+
+  function closeAllFamilies() {
+    setOpenFamilies({});
   }
 
   return (
@@ -319,7 +390,7 @@ export default function AssignmentEditor({
         <button
           className="assignment-editor__toggle"
           type="button"
-          onClick={() => setShowAssignmentEditor((prev) => !prev)}
+          onClick={() => setShowAssignmentEditor?.((prev) => !prev)}
         >
           {showAssignmentEditor ? "Hide Editor" : "Show Editor"}
         </button>
@@ -332,11 +403,12 @@ export default function AssignmentEditor({
               <span>Game</span>
 
               <select
-                value={editorGameKey}
+                value={editorGameKey || ""}
                 onChange={(event) => {
-                  setEditorGameKey(event.target.value);
+                  setEditorGameKey?.(event.target.value);
                   setSearchTerm("");
                   setPresetTab("recommended");
+                  setOpenFamilies({});
                 }}
               >
                 <option value="">Select assignment</option>
@@ -426,13 +498,19 @@ export default function AssignmentEditor({
                 <button type="button" onClick={assignRecommendedToWholeClass}>
                   1-Click Assign Recommended
                 </button>
+
+                <button type="button" onClick={selectWeakFamilies}>
+                  Auto Pick Weak Families
+                </button>
               </div>
 
               <div className="assignment-editor__panel assignment-editor__panel--wide">
                 <div className="assignment-editor__panel-head assignment-editor__panel-head--split">
                   <div>
                     <h3>Choose Practice Sets</h3>
-                    <p>Recommended sets are first. Families let you pick number groups.</p>
+                    <p>
+                      Recommended sets are first. Families let you pick number groups.
+                    </p>
                   </div>
 
                   <div className="assignment-editor__tabs">
@@ -451,7 +529,7 @@ export default function AssignmentEditor({
                   </div>
                 </div>
 
-                {visiblePresets.length > 0 ? (
+                {Array.isArray(visiblePresets) && visiblePresets.length > 0 ? (
                   <div className="assignment-editor__preset-grid">
                     {visiblePresets.map((preset) => {
                       const selected = selectedPresetIds.includes(preset.id);
@@ -470,7 +548,7 @@ export default function AssignmentEditor({
                               ? "assignment-editor__preset--weak-ready"
                               : ""
                           }`}
-                          onClick={() => togglePreset(preset.id)}
+                          onClick={() => togglePreset?.(preset.id)}
                         >
                           <span className="assignment-editor__preset-check">
                             {selected ? "✓" : "+"}
@@ -495,7 +573,9 @@ export default function AssignmentEditor({
                     })}
                   </div>
                 ) : (
-                  <div className="assignment-editor__empty">No sets in this tab yet.</div>
+                  <div className="assignment-editor__empty">
+                    No sets in this tab yet.
+                  </div>
                 )}
               </div>
 
@@ -518,7 +598,7 @@ export default function AssignmentEditor({
                         placeholder="Question, like 3 + 4"
                         value={editorCustomQuestion}
                         onChange={(event) =>
-                          setEditorCustomQuestion(event.target.value)
+                          setEditorCustomQuestion?.(event.target.value)
                         }
                       />
 
@@ -527,7 +607,7 @@ export default function AssignmentEditor({
                         placeholder="Answer"
                         value={editorCustomAnswer}
                         onChange={(event) =>
-                          setEditorCustomAnswer(event.target.value)
+                          setEditorCustomAnswer?.(event.target.value)
                         }
                       />
 
@@ -547,7 +627,7 @@ export default function AssignmentEditor({
 
                             <button
                               type="button"
-                              onClick={() => handleRemoveCustomProblem(problem)}
+                              onClick={() => handleRemoveCustomProblem?.(problem)}
                             >
                               Remove
                             </button>
@@ -568,13 +648,28 @@ export default function AssignmentEditor({
                     <span className="family-picker__tag">Optional</span>
                   </div>
 
-                  <input
-                    className="family-picker__search"
-                    type="text"
-                    placeholder="Search family, difficulty, question, or answer..."
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                  />
+                  <div className="family-picker__tools">
+                    <input
+                      className="family-picker__search"
+                      type="text"
+                      placeholder="Search family, difficulty, question, or answer..."
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                    />
+
+                    <div className="family-picker__tiny-actions">
+                      <button type="button" onClick={openAllFamilies}>
+                        Open All
+                      </button>
+                      <button type="button" onClick={closeAllFamilies}>
+                        Close All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="family-picker__meta">
+                    Showing {filteredCount} of {totalAvailableBuiltIns} problems
+                  </div>
 
                   {groupedByDifficulty.length > 0 ? (
                     <div className="family-picker__difficulty-list">
@@ -604,9 +699,11 @@ export default function AssignmentEditor({
                             {isDifficultyOpen && (
                               <div className="family-difficulty__body">
                                 {families.map(([family, problems]) => {
-                                  const allSelected = problems.every((problem) =>
-                                    selectedBuiltInKeys.has(safeProblemKey(problem))
-                                  );
+                                  const allSelected =
+                                    problems.length > 0 &&
+                                    problems.every((problem) =>
+                                      selectedBuiltInKeys.has(safeProblemKey(problem))
+                                    );
 
                                   const selectedCount = problems.filter((problem) =>
                                     selectedBuiltInKeys.has(safeProblemKey(problem))
@@ -615,6 +712,7 @@ export default function AssignmentEditor({
                                   const weakStats = weakFamilyStats?.[family];
                                   const weakFromData =
                                     !!weakStats ||
+                                    safeNumber(weakStats?.wrong) > 5 ||
                                     /7s|8s|9s|challenge|hundreds/i.test(family);
 
                                   const isFamilyOpen = openFamilies[family] ?? false;
@@ -644,10 +742,12 @@ export default function AssignmentEditor({
                                             <h4>{family}</h4>
                                             <p>
                                               {problems.length} problems
-                                              {selectedCount > 0 &&
-                                                ` • ${selectedCount} selected`}
-                                              {weakStats?.wrong &&
-                                                ` • ${weakStats.wrong} wrong tries`}
+                                              {selectedCount > 0
+                                                ? ` • ${selectedCount} selected`
+                                                : ""}
+                                              {weakFromData
+                                                ? ` • ${getWeakLabel(weakStats)}`
+                                                : ""}
                                             </p>
                                           </div>
                                         </button>
@@ -667,7 +767,7 @@ export default function AssignmentEditor({
                                           }`}
                                           onClick={() => toggleWholeFamily(problems)}
                                         >
-                                          {allSelected ? "Selected" : "Pick"}
+                                          {allSelected ? "Selected" : "Pick Family"}
                                         </button>
 
                                         <button

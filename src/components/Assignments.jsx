@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./Assignments.css";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { subscribeAssignmentsForGrade } from "../assignmentService";
 import { getAssignmentTheme } from "./appTheme";
@@ -8,60 +8,46 @@ import StarTwinkleOverlay from "./StarTwinkleOverlay";
 import LayeredSkyScene from "../components/LayeredSkyScene";
 import useAmbience from "../hooks/useAmbience";
 
+const PREVIEW_PROBLEMS = {
+  "1st_addition": "1 + 5",
+  "1st_subtraction": "5 - 1",
+  "2nd_addition": "8 + 7",
+  "2nd_subtraction": "15 - 6",
+  "2nd_fill_blank": "4 + _ = 10",
+  "2nd_place_value": "42 → 4 tens",
+  "2nd_multiplication": "2 × 3",
+};
+
+const GAME_LABELS = {
+  "1st_addition": "Addition",
+  "1st_subtraction": "Subtraction",
+  "2nd_addition": "2nd Grade Addition",
+  "2nd_subtraction": "2nd Grade Subtraction",
+  "2nd_fill_blank": "Fill in the Blank",
+  "2nd_place_value": "Place Value",
+  "2nd_multiplication": "Multiplication",
+};
+
+const ASSIGNMENT_ORDER = {
+  "1st_addition": 0,
+  "1st_subtraction": 1,
+  "2nd_addition": 2,
+  "2nd_subtraction": 3,
+  "2nd_fill_blank": 4,
+  "2nd_place_value": 5,
+  "2nd_multiplication": 6,
+};
+
 function getPreviewProblem(gameKey) {
-  switch (gameKey) {
-    case "1st_addition":
-      return "1 + 5";
-    case "1st_subtraction":
-      return "5 - 1";
-    case "2nd_addition":
-      return "8 + 7";
-    case "2nd_subtraction":
-      return "15 - 6";
-    case "2nd_fill_blank":
-      return "4 + _ = 10";
-    case "2nd_place_value":
-      return "42 → 4 tens";
-    case "2nd_multiplication":
-      return "2 × 3";
-    default:
-      return "1 + 5";
-  }
-}
-
-function getAssignmentOrder(gameKey) {
-  const order = {
-    "1st_addition": 0,
-    "1st_subtraction": 1,
-    "2nd_addition": 2,
-    "2nd_subtraction": 3,
-    "2nd_fill_blank": 4,
-    "2nd_place_value": 5,
-    "2nd_multiplication": 6,
-  };
-
-  return order[gameKey] ?? 99;
+  return PREVIEW_PROBLEMS[gameKey] || "1 + 5";
 }
 
 function getGameLabel(gameKey) {
-  switch (gameKey) {
-    case "1st_addition":
-      return "Addition";
-    case "1st_subtraction":
-      return "Subtraction";
-    case "2nd_addition":
-      return "2nd Grade Addition";
-    case "2nd_subtraction":
-      return "2nd Grade Subtraction";
-    case "2nd_fill_blank":
-      return "Fill in the Blank";
-    case "2nd_place_value":
-      return "Place Value";
-    case "2nd_multiplication":
-      return "Multiplication";
-    default:
-      return "Game";
-  }
+  return GAME_LABELS[gameKey] || "Game";
+}
+
+function getAssignmentOrder(gameKey) {
+  return ASSIGNMENT_ORDER[gameKey] ?? 99;
 }
 
 function sortAssignments(items = []) {
@@ -70,12 +56,26 @@ function sortAssignments(items = []) {
   );
 }
 
+function buildCompletedMap(snapshot) {
+  const completed = {};
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const gameKey = data?.gameKey || docSnap.id;
+
+    if (gameKey) {
+      completed[gameKey] = true;
+    }
+  });
+
+  return completed;
+}
+
 export default function Assignments({
   student,
   onBack,
   onOpenGame,
   externalAssignments,
-  externalCompletedMap,
   externalLockMap,
 }) {
   const [assignments, setAssignments] = useState([]);
@@ -83,6 +83,9 @@ export default function Assignments({
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const lastResetVersionRef = useRef(0);
+
+  const studentId = useMemo(() => String(student?.id || "").trim(), [student?.id]);
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
 
@@ -97,25 +100,17 @@ export default function Assignments({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  function scrollToTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
-
   useEffect(() => {
     let unsubscribeAssignments = null;
     let unsubscribeResults = null;
     let unsubscribeClassroom = null;
+    let unsubscribeStudentReset = null;
 
     setLoading(true);
     setCompletedMap({});
     setLockMap({});
 
-    const hasExternalAssignments = Array.isArray(externalAssignments);
-
-    if (hasExternalAssignments) {
+    if (Array.isArray(externalAssignments)) {
       setAssignments(sortAssignments(externalAssignments));
       setLoading(false);
     } else {
@@ -133,34 +128,47 @@ export default function Assignments({
       );
     }
 
-    if (!student?.id) {
+    if (!studentId) {
+      setLoading(false);
+
       return () => {
-        if (unsubscribeAssignments) unsubscribeAssignments();
+        if (typeof unsubscribeAssignments === "function") {
+          unsubscribeAssignments();
+        }
       };
     }
 
-    const resultsRef = collection(
-      db,
-      "students",
-      String(student.id),
-      "assignmentResults"
+    const studentRef = doc(db, "students", studentId);
+
+    unsubscribeStudentReset = onSnapshot(
+      studentRef,
+      (snap) => {
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+        const resetVersion = Number(data?.resetVersion || 0);
+
+        if (
+          resetVersion &&
+          resetVersion !== lastResetVersionRef.current
+        ) {
+          lastResetVersionRef.current = resetVersion;
+
+          // Instant reset across the student assignments page
+          setCompletedMap({});
+        }
+      },
+      (error) => {
+        console.error("Error watching student reset state:", error);
+      }
     );
+
+    const resultsRef = collection(db, "students", studentId, "assignmentResults");
 
     unsubscribeResults = onSnapshot(
       resultsRef,
       (snapshot) => {
-        const completed = {};
-
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const gameKey = data?.gameKey || docSnap.id;
-
-          if (gameKey) {
-            completed[gameKey] = true;
-          }
-        });
-
-        setCompletedMap(completed);
+        setCompletedMap(buildCompletedMap(snapshot));
       },
       (error) => {
         console.error("Error watching assignment results:", error);
@@ -170,7 +178,7 @@ export default function Assignments({
 
     const classQ = query(
       collection(db, "classrooms"),
-      where("studentID", "array-contains", String(student.id))
+      where("studentID", "array-contains", studentId)
     );
 
     unsubscribeClassroom = onSnapshot(
@@ -178,10 +186,7 @@ export default function Assignments({
       (snapshot) => {
         if (!snapshot.empty) {
           const classData = snapshot.docs[0].data();
-          const studentLocks =
-            classData?.studentAssignments?.[String(student.id)] || {};
-
-          setLockMap(studentLocks);
+          setLockMap(classData?.studentAssignments?.[studentId] || {});
         } else {
           setLockMap({});
         }
@@ -196,17 +201,25 @@ export default function Assignments({
     );
 
     return () => {
-      if (unsubscribeAssignments) unsubscribeAssignments();
-      if (unsubscribeResults) unsubscribeResults();
-      if (unsubscribeClassroom) unsubscribeClassroom();
+      if (typeof unsubscribeAssignments === "function") unsubscribeAssignments();
+      if (typeof unsubscribeResults === "function") unsubscribeResults();
+      if (typeof unsubscribeClassroom === "function") unsubscribeClassroom();
+      if (typeof unsubscribeStudentReset === "function") unsubscribeStudentReset();
     };
-  }, [student?.id, student?.grade, externalAssignments]);
+  }, [studentId, student?.grade, externalAssignments]);
 
   useEffect(() => {
     if (externalLockMap && Object.keys(externalLockMap).length > 0) {
       setLockMap(externalLockMap);
     }
   }, [externalLockMap]);
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 
   return (
     <div className="assignments-page">
@@ -221,7 +234,7 @@ export default function Assignments({
             </p>
           </div>
 
-          <button className="assignments-back-btn" onClick={onBack}>
+          <button className="assignments-back-btn" type="button" onClick={onBack}>
             Back
           </button>
         </div>
@@ -245,10 +258,22 @@ export default function Assignments({
                 <div
                   className={`assignment-polaroid ${
                     index % 2 === 0 ? "tilt-left" : "tilt-right"
-                  }`}
+                  } ${isLocked ? "assignment-polaroid--locked" : ""}`}
                   key={assignment?.id || gameKey || index}
+                  role="button"
+                  tabIndex={isLocked ? -1 : 0}
                   onClick={() => {
                     if (!isLocked && gameKey) {
+                      onOpenGame(gameKey);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      !isLocked &&
+                      gameKey &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
                       onOpenGame(gameKey);
                     }
                   }}
@@ -260,7 +285,7 @@ export default function Assignments({
                   <div className="assignment-polaroid-photo">
                     <StarTwinkleOverlay
                       image={theme.preview}
-                      alt="preview"
+                      alt={`${getGameLabel(gameKey)} preview`}
                       problem={previewProblem}
                     />
                   </div>
@@ -292,13 +317,25 @@ export default function Assignments({
 
                     <button
                       className="assignment-play-btn"
+                      type="button"
                       disabled={isLocked}
                       style={{
                         background: theme.accent,
                         "--btn-glow": `${theme.accent}99`,
                       }}
+                      onClick={(event) => {
+                        event.stopPropagation();
+
+                        if (!isLocked && gameKey) {
+                          onOpenGame(gameKey);
+                        }
+                      }}
                     >
-                      {isCompleted ? "Play Again" : "Start Game"}
+                      {isLocked
+                        ? "Locked"
+                        : isCompleted
+                          ? "Play Again"
+                          : "Start Game"}
                     </button>
                   </div>
                 </div>
@@ -311,6 +348,7 @@ export default function Assignments({
       {showScrollTop && (
         <button
           className="scroll-top-btn"
+          type="button"
           onClick={scrollToTop}
           aria-label="Scroll to top"
           title="Scroll to top"

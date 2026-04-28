@@ -28,9 +28,10 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.gameMusicDuckedVolume = 0.012;
     this.correctSfxVolume = 0.25;
     this.wrongSfxVolume = 0.22;
+    this.feedbackDuration = 1100;
   }
 
-  init(data) {
+  init(data = {}) {
     const fromDataProblems = Array.isArray(data?.assignedProblems)
       ? data.assignedProblems
       : [];
@@ -44,15 +45,11 @@ export class BaseMathGameScene extends Phaser.Scene {
           : [];
 
     this.studentId = String(
-      data?.studentId ||
-      this.registry.get("studentId") ||
-      ""
+      data?.studentId || this.registry.get("studentId") || ""
     ).trim();
 
     this.classId = String(
-      data?.classId ||
-      this.registry.get("classId") ||
-      ""
+      data?.classId || this.registry.get("classId") || ""
     ).trim();
 
     console.log("🧩 BaseMathGameScene init", {
@@ -95,9 +92,7 @@ export class BaseMathGameScene extends Phaser.Scene {
     const normalizedFallback = this.dedupeProblems(fallbackProblems);
 
     const problems =
-      normalizedAssigned.length > 0
-        ? normalizedAssigned
-        : normalizedFallback;
+      normalizedAssigned.length > 0 ? normalizedAssigned : normalizedFallback;
 
     console.log("🧠 Loaded Problems:", problems);
     return problems;
@@ -106,14 +101,6 @@ export class BaseMathGameScene extends Phaser.Scene {
   updateAssignedProblems(newProblems = []) {
     this.assignedProblems = this.dedupeProblems(newProblems);
     this.registry.set("assignedProblems", this.assignedProblems);
-
-    console.log("🔄 Scene assigned problems updated", {
-      scene: this.scene.key,
-      gameKey: this.gameKey,
-      classId: this.classId,
-      count: this.assignedProblems.length,
-      assignedProblems: this.assignedProblems,
-    });
 
     if (typeof this.onAssignedProblemsUpdated === "function") {
       this.onAssignedProblemsUpdated(this.assignedProblems);
@@ -144,19 +131,8 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     this.startBackgroundMusic();
 
-    this.events.once("shutdown", () => {
-      this.cleanupSceneAudio();
-      this.cleanupLiveAssignmentSync();
-      this.destroyConfettiEmitter();
-      this.destroyRaccoonFeedback();
-    });
-
-    this.events.once("destroy", () => {
-      this.cleanupSceneAudio();
-      this.cleanupLiveAssignmentSync();
-      this.destroyConfettiEmitter();
-      this.destroyRaccoonFeedback();
-    });
+    this.events.once("shutdown", () => this.cleanupScene());
+    this.events.once("destroy", () => this.cleanupScene());
 
     this.saveResults = async () => {
       const studentId = String(
@@ -177,8 +153,6 @@ export class BaseMathGameScene extends Phaser.Scene {
           : [],
       };
 
-      console.log("💾 saveResults payload", payload);
-
       if (!payload.studentId) {
         throw new Error(`[${this.scene.key}] save blocked: missing studentId`);
       }
@@ -187,23 +161,21 @@ export class BaseMathGameScene extends Phaser.Scene {
         throw new Error(`[${this.scene.key}] save blocked: missing gameKey`);
       }
 
-      const result = await saveAssignmentResult(payload);
-      console.log("✅ saveAssignmentResult result", result);
-      return result;
+      return await saveAssignmentResult(payload);
     };
 
-    this.time.delayedCall(0, () => {
-      this.showGameIntroOverlay();
-    });
-
-    this.time.delayedCall(0, () => {
-      this.createConfettiSystem();
-    });
+    this.time.delayedCall(0, () => this.showGameIntroOverlay());
+    this.time.delayedCall(0, () => this.createConfettiSystem());
   }
 
-  //------------------------------------------------------------------------------------------------
-  // GAME POLISH HELPERS
-  //------------------------------------------------------------------------------------------------
+  cleanupScene() {
+    this.cleanupSceneAudio();
+    this.cleanupLiveAssignmentSync();
+    this.destroyConfettiEmitter();
+    this.destroyRaccoonFeedback();
+    this.clearCenteredFeedback();
+  }
+
   setupGamePolish(trashItems = [], trashCans = []) {
     this.gameMusicVolume = 0.025;
     this.gameMusicDuckedVolume = 0.012;
@@ -213,14 +185,15 @@ export class BaseMathGameScene extends Phaser.Scene {
     trashItems.forEach((trash) => {
       if (!trash) return;
 
-      trash.startX = trash.x;
-      trash.startY = trash.y;
-      trash.originalX = trash.x;
-      trash.originalY = trash.y;
+      trash.startX ??= trash.x;
+      trash.startY ??= trash.y;
+      trash.originalX ??= trash.x;
+      trash.originalY ??= trash.y;
       trash._lockedOnCan = false;
       trash._dragging = false;
 
       this.applyGameFont(trash);
+      this.makeTrashEasyToGrab(trash);
     });
 
     trashCans.forEach((can) => {
@@ -235,13 +208,28 @@ export class BaseMathGameScene extends Phaser.Scene {
     });
   }
 
+  setupUnifiedDragSystem() {
+    // Compatibility only. Do not add drag behavior here.
+  }
+
+  makeTrashEasyToGrab(trash) {
+    if (!trash || !trash.active) return;
+
+    trash.setInteractive(
+      new Phaser.Geom.Rectangle(-90, -90, 180, 180),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    this.input.setDraggable(trash);
+  }
+
   getTextObjectsFromGameObject(gameObject) {
     return [
+      gameObject?.text,
       gameObject?.trashMath,
       gameObject?.answerText,
       gameObject?.questionText,
       gameObject?.labelText,
-      gameObject?.text,
     ].filter(Boolean);
   }
 
@@ -265,9 +253,7 @@ export class BaseMathGameScene extends Phaser.Scene {
   }
 
   addAnswerTextGlow(can) {
-    const textObjects = this.getTextObjectsFromGameObject(can);
-
-    textObjects.forEach((textObj) => {
+    this.getTextObjectsFromGameObject(can).forEach((textObj) => {
       if (!textObj || typeof textObj.setShadow !== "function") return;
       textObj.setShadow(0, 0, "#fff1a8", 10, true, true);
     });
@@ -299,7 +285,6 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     const removeGlow = () => {
       if (!can._hoverGlow) return;
-
       this.tweens.killTweensOf(can._hoverGlow);
       can._hoverGlow.destroy();
       can._hoverGlow = null;
@@ -351,32 +336,118 @@ export class BaseMathGameScene extends Phaser.Scene {
 
   polishWrongAnswer(trash) {
     if (!trash || !trash.active) return;
-
-    trash._lockedOnCan = false;
-
-    this.tweens.add({
-      targets: trash,
-      x: trash.x + 12,
-      duration: 55,
-      yoyo: true,
-      repeat: 3,
-      ease: "Sine.easeInOut",
-      onComplete: () => {
-        this.resetDraggedTrash(trash);
-      },
-    });
+    this.resetDraggedTrash(trash);
   }
 
-  //------------------------------------------------------------------------------------------------
-  // RACCOON FEEDBACK
-  //------------------------------------------------------------------------------------------------
-  createRaccoonAnimation() {
-    if (!this.textures.exists("raccoon")) {
-      console.warn(
-        `[${this.scene.key}] Missing raccoon texture. Make sure Preloader loads "raccoon".`
-      );
-      return false;
+  resetDraggedTrash(trashItem) {
+    if (!trashItem || !trashItem.active) return;
+
+    if (typeof trashItem.snapHome === "function") {
+      trashItem.snapHome();
+      this.makeTrashEasyToGrab(trashItem);
+      return;
     }
+
+    const padding = 90;
+
+    const resetX = Phaser.Math.Clamp(
+      trashItem.startX ?? trashItem.originalX ?? trashItem.x,
+      padding,
+      this.scale.width - padding
+    );
+
+    const resetY = Phaser.Math.Clamp(
+      trashItem.startY ?? trashItem.originalY ?? trashItem.y,
+      padding,
+      this.scale.height - padding
+    );
+
+    this.tweens.killTweensOf(trashItem);
+    this.getTextObjectsFromGameObject(trashItem).forEach((obj) =>
+      this.tweens.killTweensOf(obj)
+    );
+
+    trashItem._lockedOnCan = false;
+    trashItem._dragging = false;
+
+    trashItem.setPosition(resetX, resetY);
+    trashItem.setAngle?.(0);
+    trashItem.setAlpha?.(1);
+
+    this.getTextObjectsFromGameObject(trashItem).forEach((textObj) => {
+      textObj.clearTint?.();
+      textObj.setAlpha?.(1);
+    });
+
+    if (trashItem.body) {
+      trashItem.body.enable = true;
+      trashItem.body.reset(resetX, resetY);
+      trashItem.body.setVelocity(0, 0);
+    }
+
+    this.makeTrashEasyToGrab(trashItem);
+  }
+
+  pickUniqueProblemsByAnswer(problemPool, count = 5) {
+    const normalizedPool = this.dedupeProblems(problemPool);
+
+    if (normalizedPool.length === 0) {
+      console.warn(`[${this.scene.key}] No valid problems found.`);
+      return [];
+    }
+
+    const shuffled = Phaser.Utils.Array.Shuffle([...normalizedPool]);
+    const selected = [];
+    const usedAnswers = new Set();
+
+    for (const problem of shuffled) {
+      const answerKey = String(problem?.answer);
+      if (usedAnswers.has(answerKey)) continue;
+
+      usedAnswers.add(answerKey);
+      selected.push(problem);
+
+      if (selected.length === count) break;
+    }
+
+    const backupPool = selected.length > 0 ? selected : shuffled;
+
+    while (selected.length < count) {
+      const clone = backupPool[selected.length % backupPool.length];
+      selected.push({ ...clone, __duplicateSlot: true });
+    }
+
+    return selected.slice(0, count);
+  }
+
+  assignFiveQuestionAndAnswerSlots(problemPool) {
+    const selectedProblems = this.pickUniqueProblemsByAnswer(problemPool, 5);
+    if (selectedProblems.length === 0) return [];
+
+    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
+
+    [
+      this.question1,
+      this.question2,
+      this.question3,
+      this.question4,
+      this.question5,
+    ] = questionOrder;
+
+    [
+      this.answer1,
+      this.answer2,
+      this.answer3,
+      this.answer4,
+      this.answer5,
+    ] = answerOrder;
+
+    return selectedProblems;
+  }
+
+  createRaccoonAnimation() {
+    if (!this.textures.exists("raccoon")) return false;
 
     if (!this.anims.exists("raccoonFeedback")) {
       this.anims.create({
@@ -393,14 +464,12 @@ export class BaseMathGameScene extends Phaser.Scene {
     return true;
   }
 
-    showRaccoonFeedback(trashCan, isCorrect) {
+  showRaccoonFeedback(trashCan, isCorrect) {
     if (!trashCan) return;
     if (!this.createRaccoonAnimation()) return;
 
-    // ✅ CORRECT RACCOONS STAY FOREVER
     if (isCorrect) {
       const key = `${Math.round(trashCan.x)}_${Math.round(trashCan.y)}_correct`;
-
       if (this.raccoonSpots.has(key)) return;
 
       const raccoon = this.add
@@ -418,16 +487,10 @@ export class BaseMathGameScene extends Phaser.Scene {
       }
 
       raccoon.play("raccoonFeedback");
-
-      this.raccoonSpots.set(key, {
-        raccoon,
-        emote,
-      });
-
+      this.raccoonSpots.set(key, { raccoon, emote });
       return;
     }
 
-    // ❌ WRONG RACCOON IS TEMPORARY
     this.activeFeedbackRaccoon?.destroy();
     this.activeFeedbackEmote?.destroy();
 
@@ -462,7 +525,6 @@ export class BaseMathGameScene extends Phaser.Scene {
         onComplete: () => {
           raccoon?.destroy();
           emote?.destroy();
-
           if (this.activeFeedbackRaccoon === raccoon) {
             this.activeFeedbackRaccoon = null;
             this.activeFeedbackEmote = null;
@@ -478,14 +540,12 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.activeFeedbackRaccoon = null;
     this.activeFeedbackEmote = null;
 
-    if (!this.raccoonSpots) return;
-
-    this.raccoonSpots.forEach((entry) => {
+    this.raccoonSpots?.forEach((entry) => {
       entry?.raccoon?.destroy();
       entry?.emote?.destroy();
     });
 
-    this.raccoonSpots.clear();
+    this.raccoonSpots?.clear();
   }
 
   createConfettiSystem() {
@@ -511,23 +571,12 @@ export class BaseMathGameScene extends Phaser.Scene {
       "trashConfettiFishBone",
       "trashConfettiPurple",
     ].filter((key) => this.textures.exists(key));
-
-    if (this.trashConfettiKeys.length === 0) {
-      console.warn(
-        `[${this.scene.key}] No trash confetti textures loaded. Check Preloader file names and /public/confetti paths.`
-      );
-    }
   }
 
   popTrashCanConfetti(trashCan) {
     if (!trashCan) return;
 
-    if (
-      !Array.isArray(this.trashConfettiKeys) ||
-      this.trashConfettiKeys.length === 0
-    ) {
-      this.createConfettiSystem();
-    }
+    if (!this.trashConfettiKeys?.length) this.createConfettiSystem();
 
     const keys = this.trashConfettiKeys || [];
     if (keys.length === 0) return;
@@ -535,7 +584,7 @@ export class BaseMathGameScene extends Phaser.Scene {
     const startX = trashCan.x;
     const startY = trashCan.y - 25;
 
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 24; i += 1) {
       const key = Phaser.Utils.Array.GetRandom(keys);
 
       const piece = this.add
@@ -568,20 +617,6 @@ export class BaseMathGameScene extends Phaser.Scene {
         },
       });
     }
-
-    const glow = this.add
-      .circle(startX, startY, 34, 0xfff0a8, 0.35)
-      .setDepth(1999);
-
-    this.tweens.add({
-      targets: glow,
-      scaleX: 2.1,
-      scaleY: 2.1,
-      alpha: 0,
-      duration: 220,
-      ease: "Quad.easeOut",
-      onComplete: () => glow.destroy(),
-    });
   }
 
   destroyConfettiEmitter() {
@@ -601,63 +636,11 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.unsubscribeLiveProblems = null;
   }
 
-  pickUniqueProblemsByAnswer(problemPool, count = 5) {
-    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
-    const selected = [];
-    const usedAnswers = new Set();
-
-    for (const problem of shuffled) {
-      const answerKey = String(problem?.answer);
-      if (usedAnswers.has(answerKey)) continue;
-
-      usedAnswers.add(answerKey);
-      selected.push(problem);
-
-      if (selected.length === count) break;
-    }
-
-    if (selected.length < count) {
-      throw new Error(
-        `[${this.scene.key}] Not enough unique-answer problems to choose ${count}.`
-      );
-    }
-
-    return selected;
-  }
-
-  assignFiveQuestionAndAnswerSlots(problemPool) {
-    const selectedProblems = this.pickUniqueProblemsByAnswer(problemPool, 5);
-    const questionOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-    const answerOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
-
-    [
-      this.question1,
-      this.question2,
-      this.question3,
-      this.question4,
-      this.question5,
-    ] = questionOrder;
-
-    [
-      this.answer1,
-      this.answer2,
-      this.answer3,
-      this.answer4,
-      this.answer5,
-    ] = answerOrder;
-
-    return selectedProblems;
-  }
-
   startBackgroundMusic() {
     if (!this.cache.audio.exists("gameMusic")) return;
 
-    this.gameMusicVolume = this.gameMusicVolume ?? 0.025;
-    this.gameMusicDuckedVolume = this.gameMusicDuckedVolume ?? 0.012;
-    this.correctSfxVolume = this.correctSfxVolume ?? 0.25;
-    this.wrongSfxVolume = this.wrongSfxVolume ?? 0.22;
-
     const existing = this.sound.get("gameMusic");
+
     if (existing && existing.isPlaying) {
       this.bgMusic = existing;
       this.bgMusic.setVolume(this.gameMusicVolume);
@@ -675,20 +658,17 @@ export class BaseMathGameScene extends Phaser.Scene {
   duckBackgroundMusic() {
     if (!this.bgMusic || !this.bgMusic.isPlaying) return;
 
-    const normalVolume = this.gameMusicVolume ?? 0.025;
-    const duckedVolume = this.gameMusicDuckedVolume ?? 0.012;
-
     this.tweens.killTweensOf(this.bgMusic);
 
     this.tweens.add({
       targets: this.bgMusic,
-      volume: duckedVolume,
+      volume: this.gameMusicDuckedVolume,
       duration: 120,
       ease: "Sine.easeOut",
       onComplete: () => {
         this.tweens.add({
           targets: this.bgMusic,
-          volume: normalVolume,
+          volume: this.gameMusicVolume,
           duration: 280,
           delay: 120,
           ease: "Sine.easeOut",
@@ -708,68 +688,38 @@ export class BaseMathGameScene extends Phaser.Scene {
       duration: 500,
       ease: "Sine.easeOut",
       onComplete: () => {
-        if (this.bgMusic && this.bgMusic.isPlaying) {
-          this.bgMusic.stop();
-        }
+        if (this.bgMusic?.isPlaying) this.bgMusic.stop();
         this.bgMusic = null;
       },
     });
   }
 
   cleanupSceneAudio() {
-    if (this.bgMusic) {
-      try {
-        if (this.bgMusic.isPlaying) {
-          this.bgMusic.stop();
-        }
-      } catch (error) {
-        console.error("Error stopping background music:", error);
-      }
-      this.bgMusic = null;
-    }
-  }
+    if (!this.bgMusic) return;
 
-  isPerfectRun() {
-    if (!Array.isArray(this.numGuessesPerAnswer)) return false;
-    return (
-      Number(this.numWrong || 0) === 0 &&
-      this.numGuessesPerAnswer.every(
-        (entry) => Number(entry?.numGuess || 0) === 0
-      )
-    );
-  }
-
-  getCelebrationMessage() {
-    return this.isPerfectRun() ? "Perfect run!" : "";
-  }
-
-  getFinishSubtitle(coinsEarned) {
-    if (this.isPerfectRun()) {
-      return `${coinsEarned} coins earned\nNo wrong guesses`;
+    try {
+      if (this.bgMusic.isPlaying) this.bgMusic.stop();
+    } catch (error) {
+      console.error("Error stopping background music:", error);
     }
 
-    return `${coinsEarned} coins earned`;
+    this.bgMusic = null;
   }
 
   playFeedbackSound(isCorrect) {
     const key = isCorrect ? this.correctSoundKey : this.wrongSoundKey;
 
-    if (!key) return;
-    if (!this.cache.audio.exists(key)) return;
+    if (!key || !this.cache.audio.exists(key)) return;
 
     this.duckBackgroundMusic();
 
     this.sound.play(key, {
-      volume: isCorrect
-        ? this.correctSfxVolume ?? 0.25
-        : this.wrongSfxVolume ?? 0.22,
+      volume: isCorrect ? this.correctSfxVolume : this.wrongSfxVolume,
     });
   }
 
   showCenteredFeedback(message, isCorrect) {
     this.feedbackContainer?.destroy();
-    this.correct = null;
-    this.wrongText = null;
 
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height * 0.15;
@@ -802,6 +752,7 @@ export class BaseMathGameScene extends Phaser.Scene {
       shadowText,
       text,
     ]);
+
     this.feedbackContainer.setDepth(100);
     this.feedbackContainer.setScrollFactor(0);
     this.feedbackContainer.setAlpha(0);
@@ -821,15 +772,13 @@ export class BaseMathGameScene extends Phaser.Scene {
       ease: "Sine.easeOut",
     });
 
-    if (isCorrect) {
-      this.createCorrectSparkles(centerX, centerY);
-    }
+    if (isCorrect) this.createCorrectSparkles(centerX, centerY);
   }
 
   createCorrectSparkles(x, y) {
     const sparkleChars = ["✦", "✧", "•", "⋆"];
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 6; i += 1) {
       const sparkle = this.add
         .text(
           x + Phaser.Math.Between(-38, 38),
@@ -864,225 +813,29 @@ export class BaseMathGameScene extends Phaser.Scene {
   clearCenteredFeedback() {
     this.feedbackContainer?.destroy();
     this.feedbackContainer = null;
-    this.correct = null;
-    this.wrongText = null;
-  }
-
-  setupGamePolish(trashItems = [], trashCans = []) {
-    this.gameMusicVolume = 0.025;
-    this.gameMusicDuckedVolume = 0.012;
-    this.correctSfxVolume = 0.25;
-    this.wrongSfxVolume = 0.22;
-
-    trashItems.forEach((trash) => {
-      if (!trash) return;
-
-      trash.startX = trash.x;
-      trash.startY = trash.y;
-      trash.originalX = trash.x;
-      trash.originalY = trash.y;
-      trash._lockedOnCan = false;
-      trash._dragging = false;
-
-      this.applyGameFont(trash);
-    });
-
-    trashCans.forEach((can) => {
-      if (!can) return;
-
-      can.baseScaleX = can.scaleX;
-      can.baseScaleY = can.scaleY;
-
-      this.applyGameFont(can);
-      this.addAnswerTextGlow(can);
-      this.addCanHoverPolish(can);
-    });
-  }
-
-  getTextObjectsFromGameObject(gameObject) {
-    return [
-      gameObject?.trashMath,
-      gameObject?.answerText,
-      gameObject?.questionText,
-      gameObject?.labelText,
-      gameObject?.text,
-    ].filter(Boolean);
-  }
-
-  applyGameFont(gameObject) {
-    const textObjects = this.getTextObjectsFromGameObject(gameObject);
-
-    textObjects.forEach((textObj) => {
-      if (!textObj || typeof textObj.setStyle !== "function") return;
-
-      textObj.setStyle({
-        fontFamily: "'Fjalla One', sans-serif",
-        fontSize: textObj.style?.fontSize || "34px",
-        color: textObj.style?.color || "#fff6d8",
-        stroke: textObj.style?.stroke || "#5a3518",
-        strokeThickness: textObj.style?.strokeThickness ?? 4,
-        align: "center",
-      });
-
-      textObj.setPadding?.(0, 4, 0, 10);
-    });
-  }
-
-  addAnswerTextGlow(can) {
-    const textObjects = this.getTextObjectsFromGameObject(can);
-
-    textObjects.forEach((textObj) => {
-      if (!textObj || typeof textObj.setShadow !== "function") return;
-      textObj.setShadow(0, 0, "#fff1a8", 10, true, true);
-    });
-  }
-
-  addCanHoverPolish(can) {
-    if (!can || !can.active) return;
-
-    can.setInteractive?.({ useHandCursor: true });
-
-    const makeGlow = () => {
-      if (can._hoverGlow?.active) return;
-
-      can._hoverGlow = this.add
-        .circle(can.x, can.y, 76, 0xfff0a8, 0.24)
-        .setDepth((can.depth || 0) - 1);
-
-      this.tweens.add({
-        targets: can._hoverGlow,
-        scaleX: 1.18,
-        scaleY: 1.18,
-        alpha: 0.38,
-        duration: 240,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-    };
-
-    const removeGlow = () => {
-      if (!can._hoverGlow) return;
-
-      this.tweens.killTweensOf(can._hoverGlow);
-      can._hoverGlow.destroy();
-      can._hoverGlow = null;
-    };
-
-    can.on?.("pointerover", () => {
-      makeGlow();
-
-      this.tweens.killTweensOf(can);
-      this.tweens.add({
-        targets: can,
-        scaleX: can.baseScaleX * 1.08,
-        scaleY: can.baseScaleY * 1.08,
-        angle: 2,
-        duration: 90,
-        yoyo: true,
-        repeat: 2,
-        ease: "Sine.easeInOut",
-      });
-    });
-
-    can.on?.("pointerout", () => {
-      removeGlow();
-
-      this.tweens.killTweensOf(can);
-      this.tweens.add({
-        targets: can,
-        scaleX: can.baseScaleX,
-        scaleY: can.baseScaleY,
-        angle: 0,
-        duration: 120,
-        ease: "Sine.easeOut",
-      });
-    });
-  }
-
-  polishCorrectAnswer(trashCan) {
-    if (!trashCan || !trashCan.active) return;
-
-    this.tweens.add({
-      targets: trashCan,
-      scaleX: trashCan.scaleX * 1.13,
-      scaleY: trashCan.scaleY * 1.13,
-      duration: 120,
-      yoyo: true,
-      ease: "Back.easeOut",
-    });
-  }
-
-  polishWrongAnswer(trash) {
-    if (!trash || !trash.active) return;
-
-    trash._lockedOnCan = false;
-
-    this.tweens.add({
-      targets: trash,
-      x: trash.x + 12,
-      duration: 55,
-      yoyo: true,
-      repeat: 3,
-      ease: "Sine.easeInOut",
-      onComplete: () => {
-        this.resetDraggedTrash(trash);
-      },
-    });
-  }
-
-  resetDraggedTrash(trashItem) {
-    if (!trashItem || !trashItem.active) return;
-
-    const resetX =
-      trashItem.startX ??
-      trashItem.originalX ??
-      trashItem.input?.dragStartX ??
-      trashItem.x;
-
-    const resetY =
-      trashItem.startY ??
-      trashItem.originalY ??
-      trashItem.input?.dragStartY ??
-      trashItem.y;
-
-    trashItem._lockedOnCan = false;
-    trashItem._dragging = false;
-
-    if (trashItem.body) {
-      trashItem.body.enable = false;
-      trashItem.body.setVelocity(0, 0);
-    }
-
-    trashItem.disableInteractive();
-
-    this.tweens.add({
-      targets: trashItem,
-      x: resetX,
-      y: resetY,
-      duration: 260,
-      ease: "Back.easeOut",
-      onComplete: () => {
-        if (trashItem?.active) {
-          if (trashItem.body) {
-            trashItem.body.enable = true;
-            trashItem.body.setVelocity(0, 0);
-          }
-
-          trashItem._lockedOnCan = false;
-          trashItem._dragging = false;
-          trashItem.setInteractive({ draggable: true });
-
-          if (trashItem.trashMath) {
-            trashItem.trashMath.clearTint();
-          }
-        }
-      },
-    });
   }
 
   onCorrect() {
     this.clearCenteredFeedback();
+  }
+
+  isPerfectRun() {
+    if (!Array.isArray(this.numGuessesPerAnswer)) return false;
+
+    return (
+      Number(this.numWrong || 0) === 0 &&
+      this.numGuessesPerAnswer.every(
+        (entry) => Number(entry?.numGuess || 0) === 0
+      )
+    );
+  }
+
+  getFinishSubtitle(coinsEarned) {
+    if (this.isPerfectRun()) {
+      return `${coinsEarned} coins earned\nNo wrong guesses`;
+    }
+
+    return `${coinsEarned} coins earned`;
   }
 
   async fetchGameDescription() {
@@ -1111,6 +864,7 @@ export class BaseMathGameScene extends Phaser.Scene {
 
   async showGameIntroOverlay() {
     if (this._introShown) return;
+
     this._introShown = true;
     this.introActive = true;
 
@@ -1211,12 +965,14 @@ export class BaseMathGameScene extends Phaser.Scene {
         30
       );
 
-      const topLeft = hover ? 0xffb35b : 0xffa04f;
-      const topRight = hover ? 0xffd86c : 0xffcb6b;
-      const bottomLeft = hover ? 0x4fdc87 : 0x39c774;
-      const bottomRight = hover ? 0x38c0ff : 0x2ea5ff;
+      buttonBg.fillGradientStyle(
+        hover ? 0xffb35b : 0xffa04f,
+        hover ? 0xffd86c : 0xffcb6b,
+        hover ? 0x4fdc87 : 0x39c774,
+        hover ? 0x38c0ff : 0x2ea5ff,
+        1
+      );
 
-      buttonBg.fillGradientStyle(topLeft, topRight, bottomLeft, bottomRight, 1);
       buttonBg.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 30);
       buttonBg.lineStyle(5, 0xfff9ef, 0.98);
       buttonBg.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 30);
@@ -1270,30 +1026,18 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     buttonHit.on("pointerover", () => {
       drawButton(true);
-      this.tweens.add({
-        targets: buttonText,
-        scale: 1.07,
-        duration: 120,
-      });
+      this.tweens.add({ targets: buttonText, scale: 1.07, duration: 120 });
     });
 
     buttonHit.on("pointerout", () => {
       drawButton(false);
-      this.tweens.add({
-        targets: buttonText,
-        scale: 1,
-        duration: 120,
-      });
+      this.tweens.add({ targets: buttonText, scale: 1, duration: 120 });
     });
 
-    buttonHit.on("pointerdown", () => {
-      this.closeGameIntroOverlay();
-    });
+    buttonHit.on("pointerdown", () => this.closeGameIntroOverlay());
 
     const description = await this.fetchGameDescription();
-    if (descriptionText?.active) {
-      descriptionText.setText(description);
-    }
+    if (descriptionText?.active) descriptionText.setText(description);
   }
 
   closeGameIntroOverlay() {
@@ -1323,15 +1067,12 @@ export class BaseMathGameScene extends Phaser.Scene {
     const perfectRun = this.isPerfectRun();
 
     try {
-      if (typeof this.saveResults !== "function") {
-        throw new Error(
-          `[${this.scene.key}] saveResults is missing. Make sure this scene calls initSharedGameConfig(...).`
-        );
-      }
-
       const rewardResult = await this.saveResults();
-      console.log("rewardResult:", rewardResult);
-      coinsEarned = rewardResult?.coinReward || 0;
+      coinsEarned =
+        rewardResult?.coinReward ??
+        rewardResult?.coinsEarned ??
+        rewardResult?.reward ??
+        0;
     } catch (error) {
       console.error("Save failed:", error);
     }
@@ -1351,9 +1092,7 @@ export class BaseMathGameScene extends Phaser.Scene {
     });
 
     this.time.delayedCall(300, () => {
-      if (window.onPhaserGameFinished) {
-        window.onPhaserGameFinished();
-      }
+      window.onPhaserGameFinished?.();
     });
   }
 }

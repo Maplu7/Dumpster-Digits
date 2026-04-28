@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { buildProgressMeta } from "../../utils/teacherProgressUtils";
 import "./AssignmentResults.css";
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
 
 function safeNumber(value, fallback = 0) {
   const number = Number(value);
@@ -11,17 +15,25 @@ function clampPercent(value) {
   return Math.max(0, Math.min(100, Math.round(safeNumber(value, 0))));
 }
 
-function getAttemptTime(attempt) {
+function plural(value, singular, pluralText = `${singular}s`) {
+  return `${value} ${value === 1 ? singular : pluralText}`;
+}
+
+function getAttemptTimestamp(attempt) {
   const raw = attempt?.completedAt || attempt?.submittedAt || attempt?.createdAt;
+
   if (!raw) return 0;
-  if (raw?.toDate) return raw.toDate().getTime();
+  if (typeof raw.toDate === "function") return raw.toDate().getTime();
+  if (typeof raw.seconds === "number") return raw.seconds * 1000;
 
   const parsed = new Date(raw).getTime();
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function sortAttemptsLatestFirst(attempts = []) {
-  return [...attempts].sort((a, b) => getAttemptTime(b) - getAttemptTime(a));
+  return [...attempts].sort(
+    (a, b) => getAttemptTimestamp(b) - getAttemptTimestamp(a)
+  );
 }
 
 function getSeverityLabel(severity) {
@@ -30,8 +42,26 @@ function getSeverityLabel(severity) {
   if (severity === "ok" || severity === "good") return "On track 🟢";
   if (severity === "perfect") return "Perfect ⭐";
   if (severity === "locked") return "Locked 🔒";
+
   return "Not started";
 }
+
+function getAttemptDateValue(attempt) {
+  return attempt?.completedAt || attempt?.submittedAt || attempt?.createdAt || null;
+}
+
+function getProblemLabelFromAnswer(answer) {
+  return (
+    answer?.problem ||
+    answer?.question ||
+    answer?.prompt ||
+    "Unknown problem"
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Small UI pieces                                                            */
+/* -------------------------------------------------------------------------- */
 
 function ProgressBar({
   percent = 0,
@@ -48,7 +78,14 @@ function ProgressBar({
   });
 
   return (
-    <div className="tdash-results__bar-wrap" aria-label={`${label}: ${progress.percent}%`}>
+    <div
+      className="tdash-results__bar-wrap"
+      aria-label={`${label}: ${progress.percent}%`}
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow={progress.percent}
+    >
       <div
         className={`tdash-results__bar-fill ${progress.fillClass}`}
         style={{ width: `${progress.percent}%` }}
@@ -57,11 +94,20 @@ function ProgressBar({
   );
 }
 
-function StatPill({ icon, label, value, variant = "", active = false, onClick }) {
+function StatPill({
+  icon,
+  label,
+  value,
+  variant = "",
+  active = false,
+  onClick,
+}) {
   return (
     <button
       type="button"
-      className={`tdash-results__pill ${variant} ${active ? "tdash-results__pill--active" : ""}`}
+      className={`tdash-results__pill ${variant} ${
+        active ? "tdash-results__pill--active" : ""
+      }`}
       onClick={onClick}
     >
       <span className="tdash-results__pill-icon">{icon}</span>
@@ -75,6 +121,10 @@ function EmptyState({ children }) {
   return <p className="tdash__empty-text">{children}</p>;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Insight helpers                                                            */
+/* -------------------------------------------------------------------------- */
+
 function collectMissedProblemStats(
   classAssignmentProgress = [],
   getStudentAttemptsForAssignment
@@ -82,51 +132,50 @@ function collectMissedProblemStats(
   const missed = new Map();
 
   function addMiss(problem, wrong, studentName) {
-    if (!problem || wrong <= 0) return;
+    const safeProblem = String(problem || "").trim();
+    const safeWrong = safeNumber(wrong);
 
-    const current = missed.get(problem) || {
-      problem,
+    if (!safeProblem || safeWrong <= 0) return;
+
+    const current = missed.get(safeProblem) || {
+      problem: safeProblem,
       misses: 0,
       students: new Map(),
     };
 
-    current.misses += wrong;
-
+    current.misses += safeWrong;
     current.students.set(
       studentName,
-      (current.students.get(studentName) || 0) + wrong
+      (current.students.get(studentName) || 0) + safeWrong
     );
 
-    missed.set(problem, current);
+    missed.set(safeProblem, current);
   }
 
   classAssignmentProgress.forEach((assignmentProgress) => {
     const gameKey =
-      assignmentProgress.assignment?.gameKey || assignmentProgress.gameKey;
+      assignmentProgress?.assignment?.gameKey || assignmentProgress?.gameKey;
 
-    (assignmentProgress.rows || []).forEach((row) => {
-      const studentId = row.student?.id;
-      const studentName = row.student?.name || `Student ${studentId}`;
+    (assignmentProgress?.rows || []).forEach((row) => {
+      const studentId = row?.student?.id;
+      const studentName = row?.student?.name || `Student ${studentId}`;
 
       if (!studentId || !gameKey) return;
 
-      const attempts =
-        getStudentAttemptsForAssignment(studentId, gameKey) || [];
+      const attempts = getStudentAttemptsForAssignment?.(studentId, gameKey) || [];
 
       attempts.forEach((attempt) => {
-        if (attempt.problemBreakdown) {
-          Object.entries(attempt.problemBreakdown).forEach(
-            ([problem, tries]) => {
-              addMiss(problem, safeNumber(tries), studentName);
-            }
-          );
+        if (attempt?.problemBreakdown && typeof attempt.problemBreakdown === "object") {
+          Object.entries(attempt.problemBreakdown).forEach(([problem, tries]) => {
+            addMiss(problem, tries, studentName);
+          });
         }
 
-        if (Array.isArray(attempt.answers)) {
+        if (Array.isArray(attempt?.answers)) {
           attempt.answers.forEach((answer) => {
             addMiss(
-              answer.problem || "Unknown problem",
-              safeNumber(answer.wrongTries),
+              getProblemLabelFromAnswer(answer),
+              answer?.wrongTries,
               studentName
             );
           });
@@ -150,17 +199,19 @@ function getTeacherRecommendations({ summary, worstAssignment, mostMissed }) {
 
   if (summary.failing > 0) {
     recommendations.push(
-      `Review with ${summary.failing} student${summary.failing === 1 ? "" : "s"} needing attention.`
+      `Review with ${plural(summary.failing, "student")} needing attention.`
     );
   }
 
   if (mostMissed?.problem) {
-    recommendations.push(`Use ${mostMissed.problem} as a warm-up problem.`);
+    recommendations.push(`Use "${mostMissed.problem}" as a warm-up problem.`);
   }
 
   if (worstAssignment?.assignment?.title || worstAssignment?.gameKey) {
     recommendations.push(
-      `Start with ${worstAssignment.assignment?.title || worstAssignment.gameKey}; it has the lowest class progress.`
+      `Start with ${
+        worstAssignment.assignment?.title || worstAssignment.gameKey
+      }; it has the lowest class progress.`
     );
   }
 
@@ -170,6 +221,10 @@ function getTeacherRecommendations({ summary, worstAssignment, mostMissed }) {
 
   return recommendations;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Attempt details                                                            */
+/* -------------------------------------------------------------------------- */
 
 function AttemptDetails({
   attempt,
@@ -185,23 +240,39 @@ function AttemptDetails({
   isPerfectAttempt,
 }) {
   const percent = clampPercent(getAttemptPercent(attempt));
-  const wrongTries = safeNumber(attempt.totalWrongGuesses);
+  const wrongTries = safeNumber(attempt?.totalWrongGuesses);
+  const perfect = isPerfectAttempt(attempt);
+
+  const answers = Array.isArray(attempt?.answers) ? attempt.answers : [];
+  const breakdownEntries =
+    attempt?.problemBreakdown && typeof attempt.problemBreakdown === "object"
+      ? Object.entries(attempt.problemBreakdown)
+      : [];
 
   return (
-    <div className={`tdash-results__attempt-card ${isLatest ? "tdash-results__attempt-card--latest" : ""}`}>
+    <div
+      className={`tdash-results__attempt-card ${
+        isLatest ? "tdash-results__attempt-card--latest" : ""
+      }`}
+    >
       <button
         className="tdash-results__attempt-head"
         type="button"
         onClick={() => toggleAttemptDropdown(attemptKey)}
+        aria-expanded={isOpen}
       >
         <div>
           <div className="tdash-results__attempt-title">
             Attempt
-            {isLatest && <span className="tdash-results__latest-badge">Latest attempt</span>}
+            {isLatest && (
+              <span className="tdash-results__latest-badge">
+                Latest attempt
+              </span>
+            )}
           </div>
 
           <div className="tdash-results__muted">
-            {formatAttemptTime(attempt.completedAt || attempt.submittedAt || attempt.createdAt)}
+            {formatAttemptTime(getAttemptDateValue(attempt))}
           </div>
         </div>
 
@@ -209,52 +280,71 @@ function AttemptDetails({
           <span>{percent}%</span>
           <span>•</span>
           <span>{wrongTries} wrong</span>
-          {isPerfectAttempt(attempt) && <span className="tdash-results__badge">Perfect</span>}
+          {perfect && <span className="tdash-results__badge">Perfect</span>}
         </div>
 
         <span className="tdash-results__arrow">{isOpen ? "▲" : "▼"}</span>
       </button>
 
-      <ProgressBar percent={percent} wrongTries={wrongTries} completed label="Attempt progress" />
+      <ProgressBar
+        percent={percent}
+        wrongTries={wrongTries}
+        completed
+        label="Attempt progress"
+      />
 
       {isOpen && (
         <div className="tdash-results__attempt-body">
-          {Array.isArray(attempt.answers) && attempt.answers.length > 0 ? (
+          {answers.length > 0 ? (
             <div className="tdash-results__answer-list">
-              {attempt.answers.map((answer, index) => {
-                const wrong = safeNumber(answer.wrongTries);
-                const isWrong = answer.isCorrect === false || wrong > 0;
-                const isMostMissed = answer.problem === mostMissedProblem;
+              {answers.map((answer, index) => {
+                const problem = getProblemLabelFromAnswer(answer);
+                const wrong = safeNumber(answer?.wrongTries);
+                const isWrong = answer?.isCorrect === false || wrong > 0;
+                const isMostMissed = problem === mostMissedProblem;
                 const answerPercent = clampPercent(getAnswerPercentage(answer));
 
                 return (
                   <div
-                    key={`${attempt.id || attemptKey}-answer-${index}`}
-                    className={`tdash-results__answer-row ${isWrong ? "tdash-results__answer-row--wrong" : ""
-                      } ${isMostMissed ? "tdash-results__answer-row--most-missed" : ""}`}
+                    key={`${attempt?.id || attemptKey}-answer-${index}`}
+                    className={`tdash-results__answer-row ${
+                      isWrong ? "tdash-results__answer-row--wrong" : ""
+                    } ${
+                      isMostMissed
+                        ? "tdash-results__answer-row--most-missed"
+                        : ""
+                    }`}
                   >
                     <div className="tdash-results__answer-main">
-                      <strong>{answer.problem || "Problem"}</strong>
+                      <strong>{problem}</strong>
+
                       <div className="tdash-results__answer-tags">
                         {isMostMissed && (
-                          <span className="tdash-results__most-missed-tag">Most missed</span>
+                          <span className="tdash-results__most-missed-tag">
+                            Most missed
+                          </span>
                         )}
-                        {isWrong && <span className="tdash-results__wrong-tag">Needs review</span>}
+
+                        {isWrong && (
+                          <span className="tdash-results__wrong-tag">
+                            Needs review
+                          </span>
+                        )}
                       </div>
                     </div>
 
                     <div className="tdash-results__answer-meta">
                       <span>Wrong tries: {wrong}</span>
-                      <span>Correct: {String(answer.correctAnswer ?? "—")}</span>
+                      <span>Correct: {String(answer?.correctAnswer ?? "—")}</span>
                       <span>{answerPercent}%</span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          ) : attempt.problemBreakdown && Object.keys(attempt.problemBreakdown).length > 0 ? (
+          ) : breakdownEntries.length > 0 ? (
             <div className="tdash-results__answer-list">
-              {Object.entries(attempt.problemBreakdown).map(([problem, tries]) => {
+              {breakdownEntries.map(([problem, tries]) => {
                 const wrong = safeNumber(tries);
                 const isWrong = wrong > 0;
                 const isMostMissed = problem === mostMissedProblem;
@@ -262,17 +352,30 @@ function AttemptDetails({
 
                 return (
                   <div
-                    key={`${attempt.id || attemptKey}-breakdown-${problem}`}
-                    className={`tdash-results__answer-row ${isWrong ? "tdash-results__answer-row--wrong" : ""
-                      } ${isMostMissed ? "tdash-results__answer-row--most-missed" : ""}`}
+                    key={`${attempt?.id || attemptKey}-breakdown-${problem}`}
+                    className={`tdash-results__answer-row ${
+                      isWrong ? "tdash-results__answer-row--wrong" : ""
+                    } ${
+                      isMostMissed
+                        ? "tdash-results__answer-row--most-missed"
+                        : ""
+                    }`}
                   >
                     <div className="tdash-results__answer-main">
                       <strong>{problem}</strong>
+
                       <div className="tdash-results__answer-tags">
                         {isMostMissed && (
-                          <span className="tdash-results__most-missed-tag">Most missed</span>
+                          <span className="tdash-results__most-missed-tag">
+                            Most missed
+                          </span>
                         )}
-                        {isWrong && <span className="tdash-results__wrong-tag">Needs review</span>}
+
+                        {isWrong && (
+                          <span className="tdash-results__wrong-tag">
+                            Needs review
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -292,6 +395,10 @@ function AttemptDetails({
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* Student view                                                               */
+/* -------------------------------------------------------------------------- */
 
 function StudentAssignmentView({
   groupedAssignments,
@@ -323,29 +430,35 @@ function StudentAssignmentView({
         });
 
         return (
-          <article key={assignment.id} className={`tdash-results__assignment ${progress.cardClass}`}>
+          <article
+            key={assignment.id}
+            className={`tdash-results__assignment ${progress.cardClass}`}
+          >
             <button
               className="tdash-results__assignment-head"
               type="button"
               onClick={() => toggleAssignmentDropdown(assignment.id)}
+              aria-expanded={isOpen}
             >
               <div className="tdash-results__assignment-main">
                 <div className="tdash-results__title-row">
-                  <span className={`tdash__status-dot tdash__status-dot--${progress.severity}`} />
+                  <span
+                    className={`tdash__status-dot tdash__status-dot--${progress.severity}`}
+                  />
                   <h3>{assignment.title}</h3>
-                  <span className="tdash-results__status">{getSeverityLabel(progress.severity)}</span>
+                  <span className="tdash-results__status">
+                    {getSeverityLabel(progress.severity)}
+                  </span>
                 </div>
 
                 <div className="tdash-results__muted">
-                  {attempts.length} attempt{attempts.length === 1 ? "" : "s"}
+                  {plural(attempts.length, "attempt")}
                   {assignment.latestAttempt && (
                     <>
                       {" "}
                       • Latest {clampPercent(assignment.latestPercent)}% •{" "}
                       {formatAttemptTime(
-                        assignment.latestAttempt.completedAt ||
-                        assignment.latestAttempt.submittedAt ||
-                        assignment.latestAttempt.createdAt
+                        getAttemptDateValue(assignment.latestAttempt)
                       )}
                     </>
                   )}
@@ -407,17 +520,26 @@ function StudentAssignmentView({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Class / group view                                                         */
+/* -------------------------------------------------------------------------- */
+
 function normalizeClassRows(rows = []) {
   return [...rows].sort((a, b) => {
     const aCompleted = !!a.completed;
     const bCompleted = !!b.completed;
+
     if (aCompleted !== bCompleted) return aCompleted ? -1 : 1;
 
     const aPercent = clampPercent(a.medianPercent ?? a.latestPercent);
     const bPercent = clampPercent(b.medianPercent ?? b.latestPercent);
+
     if (aPercent !== bPercent) return aPercent - bPercent;
 
-    return safeNumber(b.medianWrongTries ?? b.latestWrongTries) - safeNumber(a.medianWrongTries ?? a.latestWrongTries);
+    return (
+      safeNumber(b.medianWrongTries ?? b.latestWrongTries) -
+      safeNumber(a.medianWrongTries ?? a.latestWrongTries)
+    );
   });
 }
 
@@ -426,7 +548,9 @@ function filterClassRows(rows, filter) {
 
   if (filter === "struggling") {
     return rows.filter(
-      (row) => !!row.completed && clampPercent(row.medianPercent ?? row.latestPercent) <= 60
+      (row) =>
+        !!row.completed &&
+        clampPercent(row.medianPercent ?? row.latestPercent) <= 60
     );
   }
 
@@ -461,19 +585,28 @@ function ClassAssignmentView({
 }) {
   const [classFilter, setClassFilter] = useState("all");
 
+  const missedProblemStats = useMemo(
+    () =>
+      collectMissedProblemStats(
+        classAssignmentProgress,
+        getStudentAttemptsForAssignment
+      ),
+    [classAssignmentProgress, getStudentAttemptsForAssignment]
+  );
+
+  const sortedAssignments = useMemo(
+    () =>
+      [...classAssignmentProgress].sort(
+        (a, b) => clampPercent(a.percentage) - clampPercent(b.percentage)
+      ),
+    [classAssignmentProgress]
+  );
+
   if (!classAssignmentProgress.length) {
     return <EmptyState>No whole-class progress has been loaded yet.</EmptyState>;
   }
 
-  const missedProblemStats = collectMissedProblemStats(
-    classAssignmentProgress,
-    getStudentAttemptsForAssignment
-  );
   const mostMissed = missedProblemStats[0];
-
-  const sortedAssignments = [...classAssignmentProgress].sort(
-    (a, b) => clampPercent(a.percentage) - clampPercent(b.percentage)
-  );
   const worstAssignment = sortedAssignments[0];
 
   const summary = {
@@ -503,6 +636,7 @@ function ClassAssignmentView({
           <div className="tdash-results__insight-card">
             <span>🧠</span>
             <strong>{mostMissed ? mostMissed.problem : "—"}</strong>
+
             {mostMissed ? (
               <>
                 <p>{mostMissed.misses} total misses</p>
@@ -526,13 +660,18 @@ function ClassAssignmentView({
 
           <div className="tdash-results__insight-card">
             <span>📉</span>
-            <strong>{worstAssignment?.assignment?.title || worstAssignment?.gameKey || "—"}</strong>
+            <strong>
+              {worstAssignment?.assignment?.title ||
+                worstAssignment?.gameKey ||
+                "—"}
+            </strong>
             <p>Lowest class progress</p>
           </div>
 
           <div className="tdash-results__insight-card tdash-results__insight-card--wide">
             <span>✨</span>
             <strong>Recommendations</strong>
+
             <ul>
               {recommendations.map((item) => (
                 <li key={item}>{item}</li>
@@ -543,18 +682,59 @@ function ClassAssignmentView({
       </div>
 
       <div className="tdash-results__stats-bar">
-        <StatPill icon="👩‍🎓" value={summary.totalStudents} label="all" active={classFilter === "all"} onClick={() => setClassFilter("all")} />
-        <StatPill icon="✅" value={summary.completed} label="completed" variant="tdash-results__pill--completed" active={classFilter === "completed"} onClick={() => setClassFilter("completed")} />
-        <StatPill icon="📊" value={`${summary.average}%`} label="median" variant="tdash-results__pill--median" active={classFilter === "all"} onClick={() => setClassFilter("all")} />
-        <StatPill icon="🔥" value={summary.failing} label="needs attention" variant="tdash-results__pill--danger" active={classFilter === "struggling"} onClick={() => setClassFilter("struggling")} />
-        <StatPill icon="⭐" value={summary.perfect} label="perfect" variant="tdash-results__pill--perfect" active={classFilter === "perfect"} onClick={() => setClassFilter("perfect")} />
-        <StatPill icon="🧠" value={summary.mostMissed} label="most missed" variant="tdash-results__pill--insight" active={false} onClick={() => setClassFilter("struggling")} />
+        <StatPill
+          icon="👩‍🎓"
+          value={summary.totalStudents}
+          label="all"
+          active={classFilter === "all"}
+          onClick={() => setClassFilter("all")}
+        />
+        <StatPill
+          icon="✅"
+          value={summary.completed}
+          label="completed"
+          variant="tdash-results__pill--completed"
+          active={classFilter === "completed"}
+          onClick={() => setClassFilter("completed")}
+        />
+        <StatPill
+          icon="📊"
+          value={`${summary.average}%`}
+          label="median"
+          variant="tdash-results__pill--median"
+          active={classFilter === "all"}
+          onClick={() => setClassFilter("all")}
+        />
+        <StatPill
+          icon="🔥"
+          value={summary.failing}
+          label="needs attention"
+          variant="tdash-results__pill--danger"
+          active={classFilter === "struggling"}
+          onClick={() => setClassFilter("struggling")}
+        />
+        <StatPill
+          icon="⭐"
+          value={summary.perfect}
+          label="perfect"
+          variant="tdash-results__pill--perfect"
+          active={classFilter === "perfect"}
+          onClick={() => setClassFilter("perfect")}
+        />
+        <StatPill
+          icon="🧠"
+          value={summary.mostMissed}
+          label="most missed"
+          variant="tdash-results__pill--insight"
+          onClick={() => setClassFilter("struggling")}
+        />
       </div>
 
       <div className="tdash-results__list">
         {sortedAssignments.map((assignmentProgress) => {
           const assignment = assignmentProgress.assignment || {};
           const gameKey = assignment.gameKey || assignmentProgress.gameKey;
+
           if (!gameKey) return null;
 
           const completedCount = safeNumber(assignmentProgress.completedCount);
@@ -577,15 +757,21 @@ function ClassAssignmentView({
           });
 
           return (
-            <article key={gameKey} className={`tdash-results__assignment ${assignmentProgressMeta.cardClass}`}>
+            <article
+              key={gameKey}
+              className={`tdash-results__assignment ${assignmentProgressMeta.cardClass}`}
+            >
               <button
                 className="tdash-results__assignment-head"
                 type="button"
                 onClick={() => toggleClassAssignmentDropdown(gameKey)}
+                aria-expanded={isOpen}
               >
                 <div className="tdash-results__assignment-main">
                   <div className="tdash-results__title-row">
-                    <span className={`tdash__status-dot tdash__status-dot--${assignmentProgressMeta.severity}`} />
+                    <span
+                      className={`tdash__status-dot tdash__status-dot--${assignmentProgressMeta.severity}`}
+                    />
                     <h3>{assignment.title || gameKey}</h3>
                     <span className="tdash-results__status">
                       {getSeverityLabel(assignmentProgressMeta.severity)}
@@ -595,7 +781,10 @@ function ClassAssignmentView({
                   <div className="tdash-results__muted">
                     {completedCount} of {totalStudents} completed
                     {classFilter !== "all" && (
-                      <> • Showing {filteredRows.length} matching student{filteredRows.length === 1 ? "" : "s"}</>
+                      <>
+                        {" "}
+                        • Showing {plural(filteredRows.length, "matching student")}
+                      </>
                     )}
                   </div>
                 </div>
@@ -626,6 +815,7 @@ function ClassAssignmentView({
                     filteredRows.map((row) => {
                       const student = row.student || {};
                       const studentId = student.id;
+
                       if (!studentId) return null;
 
                       const studentKey = `${gameKey}-${studentId}`;
@@ -636,9 +826,12 @@ function ClassAssignmentView({
                       );
 
                       const latestAttempt = studentAttempts[0];
-
-                      const medianPercent = clampPercent(row.medianPercent ?? row.latestPercent);
-                      const medianWrongTries = safeNumber(row.medianWrongTries ?? row.latestWrongTries);
+                      const medianPercent = clampPercent(
+                        row.medianPercent ?? row.latestPercent
+                      );
+                      const medianWrongTries = safeNumber(
+                        row.medianWrongTries ?? row.latestWrongTries
+                      );
 
                       const progress =
                         row.progress ||
@@ -649,26 +842,40 @@ function ClassAssignmentView({
                           locked: row.locked,
                         });
 
-                      const needsAttention = !!row.completed && progress.percent <= 60;
+                      const needsAttention =
+                        !!row.completed && progress.percent <= 60;
                       const isPerfect =
                         !!row.completed &&
-                        (safeNumber(row.perfectRuns) > 0 || progress.percent === 100);
+                        (safeNumber(row.perfectRuns) > 0 ||
+                          progress.percent === 100);
 
                       return (
                         <div
                           key={studentKey}
-                          className={`tdash-results__student-card ${progress.cardClass} ${needsAttention ? "tdash-results__student-card--struggling" : ""
-                            } ${isPerfect ? "tdash-results__student-card--perfect" : ""}`}
+                          className={`tdash-results__student-card ${
+                            progress.cardClass
+                          } ${
+                            needsAttention
+                              ? "tdash-results__student-card--struggling"
+                              : ""
+                          } ${
+                            isPerfect
+                              ? "tdash-results__student-card--perfect"
+                              : ""
+                          }`}
                         >
                           <div className="tdash-results__student-head">
                             <button
                               className="tdash-results__student-toggle"
                               type="button"
                               onClick={() => toggleClassStudentDropdown(studentKey)}
+                              aria-expanded={isStudentOpen}
                             >
                               <div>
                                 <div className="tdash-results__title-row">
-                                  <span className={`tdash__status-dot tdash__status-dot--${progress.severity}`} />
+                                  <span
+                                    className={`tdash__status-dot tdash__status-dot--${progress.severity}`}
+                                  />
                                   <h4>{student.name || `Student ${studentId}`}</h4>
 
                                   <span className="tdash-results__status">
@@ -676,7 +883,9 @@ function ClassAssignmentView({
                                   </span>
 
                                   {needsAttention && (
-                                    <span className="tdash-results__help-chip">Needs attention</span>
+                                    <span className="tdash-results__help-chip">
+                                      Needs attention
+                                    </span>
                                   )}
 
                                   {isPerfect && (
@@ -689,17 +898,14 @@ function ClassAssignmentView({
                                 <div className="tdash-results__muted">
                                   {row.completed ? (
                                     <>
-                                      {studentAttempts.length} attempt
-                                      {studentAttempts.length === 1 ? "" : "s"}
+                                      {plural(studentAttempts.length, "attempt")}
                                       {" • "}
                                       Latest {clampPercent(row.latestPercent)}%
                                       {latestAttempt && (
                                         <>
                                           {" • "}
                                           {formatAttemptTime(
-                                            latestAttempt.completedAt ||
-                                            latestAttempt.submittedAt ||
-                                            latestAttempt.createdAt
+                                            getAttemptDateValue(latestAttempt)
                                           )}
                                         </>
                                       )}
@@ -753,12 +959,17 @@ function ClassAssignmentView({
                             <div className="tdash-results__student-body">
                               {studentAttempts.length > 0 ? (
                                 studentAttempts.map((attempt, index) => {
-                                  const attemptKey = `class-${studentKey}-${attempt.id || index}`;
+                                  const attemptKey = `class-${studentKey}-${
+                                    attempt.id || index
+                                  }`;
 
                                   return (
                                     <AttemptDetails
                                       key={attemptKey}
-                                      attempt={{ ...attempt, id: attempt.id || attemptKey }}
+                                      attempt={{
+                                        ...attempt,
+                                        id: attempt.id || attemptKey,
+                                      }}
                                       attemptKey={attemptKey}
                                       isLatest={index === 0}
                                       mostMissedProblem={mostMissed?.problem}
@@ -773,7 +984,9 @@ function ClassAssignmentView({
                                   );
                                 })
                               ) : (
-                                <EmptyState>This student hasn't attempted this assignment yet.</EmptyState>
+                                <EmptyState>
+                                  This student hasn't attempted this assignment yet.
+                                </EmptyState>
                               )}
                             </div>
                           )}
@@ -792,6 +1005,10 @@ function ClassAssignmentView({
     </>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* Main export                                                                */
+/* -------------------------------------------------------------------------- */
 
 export default function AssignmentResults({
   resultsViewMode,
@@ -820,7 +1037,8 @@ export default function AssignmentResults({
   getStudentAttemptsForAssignment,
   jumpToStudent,
 }) {
-  const isClassLikeView = resultsViewMode === "class" || resultsViewMode === "group";
+  const isClassLikeView =
+    resultsViewMode === "class" || resultsViewMode === "group";
 
   return (
     <section className="tdash__card tdash-results">
@@ -828,15 +1046,22 @@ export default function AssignmentResults({
         <div>
           <h2 className="tdash__section-title">Assignment Results</h2>
           <p className="tdash-results__subtitle">
-            Students who need attention are shown first. Use the pills to filter the whole-class view.
+            Students who need attention are shown first. Use the pills to filter
+            the whole-class view.
           </p>
         </div>
 
         <div className="tdash-results__controls">
-          <div className="tdash__view-toggle" role="tablist" aria-label="Assignment result views">
+          <div
+            className="tdash__view-toggle"
+            role="tablist"
+            aria-label="Assignment result views"
+          >
             <button
               type="button"
-              className={`tdash__view-btn ${resultsViewMode === "student" ? "tdash__view-btn--active" : ""}`}
+              className={`tdash__view-btn ${
+                resultsViewMode === "student" ? "tdash__view-btn--active" : ""
+              }`}
               onClick={() => setResultsViewMode("student")}
             >
               Student
@@ -844,7 +1069,9 @@ export default function AssignmentResults({
 
             <button
               type="button"
-              className={`tdash__view-btn ${resultsViewMode === "group" ? "tdash__view-btn--active" : ""}`}
+              className={`tdash__view-btn ${
+                resultsViewMode === "group" ? "tdash__view-btn--active" : ""
+              }`}
               onClick={() => setResultsViewMode("group")}
             >
               Group
@@ -852,7 +1079,9 @@ export default function AssignmentResults({
 
             <button
               type="button"
-              className={`tdash__view-btn ${resultsViewMode === "class" ? "tdash__view-btn--active" : ""}`}
+              className={`tdash__view-btn ${
+                resultsViewMode === "class" ? "tdash__view-btn--active" : ""
+              }`}
               onClick={() => setResultsViewMode("class")}
             >
               Whole Class
