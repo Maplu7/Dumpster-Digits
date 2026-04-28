@@ -141,9 +141,9 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
 
     this.add.image(1250, 100, "yellowTent", 0).setScale(3);
     this.add.image(200, 100, "yellowTent", 1).setScale(3);
-    this.add.image(100, 300, "campFire", 3).setScale(3);
-    this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
-    this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
+    this.add.image(100, 300, "campBags", 3).setScale(3);
+    this.add.image(1400, 200, "campChairStriped", 0).setScale(2);
+    this.add.image(1480, 280, "campChairStriped", 2).setScale(2);
 
     this.problemsPlaceValues = this.buildPlaceValueProblems();
     this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);

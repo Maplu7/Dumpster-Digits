@@ -204,9 +204,9 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
 
     this.add.image(1250, 100, "greenTent", 0).setScale(3);
     this.add.image(200, 100, "greenTent", 1).setScale(3);
-    this.add.image(100, 300, "campFire", 3).setScale(3);
-    this.add.image(1400, 200, "campChairOrange", 0).setScale(2);
-    this.add.image(1480, 280, "campChairOrange", 2).setScale(2);
+    this.add.image(100, 300, "trees", 3).setScale(3);
+    this.add.image(1400, 200, "cooler", 0).setScale(2);
+    this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
     this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
