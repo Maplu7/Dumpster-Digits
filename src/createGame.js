@@ -9,6 +9,9 @@ import { Game_2nd_grade_fillInTheBlank } from "./scenes/Game_2nd_grade_fillInThe
 import { Game_2nd_grade_placevalues } from "./scenes/Game_2nd_grade_placevalues";
 import { Game_2nd_grade_multiplication } from "./scenes/Game_2nd_grade_multiplication";
 
+const GAME_WIDTH = 1536;
+const GAME_HEIGHT = 793;
+
 function getSceneForGameKey(gameKey) {
   switch (gameKey) {
     case "1st_addition":
@@ -47,14 +50,21 @@ export function createGame(gameKey, parent = "game-container", options = {}) {
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
-    width: 1536,
-    height: 793,
+
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
+
     parent,
     backgroundColor: "#000000",
+
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: GAME_WIDTH,
+      height: GAME_HEIGHT,
+      parent,
     },
+
     physics: {
       default: "arcade",
       arcade: {
@@ -62,6 +72,7 @@ export function createGame(gameKey, parent = "game-container", options = {}) {
         debug: false,
       },
     },
+
     scene: [Preloader, SelectedScene],
   });
 
@@ -75,6 +86,7 @@ export function createGame(gameKey, parent = "game-container", options = {}) {
     studentId: safeStudentId,
     classId: safeClassId,
     assignedProblems: safeAssignedProblems,
+    size: `${GAME_WIDTH}x${GAME_HEIGHT}`,
   });
 
   return game;
