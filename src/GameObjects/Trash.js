@@ -1,70 +1,146 @@
-export class Trash extends Phaser.GameObjects.Container
-{
-    constructor(scene, x, y, problem)
-    {
-          super(scene, x, y);
-          
-        // Inorder to make it so text will be on
-        //any piece of trash the above code 
-        //needs to be replaced and instead
-        //be for a container
-        this.piecesOfTrash = [
-          0,
-          1,
-          2
-        ];
+import Phaser from "phaser";
 
+export class Trash extends Phaser.GameObjects.Container {
+  constructor(scene, x, y, problem) {
+    super(scene, x, y);
 
+    this.scene = scene;
 
-        this.trashMath = scene.add.image(0, 0, 'usedItems', Phaser.Utils.Array.GetRandom(this.piecesOfTrash)).setScale(4);
+    this.answer = problem.answer;
+    this.question = problem.question;
 
-        this.text = scene.add.text(this.trashMath.x, this.trashMath.y, problem.answer, {
-          fontSize: '23px',fontStyle: 'bold', fontFamily: 'Verdana', fill: '#000000'
-        }).setOrigin(0.5);
+    this.startX = x;
+    this.startY = y;
+    this.originalX = x;
+    this.originalY = y;
 
-        this.add([this.trashMath, this.text]) // Adds trash and text to the container
+    this._lockedOnCan = false;
+    this._dragging = false;
+    this._wrongCooldown = false;
+    this._resettingHome = false;
 
-        this.answer = problem.answer;
-        this.question = problem.question;
+    this.piecesOfTrash = [0, 1, 2];
 
-          scene.add.existing(this);
-          scene.physics.add.existing(this);
-          this.setSize(50, 20);//hit box size??
-          this.body.setOffset(-10, -10);
-        
-        
-        //this.setInteractive(new Phaser.Geom.Rectangle(0,0,this.getBounds().width, this.getBounds().height), Phaser.Geom.Rectangle.Contains, {draggable:true});
-        
-        this.trashMath.setInteractive({draggable: true});
-       // this.trashMath.setCollideWorldBounds(true);
-        //currently dragX and dragY represent trash's postion (0,0)
-        //so trying to drag it immedietly postions it to the (0, 0)
-        //position rather than properly follow the cursor
-        
-        this.trashMath.on('drag', (pointer) => {
-            this.setPosition(pointer.worldX, pointer.worldY);
+    this.trashMath = scene.add
+      .image(
+        0,
+        0,
+        "usedItems",
+        Phaser.Utils.Array.GetRandom(this.piecesOfTrash)
+      )
+      .setScale(4);
+
+    this.text = scene.add
+      .text(0, 0, String(problem.answer), {
+        fontSize: "23px",
+        fontStyle: "bold",
+        fontFamily: "Verdana",
+        fill: "#000000",
+      })
+      .setOrigin(0.5);
+
+    this.add([this.trashMath, this.text]);
+
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+
+    this.setSize(110, 110);
+
+    this.body.setSize(110, 110);
+    this.body.setOffset(-55, -55);
+    this.body.setAllowGravity(false);
+    this.body.setVelocity(0, 0);
+
+    // ✅ Make the WHOLE trash container draggable, not just the image.
+    this.setInteractive(
+      new Phaser.Geom.Rectangle(-70, -70, 140, 140),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    scene.input.setDraggable(this);
+
+    this.on("dragstart", () => {
+      if (this._wrongCooldown || this._resettingHome) return;
+
+      this._dragging = true;
+      this._lockedOnCan = false;
+      this.setDepth(1000);
+      this.trashMath.setTint(0x00e6e6);
+    });
+
+    this.on("drag", (pointer, dragX, dragY) => {
+      if (this._wrongCooldown || this._resettingHome) return;
+
+      this.setPosition(dragX, dragY);
+
+      if (this.body) {
+        this.body.reset(dragX, dragY);
+        this.body.setVelocity(0, 0);
+      }
+    });
+
+    this.on("dragend", () => {
+      this._dragging = false;
+      this.trashMath.clearTint();
+    });
+  }
+
+  snapHome() {
+    const x = this.startX ?? this.originalX ?? this.x;
+    const y = this.startY ?? this.originalY ?? this.y;
+
+    this._lockedOnCan = false;
+    this._dragging = false;
+    this._wrongCooldown = true;
+    this._resettingHome = true;
+
+    this.disableInteractive();
+
+    this.scene.tweens.killTweensOf(this);
+
+    this.scene.tweens.add({
+      targets: this,
+      x,
+      y,
+      duration: 300,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        if (!this.active) return;
+
+        this.setPosition(x, y);
+        this.trashMath.clearTint();
+
+        if (this.body) {
+          this.body.enable = true;
+          this.body.reset(x, y);
+          this.body.setVelocity(0, 0);
+        }
+
+        this._lockedOnCan = false;
+        this._dragging = false;
+
+        this.scene.time.delayedCall(150, () => {
+          if (!this.active) return;
+
+          this._wrongCooldown = false;
+          this._resettingHome = false;
+
+          this.setInteractive(
+            new Phaser.Geom.Rectangle(-70, -70, 140, 140),
+            Phaser.Geom.Rectangle.Contains
+          );
+
+          this.scene.input.setDraggable(this);
         });
-            //worldX and worldY sets the postion to where the cursor 
-            //is in the world 
+      },
+    });
+  }
 
-        this.trashMath.on('dragstart', function(pointer) {
-            this.setTint(0x00e6e6);
-        });
+  setSpriteScale(scale) {
+    this.trashMath.setScale(scale);
+  }
 
-        this.trashMath.on('dragend', function(pointer) {
-            this.clearTint();
-        });
-
-    }
-
-    setSpriteScale(scale) 
-    {
-      this.trashMath.setScale(scale);
-    }
-
-    setTextScale(scale)
-    {
-      this.text.setFontSize(scale);
-    }
-
+  setTextScale(scale) {
+    this.text.setFontSize(scale);
+  }
 }
