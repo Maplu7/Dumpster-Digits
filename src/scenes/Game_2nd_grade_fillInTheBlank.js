@@ -13,6 +13,9 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
       assignmentTitle: "2nd Grade Fill in the Blank",
     });
 
+    // -----------------------------
+    // CLEAN PROBLEM GENERATION
+    // -----------------------------
     const problems = [];
 
     for (let n = 0; n <= 100; n++) {
@@ -28,36 +31,43 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     this.configuredProblems = this.getConfiguredProblems(this.problems);
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
+    // -----------------------------
+    // GROUND (GRAPHICS)
+    // -----------------------------
     for (let i = 1; i <= 7; i++) {
       this.add.group({
-        key: "camp",
+        key: "patchyDirtGround", // from your graphic version
         repeat: 11,
         setXY: {
           x: 90,
           y: 50 + (i - 1) * 100,
           stepX: 180,
         },
-        setScale: {
-          x: 3,
-          y: 6,
-        },
+        setScale: { x: 3, y: 6 },
       });
     }
 
-    this.add.image(1250, 100, "yellowTent", 0).setScale(3);
-    this.add.image(200, 100, "yellowTent", 1).setScale(3);
-     this.add.image(100, 300, "trees", 3).setScale(3);
+    // -----------------------------
+    // BACKGROUND OBJECTS (GRAPHICS)
+    // -----------------------------
+    this.add.image(1250, 100, "greenTent", 0).setScale(3);
+    this.add.image(200, 100, "greenTent", 1).setScale(3);
+    this.add.image(100, 300, "trees", 3).setScale(3);
     this.add.image(1400, 200, "cooler", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
+    // -----------------------------
     // CANS = PROBLEMS
-    this.trashCan1 = new TrashCan(this, 100, 700, this.question1).setScale(1);
-    this.trashCan2 = new TrashCan(this, 440, 700, this.question2).setScale(1);
-    this.trashCan3 = new TrashCan(this, 740, 700, this.question3).setScale(1);
-    this.trashCan4 = new TrashCan(this, 1040, 700, this.question4).setScale(1);
-    this.trashCan5 = new TrashCan(this, 1340, 700, this.question5).setScale(1);
+    // -----------------------------
+    this.trashCan1 = new TrashCan(this, 100, 700, this.question1);
+    this.trashCan2 = new TrashCan(this, 440, 700, this.question2);
+    this.trashCan3 = new TrashCan(this, 740, 700, this.question3);
+    this.trashCan4 = new TrashCan(this, 1040, 700, this.question4);
+    this.trashCan5 = new TrashCan(this, 1340, 700, this.question5);
 
+    // -----------------------------
     // TRASH = ANSWERS
+    // -----------------------------
     this.trash1 = new Trash(this, 550, 280, {
       question: String(this.answer1.answer),
       answer: this.answer1.answer,
@@ -83,6 +93,9 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
       answer: this.answer5.answer,
     });
 
+    // -----------------------------
+    // STATE FLAGS (CRITICAL FIX)
+    // -----------------------------
     [
       this.trash1,
       this.trash2,
@@ -100,6 +113,9 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
       trash._resettingHome = false;
     });
 
+    // -----------------------------
+    // TRACKING
+    // -----------------------------
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
       { guessedAnswer: this.trash2, numGuess: 0 },
@@ -112,19 +128,24 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group();
-    this.trashGroup.add(this.trash1);
-    this.trashGroup.add(this.trash2);
-    this.trashGroup.add(this.trash3);
-    this.trashGroup.add(this.trash4);
-    this.trashGroup.add(this.trash5);
+    // -----------------------------
+    // PHYSICS
+    // -----------------------------
+    this.trashGroup = this.physics.add.group([
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ]);
 
-    this.trashCanGroup = this.physics.add.group();
-    this.trashCanGroup.add(this.trashCan1);
-    this.trashCanGroup.add(this.trashCan2);
-    this.trashCanGroup.add(this.trashCan3);
-    this.trashCanGroup.add(this.trashCan4);
-    this.trashCanGroup.add(this.trashCan5);
+    this.trashCanGroup = this.physics.add.group([
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5,
+    ]);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -145,34 +166,30 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
 
   putInTrash(trash, trashCan) {
     if (this.introActive) return;
-    if (!trash || !trash.active) return;
-    if (!trashCan || !trashCan.active) return;
+    if (!trash?.active || !trashCan?.active) return;
     if (trashCan._disabled) return;
-
-    if (trash._lockedOnCan) return;
-    if (trash._wrongCooldown) return;
-    if (trash._resettingHome) return;
+    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) return;
 
     trash._lockedOnCan = true;
-    trash._dragging = false;
 
     if (trash.body) {
       trash.body.setVelocity(0, 0);
     }
 
+    // ✅ CORRECT
     if (trash.answer === trashCan.answer) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
-      this.showRaccoonFeedback(trashCan, true);
+      this.showRaccoonFeedback?.(trashCan, true);
 
       trashCan.markCorrect?.();
-      this.popTrashCanConfetti(trashCan);
+      this.popTrashCanConfetti?.(trashCan);
 
       trash.destroy();
       trashCan.destroy();
 
-      this.numCorrect += 1;
+      this.numCorrect++;
 
       this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
@@ -188,28 +205,24 @@ export class Game_2nd_grade_fillInTheBlank extends BaseMathGameScene {
       return;
     }
 
-    this.numWrong += 1;
-    this.triesUsed += 1;
+    // ❌ WRONG
+    this.numWrong++;
+    this.triesUsed++;
     this.incrementWrongGuess(trash);
 
     trash._wrongCooldown = true;
     trash._resettingHome = true;
+    trash._lockedOnCan = false;
 
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
-    this.showRaccoonFeedback(trashCan, false);
+    this.showRaccoonFeedback?.(trashCan, false);
 
-    trash._lockedOnCan = false;
-
-    if (typeof trash.snapHome === "function") {
-      trash.snapHome();
-    } else {
-      this.resetDraggedTrash(trash);
-    }
+    trash.snapHome?.() || this.resetDraggedTrash?.(trash);
 
     this.time.delayedCall(500, () => {
-      if (!trash || !trash.active) return;
+      if (!trash?.active) return;
 
       trash._wrongCooldown = false;
       trash._resettingHome = false;

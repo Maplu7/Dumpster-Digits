@@ -13,6 +13,9 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
       assignmentTitle: "1st Grade Subtraction",
     });
 
+    // -----------------------------
+    // PROBLEM BANK
+    // -----------------------------
     const problems = [];
 
     for (let n = 10; n >= 1; n--) {
@@ -28,13 +31,18 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.configuredProblems = this.getConfiguredProblems(this.allProblems);
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
+    // -----------------------------
+    // GRAPHICS / BACKGROUND
+    // -----------------------------
     for (let i = 1; i <= 7; i++) {
-      this.add.group({
-        key: "camp",
+      const y = 50 + (i - 1) * 100;
+
+      this[`campGroundRow${i}`] = this.add.group({
+        key: "dirtGround",
         repeat: 11,
         setXY: {
           x: 90,
-          y: 50 + (i - 1) * 100,
+          y,
           stepX: 180,
         },
         setScale: {
@@ -44,13 +52,15 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
       });
     }
 
-   this.add.image(1250, 100, 'greenTent', 0).setScale(3);
-        this.add.image(200, 100, 'greenTent', 1).setScale(3);
-        this.add.image(100, 300, 'horizontalLog', 3).setScale(3);
-        this.add.image(1400, 200, 'horizontalLog', 0).setScale(2);
-        this.add.image(1480, 280, 'verticalLog', 2).setScale(2);
+    this.add.image(1250, 100, "greenTent", 0).setScale(3);
+    this.add.image(200, 100, "greenTent", 1).setScale(3);
+    this.add.image(100, 300, "horizontalLog", 3).setScale(3);
+    this.add.image(1400, 200, "horizontalLog", 0).setScale(2);
+    this.add.image(1480, 280, "verticalLog", 2).setScale(2);
 
+    // -----------------------------
     // CANS = PROBLEMS
+    // -----------------------------
     this.trashCan1 = new TrashCan(this, 100, 700, this.question1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.question2).setScale(1);
     this.trashCan3 = new TrashCan(this, 740, 700, this.question3).setScale(1);
@@ -114,7 +124,9 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.trashCan4 = new TrashCan(this, 1040, 700, this.question4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.question5).setScale(1);
 
+    // -----------------------------
     // TRASH = ANSWERS
+    // -----------------------------
     this.trash1 = new Trash(this, 550, 280, {
       question: String(this.answer1.answer),
       answer: this.answer1.answer,
@@ -157,6 +169,9 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
       trash._resettingHome = false;
     });
 
+    // -----------------------------
+    // TRACKING
+    // -----------------------------
     this.numGuessesPerAnswer = [
       { guessedAnswer: this.trash1, numGuess: 0 },
       { guessedAnswer: this.trash2, numGuess: 0 },
@@ -175,6 +190,9 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.trashGroup.add(this.trash3);
     this.trashGroup.add(this.trash4);
     this.trashGroup.add(this.trash5);
+    // -----------------------------
+    // PHYSICS GROUPS
+    // -----------------------------
     this.trashGroup = this.physics.add.group();
     this.trashGroup.add(this.trash1);
     this.trashGroup.add(this.trash2);
@@ -241,14 +259,17 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
 
     // ✅ CORRECT
     // ✅ CORRECT
+    // -----------------------------
+    // CORRECT
+    // -----------------------------
     if (trash.answer === trashCan.answer) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
-      this.showRaccoonFeedback(trashCan, true);
+      this.showRaccoonFeedback?.(trashCan, true);
 
       trashCan.markCorrect?.();
-      this.popTrashCanConfetti(trashCan);
+      this.popTrashCanConfetti?.(trashCan);
 
       trash.destroy();
       trashCan.destroy();
@@ -271,6 +292,9 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
 
     // ❌ WRONG
     // ❌ WRONG
+    // -----------------------------
+    // WRONG
+    // -----------------------------
     this.numWrong += 1;
     this.triesUsed += 1;
     this.incrementWrongGuess(trash);
@@ -305,13 +329,14 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
         trash.body.setVelocity(0, 0);
       }
     });
+    this.showRaccoonFeedback?.(trashCan, false);
 
     trash._lockedOnCan = false;
 
     if (typeof trash.snapHome === "function") {
       trash.snapHome();
     } else {
-      this.resetDraggedTrash(trash);
+      this.resetDraggedTrash?.(trash);
     }
 
     this.time.delayedCall(500, () => {
