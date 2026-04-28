@@ -581,7 +581,7 @@ export default function AssignmentEditor({
 
               <div className="assignment-editor__compact-row">
                 <div className="assignment-editor__panel assignment-editor__panel--compact">
-                  <details className="assignment-editor__mini-details">
+                  <details className="assignment-editor__mini-details" open>
                     <summary>
                       <span>Add Your Own Problem</span>
                       <small>Optional</small>
