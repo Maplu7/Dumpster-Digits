@@ -19,8 +19,8 @@ export class TrashCan extends Phaser.GameObjects.Container
 
         this.add([this.trashCanMath, this.text]) // Adds trash and text to the container
 
-
         this.answer = problem.answer;
+        this.question = problem.question;
 
           scene.add.existing(this);
           scene.physics.add.existing(this);
