@@ -219,10 +219,24 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       }
     };
 
-    const trashLabel = String(trash?.problemData?.question ?? "").trim();
-    const canLabel = String(trashCan?.problemData?.question ?? "").trim();
+//-----------------------------------------------------------------------------
+//--------------------------CODE: UPDATE PLACE VALUE BUG--------------------------------------
+//-----------------------------------------------------------------------------
+    function trashCanPlaceValue(num, place) {
+        const n = Number(num);
+        if(place === "ones") 
+            {return n % 10};
+        if(place === "tens")
+            {return Math.floor(n/10) % 10};
+        if(place === "hundreds")
+            {return Math.floor(n/100)};
+        return null;    
+    };
 
-    if (trashLabel && canLabel && trashLabel === canLabel) {
+    const checkDigit = Number(trashCanPlaceValue(trash.answer, placeValue));
+    const exsitingAnswer = Number(trashCan.question?.split(`->`)[0].trim());
+
+    if (checkDigit === exsitingAnswer) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
@@ -231,7 +245,8 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
 
       trash.destroy();
       trashCan.destroy();
-
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
       this.numCorrect += 1;
       this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
