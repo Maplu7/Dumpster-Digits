@@ -196,6 +196,50 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
         this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
         this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
 
+//------------------------------------------------------------------------------------
+//-----------------------Raccon Animation Sync-----------------------------------------
+//------------------------------------------------------------------------------------
+      this.trashCan1.index = 0;
+      this.trashCan2.index = 1;
+      this.trashCan3.index = 2;
+      this.trashCan4.index = 3;
+      this.trashCan5.index = 4;
+
+        this.anims.create ({
+          key: 'raccoonFeedback',
+          frames: this.anims.generateFrameNumbers ('raccoon', {start: 20, end: 27}),
+          frameRate: 7,
+          repeat: -1
+        });
+
+        this.raccoon1 = this.add.sprite(this.trashCan1.x,this.trashCan1.y, 'raccoon', 20).setScale(4); //UPDATE
+        this.raccoon2 = this.add.sprite(this.trashCan2.x,this.trashCan2.y, 'raccoon', 20).setScale(4); //UPDATE
+        this.raccoon3 = this.add.sprite(this.trashCan3.x,this.trashCan3.y, 'raccoon', 20).setScale(4); //UPDATE
+        this.raccoon4 = this.add.sprite(this.trashCan4.x,this.trashCan4.y, 'raccoon', 20).setScale(4); //UPDATE
+        this.raccoon5 = this.add.sprite(this.trashCan5.x,this.trashCan5.y, 'raccoon', 20).setScale(4); //UPDATE
+
+        this.raccoon1.play('raccoonFeedback'); //UPDATE
+        this.raccoon2.play('raccoonFeedback'); //UPDATE
+        this.raccoon3.play('raccoonFeedback'); //UPDATE
+        this.raccoon4.play('raccoonFeedback'); //UPDATE
+        this.raccoon5.play('raccoonFeedback'); //UPDATE
+
+        this.raccoonGroup = [
+          this.raccoon1,
+          this.raccoon2,
+          this.raccoon3,
+          this.raccoon4,
+          this.raccoon5]; 
+
+        for(let n = 0; n < this.raccoonGroup.length; n++)
+        {
+          this.raccoonGroup[n].visible = false;
+        }
+//------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+
+
         this.trash1 = new Trash(this, 550, 280, this.question1);
         this.trash2 = new Trash(this, 650, 400, this.question2);
         this.trash3 = new Trash(this, 750, 280, this.question3);
@@ -269,6 +313,15 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
 
             trash.destroy();
             trashCan.destroy();
+//------------------------------------------------------------------------------------
+//------------------------RACCON SYNC Pt.2----------------------------------------
+//------------------------------------------------------------------------------------
+    const trashCanIndex = trashCan.index;
+    this.raccoonGroup[trashCanIndex].visible = true;
+
+//------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
 
             this.numCorrect += 1;
             this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
