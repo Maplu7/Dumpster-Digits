@@ -1,3 +1,56 @@
+.assignments-coin-display {
+  position: fixed;
+  top: 22px;
+  left: 22px;
+  z-index: 20;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  min-height: 52px;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(55, 39, 80, 0.78) 0%,
+      rgba(43, 32, 68, 0.9) 100%
+    );
+
+  border: 1px solid rgba(255, 231, 180, 0.2);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.26),
+    0 0 18px rgba(255, 214, 140, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.assignments-coin-display img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: auto;
+
+  filter:
+    drop-shadow(0 0 4px rgba(255, 215, 120, 0.8))
+    drop-shadow(0 0 10px rgba(255, 180, 90, 0.5));
+}
+
+.assignments-coin-display span {
+  font-family: "Fjalla One", sans-serif;
+  font-size: 23px;
+  line-height: 1;
+  color: #ffe7b4;
+  text-shadow:
+    0 0 8px rgba(255, 214, 148, 0.18),
+    0 3px 8px rgba(0, 0, 0, 0.36);
+}
+
 .assignments-page {
   position: relative;
   width: 100%;

@@ -39,21 +39,50 @@ export function showFinishScreen(scene, options = {}) {
   if (scene.correct?.destroy) scene.correct.destroy();
   if (scene.wrongText?.destroy) scene.wrongText.destroy();
 
-  const trashes = [
-    scene.trash1,
-    scene.trash2,
-    scene.trash3,
-    scene.trash4,
-    scene.trash5,
-  ].filter(Boolean);
+  const trackedAnswers =
+    Array.isArray(scene.numGuessesPerAnswer) && scene.numGuessesPerAnswer.length
+      ? scene.numGuessesPerAnswer
+      : [];
 
-  const lineTexts = trashes.map((trash, index) => {
-    const guessCount = scene.numGuessesPerAnswer?.[index]?.numGuess ?? 0;
+  const trashes =
+    Array.isArray(scene.trashItems) && scene.trashItems.length
+      ? scene.trashItems
+      : [
+          scene.trash1,
+          scene.trash2,
+          scene.trash3,
+          scene.trash4,
+          scene.trash5,
+        ].filter(Boolean);
 
-    return formatLine
-      ? formatLine(trash, guessCount, index)
-      : `Wrong guesses for ${trash.question} = ${trash.answer}: ${guessCount}`;
-  });
+  const lineTexts = trackedAnswers.length
+    ? trackedAnswers.map((entry, index) => {
+        const trash = entry.guessedAnswer || trashes[index];
+        const guessCount = entry.numGuess ?? 0;
+
+        return formatLine
+          ? formatLine(trash, guessCount, index)
+          : guessCount === 0
+            ? `✓ ${trash?.question ?? trash?.problemData?.question ?? "Problem"} = ${
+                trash?.answer ?? trash?.problemData?.answer ?? ""
+              }`
+            : `Wrong guesses for ${
+                trash?.question ?? trash?.problemData?.question ?? "Problem"
+              } = ${trash?.answer ?? trash?.problemData?.answer ?? ""}: ${guessCount}`;
+      })
+    : trashes.map((trash, index) => {
+        const guessCount = scene.numGuessesPerAnswer?.[index]?.numGuess ?? 0;
+
+        return formatLine
+          ? formatLine(trash, guessCount, index)
+          : guessCount === 0
+            ? `✓ ${trash?.question ?? trash?.problemData?.question ?? "Problem"} = ${
+                trash?.answer ?? trash?.problemData?.answer ?? ""
+              }`
+            : `Wrong guesses for ${
+                trash?.question ?? trash?.problemData?.question ?? "Problem"
+              } = ${trash?.answer ?? trash?.problemData?.answer ?? ""}: ${guessCount}`;
+      });
 
   const cardWidth = Math.min(900, width * 0.8);
   const lineAreaHeight = Math.max(120, lineTexts.length * lineGap);
@@ -68,21 +97,32 @@ export function showFinishScreen(scene, options = {}) {
     .rectangle(0, 0, width, height, 0x071017, 0.78)
     .setOrigin(0);
 
-  const glow = scene.add
-    .ellipse(
-      centerX,
-      cardY + cardHeight / 2,
-      width * 0.7,
-      height * 0.52,
-      0xffc96f,
-      0.16
-    );
+  const glow = scene.add.ellipse(
+    centerX,
+    cardY + cardHeight / 2,
+    width * 0.7,
+    height * 0.52,
+    0xffc96f,
+    0.16
+  );
 
-  const sideGlowLeft = scene.add
-    .ellipse(centerX - 220, cardY + cardHeight * 0.65, 190, 135, 0xff9f43, 0.09);
+  const sideGlowLeft = scene.add.ellipse(
+    centerX - 220,
+    cardY + cardHeight * 0.65,
+    190,
+    135,
+    0xff9f43,
+    0.09
+  );
 
-  const sideGlowRight = scene.add
-    .ellipse(centerX + 220, cardY + cardHeight * 0.35, 170, 125, 0xffd977, 0.08);
+  const sideGlowRight = scene.add.ellipse(
+    centerX + 220,
+    cardY + cardHeight * 0.35,
+    170,
+    125,
+    0xffd977,
+    0.08
+  );
 
   const cardShadow = scene.add.graphics();
   cardShadow.fillStyle(0x000000, 0.32);
@@ -104,8 +144,14 @@ export function showFinishScreen(scene, options = {}) {
     24
   );
 
-  const topGlow = scene.add
-    .ellipse(centerX, cardY + 22, cardWidth * 0.72, 56, 0xfff1c7, 0.34);
+  const topGlow = scene.add.ellipse(
+    centerX,
+    cardY + 22,
+    cardWidth * 0.72,
+    56,
+    0xfff1c7,
+    0.34
+  );
 
   const sparkleLeft = scene.add
     .text(cardX + 46, cardY + 42, "✦", {
@@ -144,7 +190,8 @@ export function showFinishScreen(scene, options = {}) {
     .setOrigin(0.5, 0)
     .setAlpha(0);
 
-  let coinGlow = null;
+  let coinOuterGlow = null;
+  let coinInnerGlow = null;
   let coinImage = null;
   let subtitleText = null;
   let subtitleLineTwoText = null;
@@ -158,9 +205,8 @@ export function showFinishScreen(scene, options = {}) {
     const firstLine = subtitleLines[0] || "";
     const secondLine = subtitleLines[1] || "";
 
-    const coinSize = 28;
-    const coinGlowSize = 34;
-    const coinGap = 10;
+    const coinSize = 34;
+    const coinGap = 12;
     const rowY = subtitleY + 34;
 
     subtitleText = scene.add
@@ -180,27 +226,33 @@ export function showFinishScreen(scene, options = {}) {
     const coinX = rowLeft + coinSize / 2;
     const textX = rowLeft + coinSize + coinGap;
 
-    coinGlow = scene.add
-      .ellipse(coinX, rowY, coinGlowSize, coinGlowSize, 0xffd97a, 0.26)
+    coinOuterGlow = scene.add
+      .ellipse(coinX, rowY, 56, 56, 0xffb85f, 0.2)
+      .setAlpha(0);
+
+    coinInnerGlow = scene.add
+      .ellipse(coinX, rowY, 42, 42, 0xfff0a8, 0.22)
       .setAlpha(0);
 
     coinImage = scene.add.image(coinX, rowY, "raccacoin");
 
+    if (coinImage.texture?.setFilter) {
+      coinImage.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+
     const baseWidth = coinImage.width || coinImage.displayWidth || 1;
-    const scale = coinSize / baseWidth;
+    const finalScale = coinSize / baseWidth;
 
     coinImage
-      .setScale(scale)
+      .setScale(finalScale * 0.9)
       .setDepth(1001)
       .setAlpha(0);
-
-    coinImage.setScale(scale * 0.92);
 
     subtitleText.setPosition(textX, rowY + 1);
 
     if (secondLine) {
       subtitleLineTwoText = scene.add
-        .text(centerX, rowY + 30, secondLine, {
+        .text(centerX, rowY + 32, secondLine, {
           fontFamily: "'Fjalla One', sans-serif",
           fontSize: "26px",
           color: subtitleColor,
@@ -213,14 +265,20 @@ export function showFinishScreen(scene, options = {}) {
   }
 
   scene.finishTexts = lineTexts.map((lineText, index) => {
-    const guessCount = scene.numGuessesPerAnswer?.[index]?.numGuess ?? 0;
-    const lineColor = guessCount === 0 ? "#5d7f2b" : "#3f2b1d";
+    const guessCount =
+      trackedAnswers[index]?.numGuess ??
+      scene.numGuessesPerAnswer?.[index]?.numGuess ??
+      0;
+
+    const lineColor = guessCount === 0 ? "#4f8f2f" : "#b24a35";
 
     return scene.add
       .text(centerX, lineStartY + index * lineGap, lineText, {
         fontFamily: "'Fjalla One', sans-serif",
         fontSize: lineSize,
         color: lineColor,
+        stroke: guessCount === 0 ? "#eaffd5" : "#ffe0d5",
+        strokeThickness: 2,
         align: "center",
       })
       .setPadding(0, 2, 0, 8)
@@ -233,15 +291,14 @@ export function showFinishScreen(scene, options = {}) {
   const buttonX = centerX - buttonWidth / 2;
   const buttonY = cardY + cardHeight - 116;
 
-  const buttonGlow = scene.add
-    .ellipse(
-      centerX,
-      buttonY + buttonHeight / 2,
-      buttonWidth + 96,
-      buttonHeight + 44,
-      0xa8e6ff,
-      0.24
-    );
+  const buttonGlow = scene.add.ellipse(
+    centerX,
+    buttonY + buttonHeight / 2,
+    buttonWidth + 96,
+    buttonHeight + 44,
+    0xa8e6ff,
+    0.24
+  );
 
   const buttonShadow = scene.add.graphics();
   const buttonBg = scene.add.graphics();
@@ -251,7 +308,13 @@ export function showFinishScreen(scene, options = {}) {
     buttonBg.clear();
 
     buttonShadow.fillStyle(0x000000, 0.18);
-    buttonShadow.fillRoundedRect(buttonX + 4, buttonY + 7, buttonWidth, buttonHeight, 30);
+    buttonShadow.fillRoundedRect(
+      buttonX + 4,
+      buttonY + 7,
+      buttonWidth,
+      buttonHeight,
+      30
+    );
 
     const topLeft = hover ? 0xffd27a : 0xffbf67;
     const topRight = hover ? 0x95e5ff : 0x6fd2ff;
@@ -264,7 +327,13 @@ export function showFinishScreen(scene, options = {}) {
     buttonBg.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 30);
 
     buttonBg.lineStyle(2, 0xffffff, 0.34);
-    buttonBg.strokeRoundedRect(buttonX + 8, buttonY + 8, buttonWidth - 16, buttonHeight - 16, 22);
+    buttonBg.strokeRoundedRect(
+      buttonX + 8,
+      buttonY + 8,
+      buttonWidth - 16,
+      buttonHeight - 16,
+      22
+    );
   };
 
   drawButton(false);
@@ -302,20 +371,15 @@ export function showFinishScreen(scene, options = {}) {
   if (perfectRunGlow) overlay.add(perfectRunGlow);
   overlay.add(titleText);
 
-  if (coinGlow) overlay.add(coinGlow);
+  if (coinOuterGlow) overlay.add(coinOuterGlow);
+  if (coinInnerGlow) overlay.add(coinInnerGlow);
   if (coinImage) overlay.add(coinImage);
   if (subtitleText) overlay.add(subtitleText);
   if (subtitleLineTwoText) overlay.add(subtitleLineTwoText);
+
   scene.finishTexts.forEach((textObj) => overlay.add(textObj));
 
-  overlay.add([
-    buttonGlow,
-    buttonShadow,
-    buttonBg,
-    buttonText,
-    buttonHit,
-  ]);
-
+  overlay.add([buttonGlow, buttonShadow, buttonBg, buttonText, buttonHit]);
   overlay.setAlpha(0);
 
   scene.tweens.add({
@@ -344,15 +408,6 @@ export function showFinishScreen(scene, options = {}) {
       ease: "Sine.easeInOut",
     });
 
-    scene.tweens.add({
-      targets: titleText,
-      alpha: { from: 0.92, to: 1 },
-      duration: 700,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-
     if (perfectRunGlow) {
       scene.tweens.add({
         targets: perfectRunGlow,
@@ -365,51 +420,14 @@ export function showFinishScreen(scene, options = {}) {
         ease: "Sine.easeInOut",
       });
     }
-
-    scene.time.delayedCall(260, () => {
-      for (let i = 0; i < 12; i++) {
-        const sparkle = scene.add
-          .text(
-            centerX + Phaser.Math.Between(-150, 150),
-            topY + Phaser.Math.Between(0, 30),
-            Phaser.Utils.Array.GetRandom(["✦", "✧", "⋆"]),
-            {
-              fontFamily: "'Fjalla One', sans-serif",
-              fontSize: `${Phaser.Math.Between(16, 24)}px`,
-              color: Phaser.Utils.Array.GetRandom([
-                "#fff2a6",
-                "#ffe07a",
-                "#fff6d5",
-              ]),
-              stroke: "#8f5b12",
-              strokeThickness: 2,
-            }
-          )
-          .setOrigin(0.5)
-          .setDepth(1001);
-
-        overlay.add(sparkle);
-
-        scene.tweens.add({
-          targets: sparkle,
-          y: sparkle.y - Phaser.Math.Between(20, 55),
-          x: sparkle.x + Phaser.Math.Between(-20, 20),
-          alpha: 0,
-          scale: 0.65,
-          duration: Phaser.Math.Between(700, 1100),
-          ease: "Quad.easeOut",
-          onComplete: () => sparkle.destroy(),
-        });
-      }
-    });
   }
 
-  if (coinGlow) {
+  if (coinOuterGlow) {
     scene.tweens.add({
-      targets: coinGlow,
-      alpha: { from: 0.16, to: 0.28 },
-      scaleX: 1.08,
-      scaleY: 1.08,
+      targets: coinOuterGlow,
+      alpha: { from: 0.12, to: 0.26 },
+      scaleX: 1.12,
+      scaleY: 1.12,
       duration: 900,
       yoyo: true,
       repeat: -1,
@@ -417,26 +435,42 @@ export function showFinishScreen(scene, options = {}) {
     });
   }
 
+  if (coinInnerGlow) {
+    scene.tweens.add({
+      targets: coinInnerGlow,
+      alpha: { from: 0.18, to: 0.34 },
+      scaleX: 1.08,
+      scaleY: 1.08,
+      duration: 760,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+  }
+
   if (coinImage) {
-    const finalScaleX = coinImage.scaleX / 0.92;
-    const finalScaleY = coinImage.scaleY / 0.92;
+    const finalScaleX = coinImage.scaleX / 0.9;
+    const finalScaleY = coinImage.scaleY / 0.9;
 
     scene.tweens.add({
       targets: coinImage,
       alpha: 1,
       y: coinImage.y - 2,
-      delay: 100,
-      duration: 300,
-      ease: "Sine.easeOut",
-    });
-
-    scene.tweens.add({
-      targets: coinImage,
       scaleX: finalScaleX,
       scaleY: finalScaleY,
       delay: 100,
       duration: 420,
       ease: "Back.easeOut",
+    });
+
+    scene.tweens.add({
+      targets: coinImage,
+      y: coinImage.y - 5,
+      duration: 950,
+      yoyo: true,
+      repeat: -1,
+      delay: 580,
+      ease: "Sine.easeInOut",
     });
   }
 

@@ -4,16 +4,14 @@ import {
   collection,
   doc,
   getDoc,
+  increment,
   serverTimestamp,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
 
 function getCoinRewardForPlay(playCount, perfectRun = false) {
-  if (playCount <= 1) {
-    return perfectRun ? 80 : 60;
-  }
-
+  if (playCount <= 1) return perfectRun ? 80 : 60;
   if (playCount === 2) return 35;
   if (playCount === 3) return 20;
   if (playCount === 4) return 10;
@@ -25,8 +23,7 @@ function getAttemptPercentFromAnswers(answers) {
 
   const total = answers.reduce((sum, answer) => {
     const wrongTries = Number(answer?.wrongTries || 0);
-    const answerPercent = Math.max(0, 100 - wrongTries * 25);
-    return sum + answerPercent;
+    return sum + Math.max(0, 100 - wrongTries * 25);
   }, 0);
 
   return Math.round(total / answers.length);
@@ -40,34 +37,18 @@ function isPerfectRun(totalWrongGuesses, answers) {
     : false;
 }
 
-export async function saveAssignmentResult({
-  studentId,
+function getResetVersionFromStudent(data) {
+  return Number(data?.resetVersion || 0);
+}
+
+function buildAttemptData({
   gameKey,
   assignmentTitle,
   totalWrongGuesses,
   numGuessesPerAnswer,
+  nextPlayCount,
+  coinReward,
 }) {
-  if (!studentId || !gameKey) {
-    return { coinReward: 0, playCount: 0, newCoinTotal: 0 };
-  }
-
-  const studentRef = doc(db, "students", String(studentId));
-
-  const gameSummaryRef = doc(
-    db,
-    "students",
-    String(studentId),
-    "assignmentGameSummary",
-    String(gameKey)
-  );
-
-  const attemptsCollectionRef = collection(
-    db,
-    "students",
-    String(studentId),
-    "assignmentResults"
-  );
-
   const problemBreakdown = {};
   const answers = [];
 
@@ -75,7 +56,7 @@ export async function saveAssignmentResult({
     const problemData = item?.guessedAnswer;
     if (!problemData) continue;
 
-    const problem = problemData.question ?? "";
+    const problem = String(problemData.question ?? "");
     const correctAnswer = problemData.answer ?? "";
     const wrongTries = Number(item?.numGuess ?? 0);
 
@@ -90,31 +71,11 @@ export async function saveAssignmentResult({
     });
   }
 
-  const [studentSnap, gameSummarySnap] = await Promise.all([
-    getDoc(studentRef),
-    getDoc(gameSummaryRef),
-  ]);
-
-  const currentCoins = studentSnap.exists()
-    ? Number(studentSnap.data()?.coins || 0)
-    : 0;
-
-  const previousPlayCount = gameSummarySnap.exists()
-    ? Number(gameSummarySnap.data()?.playCount || 0)
-    : 0;
-
-  const previousTotalCoinsEarnedFromGame = gameSummarySnap.exists()
-    ? Number(gameSummarySnap.data()?.totalCoinsEarnedFromGame || 0)
-    : 0;
-
-  const nextPlayCount = previousPlayCount + 1;
   const numericWrongGuesses = Number(totalWrongGuesses ?? 0);
   const percentCorrect = getAttemptPercentFromAnswers(answers);
   const perfectRun = isPerfectRun(numericWrongGuesses, answers);
-  const coinReward = getCoinRewardForPlay(nextPlayCount, perfectRun);
-  const newCoinTotal = currentCoins + coinReward;
 
-  const attemptDocRef = await addDoc(attemptsCollectionRef, {
+  return {
     assignmentTitle: assignmentTitle || gameKey,
     gameKey,
     totalWrongGuesses: numericWrongGuesses,
@@ -127,37 +88,139 @@ export async function saveAssignmentResult({
     lastCoinReward: coinReward,
     percentCorrect,
     perfectRun,
+  };
+}
+
+export async function saveAssignmentResult({
+  studentId,
+  gameKey,
+  assignmentTitle,
+  totalWrongGuesses,
+  numGuessesPerAnswer,
+  startedAt = 0,
+}) {
+  const safeStudentId = String(studentId || "").trim();
+  const safeGameKey = String(gameKey || "").trim();
+
+  if (!safeStudentId || !safeGameKey) {
+    return {
+      coinReward: 0,
+      playCount: 0,
+      newCoinTotal: 0,
+      skipped: true,
+      reason: "Missing studentId or gameKey.",
+    };
+  }
+
+  const studentRef = doc(db, "students", safeStudentId);
+
+  const gameSummaryRef = doc(
+    db,
+    "students",
+    safeStudentId,
+    "assignmentGameSummary",
+    safeGameKey
+  );
+
+  const attemptsCollectionRef = collection(
+    db,
+    "students",
+    safeStudentId,
+    "assignmentResults"
+  );
+
+  const [studentSnap, gameSummarySnap] = await Promise.all([
+    getDoc(studentRef),
+    getDoc(gameSummaryRef),
+  ]);
+
+  const studentData = studentSnap.exists() ? studentSnap.data() : {};
+  const resetVersion = getResetVersionFromStudent(studentData);
+  const safeStartedAt = Number(startedAt || 0);
+
+  if (resetVersion && safeStartedAt && resetVersion > safeStartedAt) {
+    return {
+      coinReward: 0,
+      playCount: 0,
+      newCoinTotal: Number(studentData?.coins || 0),
+      skipped: true,
+      skippedBecauseReset: true,
+      reason: "Game was reset while this attempt was running.",
+    };
+  }
+
+  const currentCoins = Number(studentData?.coins || 0);
+
+  const previousPlayCount = gameSummarySnap.exists()
+    ? Number(gameSummarySnap.data()?.playCount || 0)
+    : 0;
+
+  const previousTotalCoinsEarnedFromGame = gameSummarySnap.exists()
+    ? Number(gameSummarySnap.data()?.totalCoinsEarnedFromGame || 0)
+    : 0;
+
+  const nextPlayCount = previousPlayCount + 1;
+
+  const previewAnswers = [];
+  for (const item of numGuessesPerAnswer || []) {
+    const problemData = item?.guessedAnswer;
+    if (!problemData) continue;
+
+    previewAnswers.push({
+      wrongTries: Number(item?.numGuess ?? 0),
+    });
+  }
+
+  const numericWrongGuesses = Number(totalWrongGuesses ?? 0);
+  const perfectRun = isPerfectRun(numericWrongGuesses, previewAnswers);
+  const coinReward = getCoinRewardForPlay(nextPlayCount, perfectRun);
+  const newCoinTotal = currentCoins + coinReward;
+
+  const attemptData = buildAttemptData({
+    gameKey: safeGameKey,
+    assignmentTitle,
+    totalWrongGuesses,
+    numGuessesPerAnswer,
+    nextPlayCount,
+    coinReward,
   });
+
+  const attemptDocRef = await addDoc(attemptsCollectionRef, attemptData);
 
   await setDoc(
     gameSummaryRef,
     {
-      assignmentTitle: assignmentTitle || gameKey,
-      gameKey,
-      totalWrongGuesses: numericWrongGuesses,
+      assignmentTitle: assignmentTitle || safeGameKey,
+      gameKey: safeGameKey,
+      totalWrongGuesses: attemptData.totalWrongGuesses,
       completedAt: serverTimestamp(),
       lastAttemptId: attemptDocRef.id,
-      latestProblemBreakdown: problemBreakdown,
-      latestAnswers: answers,
+      latestProblemBreakdown: attemptData.problemBreakdown,
+      latestAnswers: attemptData.answers,
       completed: true,
       playCount: nextPlayCount,
       lastCoinReward: coinReward,
       totalCoinsEarnedFromGame: previousTotalCoinsEarnedFromGame + coinReward,
-      percentCorrect,
-      perfectRun,
+      percentCorrect: attemptData.percentCorrect,
+      perfectRun: attemptData.perfectRun,
+      updatedAt: serverTimestamp(),
     },
     { merge: true }
   );
 
   if (studentSnap.exists()) {
     await updateDoc(studentRef, {
-      coins: newCoinTotal,
+      coins: increment(coinReward),
+      lastPlayedAt: serverTimestamp(),
+      lastGameKey: safeGameKey,
     });
   } else {
     await setDoc(
       studentRef,
       {
         coins: newCoinTotal,
+        lastPlayedAt: serverTimestamp(),
+        lastGameKey: safeGameKey,
       },
       { merge: true }
     );
@@ -168,7 +231,8 @@ export async function saveAssignmentResult({
     playCount: nextPlayCount,
     newCoinTotal,
     attemptId: attemptDocRef.id,
-    percentCorrect,
-    perfectRun,
+    percentCorrect: attemptData.percentCorrect,
+    perfectRun: attemptData.perfectRun,
+    skipped: false,
   };
 }

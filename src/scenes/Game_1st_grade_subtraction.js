@@ -1,259 +1,311 @@
-import Phaser from "phaser";
-import { Trash } from '../GameObjects/Trash.js';
-import { TrashCan } from '../GameObjects/TrashCan.js';
+import { Trash } from "../GameObjects/Trash.js";
+import { TrashCan } from "../GameObjects/TrashCan.js";
 import { BaseMathGameScene } from "./BaseMathGameScene";
 
 export class Game_1st_grade_subtraction extends BaseMathGameScene {
-    constructor() {
-        super('Game');
-    }
+  constructor() {
+    super("Game");
+  }
 
-    create() {
-        this.initSharedGameConfig({
-            gameKey: "1st_subtraction",
-            assignmentTitle: "1st Grade Subtraction",
+  create() {
+    this.initSharedGameConfig({
+      gameKey: "1st_subtraction",
+      assignmentTitle: "1st Grade Subtraction",
+    });
+
+    const problems = [];
+
+    for (let n = 10; n >= 1; n--) {
+      for (let j = 0; j <= n; j++) {
+        problems.push({
+          question: `${n}-${j}`,
+          answer: n - j,
         });
+      }
+    }
 
-        this.problems10 = [
-          {question: "10-0", answer: 10},
-          {question: "10-1", answer: 9},
-          {question: "10-2", answer: 8},
-          {question: "10-3", answer: 7},
-          {question: "10-4", answer: 6},
-          {question: "10-5", answer: 5},
-          {question: "10-6", answer: 4},
-          {question: "10-7", answer: 3},
-          {question: "10-8", answer: 2},
-          {question: "10-9", answer: 1},
-          {question: "10-10", answer: 0}
-        ];
+    this.allProblems = problems;
+    this.configuredProblems = this.getConfiguredProblems(this.allProblems);
+    this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
-        this.problems9 = [
-          {question: "9-0", answer: 9},
-          {question: "9-1", answer: 8},
-          {question: "9-2", answer: 7},
-          {question: "9-3", answer: 6},
-          {question: "9-4", answer: 5},
-          {question: "9-5", answer: 4},
-          {question: "9-6", answer: 3},
-          {question: "9-7", answer: 2},
-          {question: "9-8", answer: 1},
-          {question: "9-9", answer: 0}
-        ];
+    for (let i = 1; i <= 7; i++) {
+      const y = 50 + (i - 1) * 100;
 
-        this.problems8 = [
-          {question: "8-0", answer: 8},
-          {question: "8-1", answer: 7},
-          {question: "8-2", answer: 6},
-          {question: "8-3", answer: 5},
-          {question: "8-4", answer: 4},
-          {question: "8-5", answer: 3},
-          {question: "8-6", answer: 2},
-          {question: "8-7", answer: 1},
-          {question: "8-8", answer: 0}
-        ];
+      this[`campGroundRow${i}`] = this.add.group({
+        key: "dirtGround",
+        repeat: 11,
+        setXY: { x: 90, y, stepX: 180 },
+        setScale: { x: 3, y: 6 },
+      });
+    }
 
-        this.problems7 = [
-          {question: "7-0", answer: 7},
-          {question: "7-1", answer: 6},
-          {question: "7-2", answer: 5},
-          {question: "7-3", answer: 4},
-          {question: "7-4", answer: 3},
-          {question: "7-5", answer: 2},
-          {question: "7-6", answer: 1},
-          {question: "7-7", answer: 0}
-        ];
+    this.add.image(1250, 100, "greenTent", 0).setScale(3);
+    this.add.image(200, 100, "greenTent", 1).setScale(3);
+    this.add.image(100, 300, "horizontalLog", 3).setScale(3);
+    this.add.image(1400, 200, "horizontalLog", 0).setScale(2);
+    this.add.image(1480, 280, "verticalLog", 2).setScale(2);
 
-        this.problems6 = [
-          {question: "6-0", answer: 6},
-          {question: "6-1", answer: 5},
-          {question: "6-2", answer: 4},
-          {question: "6-3", answer: 3},
-          {question: "6-4", answer: 2},
-          {question: "6-5", answer: 1},
-          {question: "6-6", answer: 0}
-        ];
+    this.trashCan1 = new TrashCan(this, 100, 700, this.question1).setScale(1);
+    this.trashCan2 = new TrashCan(this, 440, 700, this.question2).setScale(1);
+    this.trashCan3 = new TrashCan(this, 740, 700, this.question3).setScale(1);
+    this.trashCan4 = new TrashCan(this, 1040, 700, this.question4).setScale(1);
+    this.trashCan5 = new TrashCan(this, 1340, 700, this.question5).setScale(1);
 
-        this.problems5 = [
-          {question: "5-0", answer: 5},
-          {question: "5-1", answer: 4},
-          {question: "5-2", answer: 3},
-          {question: "5-3", answer: 2},
-          {question: "5-4", answer: 1},
-          {question: "5-5", answer: 0}
-        ];
+    this.trashCan1.index = 0;
+    this.trashCan2.index = 1;
+    this.trashCan3.index = 2;
+    this.trashCan4.index = 3;
+    this.trashCan5.index = 4;
 
-        this.problems4 = [
-          {question: "4-0", answer: 4},
-          {question: "4-1", answer: 3},
-          {question: "4-2", answer: 2},
-          {question: "4-3", answer: 1},
-          {question: "4-4", answer: 0}
-        ];
+    if (!this.anims.exists("raccoonFeedback")) {
+      this.anims.create({
+        key: "raccoonFeedback",
+        frames: this.anims.generateFrameNumbers("raccoon", {
+          start: 20,
+          end: 27,
+        }),
+        frameRate: 7,
+        repeat: -1,
+      });
+    }
 
-        this.problems3 = [
-          {question: "3-0", answer: 3},
-          {question: "3-1", answer: 2},
-          {question: "3-2", answer: 1},
-          {question: "3-3", answer: 0}
-        ];
+    this.raccoonGroup = [
+      this.add.sprite(this.trashCan1.x, this.trashCan1.y, "raccoon", 20),
+      this.add.sprite(this.trashCan2.x, this.trashCan2.y, "raccoon", 20),
+      this.add.sprite(this.trashCan3.x, this.trashCan3.y, "raccoon", 20),
+      this.add.sprite(this.trashCan4.x, this.trashCan4.y, "raccoon", 20),
+      this.add.sprite(this.trashCan5.x, this.trashCan5.y, "raccoon", 20),
+    ];
 
-        this.problems2 = [
-          {question: "2-0", answer: 2},
-          {question: "2-1", answer: 1},
-          {question: "2-2", answer: 0}
-        ];
+    this.raccoonGroup.forEach((raccoon) => {
+      raccoon
+        .setScale(4)
+        .setDepth(999)
+        .setVisible(false)
+        .play("raccoonFeedback");
+    });
 
-        this.problems1 = [
-          {question: "1-0", answer: 1},
-          {question: "1-1", answer: 0}
-        ];
+    this.trash1 = new Trash(this, 550, 280, {
+      question: String(this.answer1.answer),
+      answer: this.answer1.answer,
+    });
 
-        this.allProblems = [
-          ...this.problems10,
-          ...this.problems9,
-          ...this.problems8,
-          ...this.problems7,
-          ...this.problems6,
-          ...this.problems5,
-          ...this.problems4,
-          ...this.problems3,
-          ...this.problems2,
-          ...this.problems1,
-        ];
+    this.trash2 = new Trash(this, 650, 400, {
+      question: String(this.answer2.answer),
+      answer: this.answer2.answer,
+    });
 
-        this.configuredProblems = this.getConfiguredProblems(this.allProblems);
+    this.trash3 = new Trash(this, 750, 280, {
+      question: String(this.answer3.answer),
+      answer: this.answer3.answer,
+    });
 
-        for (let i = 1; i <= 7; i++) {
-            const y = 50 + (i - 1) * 100;
+    this.trash4 = new Trash(this, 850, 400, {
+      question: String(this.answer4.answer),
+      answer: this.answer4.answer,
+    });
 
-            this[`campGroundRow${i}`] = this.add.group({
-                key: 'camp',
-                repeat: 11,
-                setXY: { x: 90, y: y, stepX: 180 },
-                setScale: { x: 3, y: 6 }
-            });
+    this.trash5 = new Trash(this, 950, 280, {
+      question: String(this.answer5.answer),
+      answer: this.answer5.answer,
+    });
+
+    [
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ].forEach((trash) => {
+      trash.startX = trash.x;
+      trash.startY = trash.y;
+      trash.originalX = trash.x;
+      trash.originalY = trash.y;
+
+      trash._lockedOnCan = false;
+      trash._dragging = false;
+      trash._wrongCooldown = false;
+      trash._resettingHome = false;
+
+      this.makeTrashEasyToGrab(trash);
+    });
+
+    this.numGuessesPerAnswer = [
+      { guessedAnswer: this.trash1, numGuess: 0 },
+      { guessedAnswer: this.trash2, numGuess: 0 },
+      { guessedAnswer: this.trash3, numGuess: 0 },
+      { guessedAnswer: this.trash4, numGuess: 0 },
+      { guessedAnswer: this.trash5, numGuess: 0 },
+    ];
+
+    this.numCorrect = 0;
+    this.numWrong = 0;
+    this.triesUsed = 0;
+
+    this.trashGroup = this.physics.add.group([
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ]);
+
+    this.trashCanGroup = this.physics.add.group([
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5,
+    ]);
+
+    this.physics.add.overlap(
+      this.trashGroup,
+      this.trashCanGroup,
+      this.putInTrash,
+      null,
+      this
+    );
+  }
+
+  makeTrashEasyToGrab(trash) {
+    if (!trash || !trash.active) return;
+
+    if (typeof trash.makeTrashInteractive === "function") {
+      trash.makeTrashInteractive();
+      return;
+    }
+
+    trash.setInteractive();
+    this.input.setDraggable(trash);
+  }
+
+  incrementWrongGuess(trash) {
+    if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess += 1;
+    else if (trash === this.trash2) this.numGuessesPerAnswer[1].numGuess += 1;
+    else if (trash === this.trash3) this.numGuessesPerAnswer[2].numGuess += 1;
+    else if (trash === this.trash4) this.numGuessesPerAnswer[3].numGuess += 1;
+    else if (trash === this.trash5) this.numGuessesPerAnswer[4].numGuess += 1;
+  }
+
+  smoothResetTrash(trash) {
+    if (!trash || !trash.active) return;
+
+    const resetX = trash.startX ?? trash.originalX ?? trash.x;
+    const resetY = trash.startY ?? trash.originalY ?? trash.y;
+
+    trash._lockedOnCan = false;
+    trash._dragging = false;
+    trash._wrongCooldown = true;
+    trash._resettingHome = true;
+
+    this.tweens.killTweensOf(trash);
+
+    if (trash.body) {
+      trash.body.enable = false;
+      trash.body.setVelocity(0, 0);
+    }
+
+    trash.disableInteractive();
+
+    this.tweens.add({
+      targets: trash,
+      x: resetX,
+      y: resetY,
+      angle: 0,
+      duration: 320,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        if (!trash || !trash.active) return;
+
+        trash.setPosition(resetX, resetY);
+        trash.setAngle?.(0);
+        trash.setAlpha?.(1);
+
+        if (trash.trashMath) {
+          trash.trashMath.clearTint?.();
         }
 
-        this.add.image(1250, 100, 'yellowTent', 0).setScale(3);
-        this.add.image(200, 100, 'yellowTent', 1).setScale(3);
-        this.add.image(100, 300, 'campFire', 3).setScale(3);
-        this.add.image(1400, 200, 'campChairGreen', 0).setScale(2);
-        this.add.image(1480, 280, 'campChairGreen', 2).setScale(2);
+        if (trash.body) {
+          trash.body.enable = true;
+          trash.body.reset(resetX, resetY);
+          trash.body.setVelocity(0, 0);
+        }
 
-        this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
+        trash._lockedOnCan = false;
+        trash._dragging = false;
 
-        this.trashCan1 = new TrashCan(this, 100, 700, this.answer1).setScale(1);
-        this.trashCan2 = new TrashCan(this, 440, 700, this.answer2).setScale(1);
-        this.trashCan3 = new TrashCan(this, 740, 700, this.answer3).setScale(1);
-        this.trashCan4 = new TrashCan(this, 1040, 700, this.answer4).setScale(1);
-        this.trashCan5 = new TrashCan(this, 1340, 700, this.answer5).setScale(1);
+        this.time.delayedCall(120, () => {
+          if (!trash || !trash.active) return;
 
-        this.trash1 = new Trash(this, 550, 280, this.question1);
-        this.trash2 = new Trash(this, 650, 400, this.question2);
-        this.trash3 = new Trash(this, 750, 280, this.question3);
-        this.trash4 = new Trash(this, 850, 400, this.question4);
-        this.trash5 = new Trash(this, 950, 280, this.question5);
+          trash._wrongCooldown = false;
+          trash._resettingHome = false;
+          this.makeTrashEasyToGrab(trash);
+        });
+      },
+    });
+  }
 
-        this.numGuessesPerAnswer = [
-            { guessedAnswer: this.trash1, numGuess: 0 },
-            { guessedAnswer: this.trash2, numGuess: 0 },
-            { guessedAnswer: this.trash3, numGuess: 0 },
-            { guessedAnswer: this.trash4, numGuess: 0 },
-            { guessedAnswer: this.trash5, numGuess: 0 }
-        ];
+  putInTrash(trash, trashCan) {
+    if (this.introActive) return;
+    if (!trash || !trash.active) return;
+    if (!trashCan || !trashCan.active) return;
+    if (trashCan._disabled) return;
 
-        this.numCorrect = 0;
-        this.numWrong = 0;
-        this.triesUsed = 0;
+    if (trash._lockedOnCan) return;
+    if (trash._wrongCooldown) return;
+    if (trash._resettingHome) return;
 
-        this.trashGroup = this.physics.add.group();
-        this.trashGroup.add(this.trash1);
-        this.trashGroup.add(this.trash2);
-        this.trashGroup.add(this.trash3);
-        this.trashGroup.add(this.trash4);
-        this.trashGroup.add(this.trash5);
+    trash._lockedOnCan = true;
 
-        this.trashCanGroup = this.physics.add.group();
-        this.trashCanGroup.add(this.trashCan1);
-        this.trashCanGroup.add(this.trashCan2);
-        this.trashCanGroup.add(this.trashCan3);
-        this.trashCanGroup.add(this.trashCan4);
-        this.trashCanGroup.add(this.trashCan5);
+    if (trash.body) {
+      trash.body.setVelocity(0, 0);
+    }
 
-        this.physics.add.overlap(
-            this.trashGroup,
-            this.trashCanGroup,
-            this.putInTrash,
-            null,
-            this
+    if (trash.answer === trashCan.answer) {
+      this.playFeedbackSound(true);
+      this.clearCenteredFeedback();
+      this.showCenteredFeedback("That is Correct!", true);
+
+      const trashCanIndex = trashCan.index;
+
+      if (this.raccoonGroup && this.raccoonGroup[trashCanIndex]) {
+        this.raccoonGroup[trashCanIndex].setVisible(true);
+      }
+
+      trashCan.markCorrect?.();
+      this.popTrashCanConfetti?.(trashCan);
+
+      trash.destroy();
+      trashCan.destroy();
+
+      this.numCorrect += 1;
+
+      this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
+
+      if (this.numCorrect === 5) {
+        this.time.delayedCall(
+          this.feedbackDuration + 250,
+          this.onFinish,
+          [],
+          this
         );
+      }
+
+      return;
     }
 
-    putInTrash(trash, trashCan) {
-        if (this.introActive) return;
-        if (trashCan && trashCan._disabled) return;
-        if (trash._lockedOnCan) return;
-        trash._lockedOnCan = true;
+    this.numWrong += 1;
+    this.triesUsed += 1;
+    this.incrementWrongGuess(trash);
 
-        const unlockWhenLeaving = () => {
-            const cans = [this.trashCan1, this.trashCan2, this.trashCan3, this.trashCan4, this.trashCan5]
-                .filter((c) => c && c.active);
+    this.playFeedbackSound(false);
+    this.clearCenteredFeedback();
+    this.showCenteredFeedback("Try again!", false);
 
-            const stillOverAny = cans.some((c) => this.physics.overlap(trash, c));
+    this.smoothResetTrash(trash);
 
-            if (!stillOverAny) {
-                trash._lockedOnCan = false;
-
-                if (trash && trash.active && trash.trashMath && !trash._dragging) {
-                    trash.trashMath.clearTint();
-                }
-            } else {
-                this.time.delayedCall(100, unlockWhenLeaving);
-            }
-        };
-
-        if (trash.answer === trashCan.answer) {
-            this.playFeedbackSound(true);
-            this.clearCenteredFeedback();
-            this.showCenteredFeedback("That is Correct!", true);
-
-            if (trashCan.markCorrect) trashCan.markCorrect();
-
-            trash.destroy();
-            trashCan.destroy();
-
-            this.numCorrect += 1;
-            this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
-
-            if (this.numCorrect === 5) {
-                this.time.delayedCall(this.feedbackDuration + 250, this.onFinish, [], this);
-            }
-
-            return;
-        }
-
-        this.numWrong += 1;
-
-        if (trash === this.trash1) {
-            this.numGuessesPerAnswer[0].numGuess++;
-        } else if (trash === this.trash2) {
-            this.numGuessesPerAnswer[1].numGuess++;
-        } else if (trash === this.trash3) {
-            this.numGuessesPerAnswer[2].numGuess++;
-        } else if (trash === this.trash4) {
-            this.numGuessesPerAnswer[3].numGuess++;
-        } else if (trash === this.trash5) {
-            this.numGuessesPerAnswer[4].numGuess++;
-        }
-
-        this.playFeedbackSound(false);
-        this.clearCenteredFeedback();
-        this.showCenteredFeedback("Try again!", false);
-
-        this.time.delayedCall(this.feedbackDuration, () => this.clearCenteredFeedback());
-        this.triesUsed += 1;
-
-        unlockWhenLeaving();
-    }
+    this.time.delayedCall(this.feedbackDuration, () => {
+      this.clearCenteredFeedback();
+    });
+  }
 }
