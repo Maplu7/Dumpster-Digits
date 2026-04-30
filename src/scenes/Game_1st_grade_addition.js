@@ -7,14 +7,21 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     super("Game");
   }
 
+  preload() {
+    this.load.image("campClover", "/backgroundCamps/campClover.jpeg");
+  }
+
   create() {
     this.initSharedGameConfig({
       gameKey: "1st_addition",
       assignmentTitle: "1st Grade Addition",
     });
 
-    this.createCampgroundBackground("campDirtCartoon");
-    
+    this.add
+      .image(this.scale.width / 2, this.scale.height / 2, "campClover")
+      .setDisplaySize(this.scale.width, this.scale.height)
+      .setDepth(-100);
+
     function additionProblems() {
       const allProblems = [];
 
@@ -33,17 +40,6 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     this.allProblems = additionProblems();
     this.configuredProblems = this.getConfiguredProblems(this.allProblems);
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
-
-    for (let i = 1; i <= 7; i++) {
-      const y = 50 + (i - 1) * 100;
-
-      this[`campGroundRow${i}`] = this.add.group({
-        key: "camp",
-        repeat: 11,
-        setXY: { x: 90, y, stepX: 180 },
-        setScale: { x: 3, y: 6 },
-      });
-    }
 
     this.add.image(1250, 100, "yellowTent", 0).setScale(3);
     this.add.image(200, 100, "yellowTent", 1).setScale(3);

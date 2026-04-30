@@ -1117,24 +1117,32 @@ export class BaseMathGameScene extends Phaser.Scene {
     });
   }
 
-  createCampgroundBackground(textureKey = "campDirtCartoon") {
+  createCampgroundBackground(textureKey = null) {
+    const backgroundOptions = [
+      "campClover",
+      "campLeaf",
+      "campRock",
+      "dirtClover",
+      "dirtLeaf",
+      "dirtLef",
+      "dirtMushroom",
+    ];
+
+    const chosenTexture =
+      textureKey || Phaser.Utils.Array.GetRandom(backgroundOptions);
+
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // 🔥 use tileSprite so it ALWAYS fills (no gaps ever)
     const bg = this.add
-      .tileSprite(0, 0, width, height, textureKey)
+      .tileSprite(0, 0, width, height, chosenTexture)
       .setOrigin(0)
       .setDepth(-100);
 
-    // make it cozy scale
     bg.setTileScale(2, 2);
 
     const resize = (gameSize) => {
-      const w = gameSize.width;
-      const h = gameSize.height;
-
-      bg.setSize(w, h);
+      bg.setSize(gameSize.width, gameSize.height);
     };
 
     this.scale.on("resize", resize);

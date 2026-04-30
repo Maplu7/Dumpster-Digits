@@ -49,13 +49,13 @@ export class Preloader extends Phaser.Scene {
     this.load.setPath("assets");
 
     // BACKGROUND IMAGES
-    this.load.image("campClover", "campClover.jpeg");
-    this.load.image("campLeaf", "campLeaf.jpeg");
-    this.load.image("campRock", "campRock.jpeg");
-    this.load.image("dirtClover", "dirtClover.jpeg");
-    this.load.image("dirtLeaf", "dirtLeaf.jpeg");
-    this.load.image("dirtLef", "dirtLef.jpeg");
-    this.load.image("dirtMushroom", "dirtMushroom.jpeg");
+    this.load.image("campClover", "/backgroundCamps/campClover.jpeg");
+    this.load.image("campLeaf", "/backgroundCamps/campLeaf.jpeg");
+    this.load.image("campRock", "/backgroundCamps/campRock.jpeg");
+    this.load.image("dirtClover", "/backgroundCamps/dirtClover.jpeg");
+    this.load.image("dirtLeaf", "/backgroundCamps/dirtLeaf.jpeg");
+    this.load.image("dirtLef", "/backgroundCamps/dirtLef.jpeg");
+    this.load.image("dirtMushroom", "/backgroundCamps/dirtMushroom.jpeg");
 
     // SINGLE IMAGES
     this.load.image("camp", "campGround.png");

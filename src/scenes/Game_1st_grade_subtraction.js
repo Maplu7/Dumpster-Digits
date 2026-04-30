@@ -7,11 +7,21 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     super("Game");
   }
 
+  preload() {
+    this.load.image("dirtMushroom", "/backgroundCamps/dirtMushroom.jpeg");
+  }
+
   create() {
     this.initSharedGameConfig({
       gameKey: "1st_subtraction",
       assignmentTitle: "1st Grade Subtraction",
     });
+
+    this.add
+      .image(this.scale.width / 2, this.scale.height / 2, "dirtMushroom")
+      .setDisplaySize(this.scale.width, this.scale.height)
+      .setDepth(-100);
+
 
     const problems = [];
 
@@ -28,16 +38,6 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.configuredProblems = this.getConfiguredProblems(this.allProblems);
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
-    for (let i = 1; i <= 7; i++) {
-      const y = 50 + (i - 1) * 100;
-
-      this[`campGroundRow${i}`] = this.add.group({
-        key: "dirtGround",
-        repeat: 11,
-        setXY: { x: 90, y, stepX: 180 },
-        setScale: { x: 3, y: 6 },
-      });
-    }
 
     this.add.image(1250, 100, "greenTent", 0).setScale(3);
     this.add.image(200, 100, "greenTent", 1).setScale(3);
