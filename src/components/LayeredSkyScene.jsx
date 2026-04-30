@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import "./LayeredSkyScene.css";
 
 export default function LayeredSkyScene({
-  variant = "shop",
+  variant = "assignments-grade1",
   editLights = false,
 }) {
   const isGrade1 = variant === "assignments-grade1";

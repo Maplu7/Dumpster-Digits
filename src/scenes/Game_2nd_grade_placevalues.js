@@ -75,27 +75,14 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     }
 
     const cloverSpots = [
-      { x: 80, y: 70 },
-      { x: 220, y: 140 },
-      { x: 420, y: 90 },
-      { x: 620, y: 180 },
-      { x: 820, y: 70 },
-      { x: 1020, y: 160 },
-      { x: 1220, y: 100 },
-      { x: 1420, y: 180 },
-      { x: 150, y: 320 },
-      { x: 350, y: 420 },
-      { x: 550, y: 300 },
-      { x: 760, y: 430 },
-      { x: 980, y: 340 },
-      { x: 1180, y: 420 },
+      { x: 80, y: 70 }, { x: 220, y: 140 }, { x: 420, y: 90 },
+      { x: 620, y: 180 }, { x: 820, y: 70 }, { x: 1020, y: 160 },
+      { x: 1220, y: 100 }, { x: 1420, y: 180 },
+      { x: 150, y: 320 }, { x: 350, y: 420 }, { x: 550, y: 300 },
+      { x: 760, y: 430 }, { x: 980, y: 340 }, { x: 1180, y: 420 },
       { x: 1380, y: 350 },
-      { x: 100, y: 560 },
-      { x: 280, y: 650 },
-      { x: 500, y: 580 },
-      { x: 700, y: 670 },
-      { x: 930, y: 590 },
-      { x: 1160, y: 660 },
+      { x: 100, y: 560 }, { x: 280, y: 650 }, { x: 500, y: 580 },
+      { x: 700, y: 670 }, { x: 930, y: 590 }, { x: 1160, y: 660 },
       { x: 1380, y: 600 },
     ];
 
@@ -140,6 +127,35 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       new TrashCan(this, 1040, 700, canOrder[3]).setScale(1),
       new TrashCan(this, 1340, 700, canOrder[4]).setScale(1),
     ];
+
+    // -----------------------------
+    // RACCOONS ADDED (array-safe)
+    // -----------------------------
+    this.trashCans.forEach((can, i) => {
+      can.index = i;
+    });
+
+    if (!this.anims.exists("raccoonFeedback")) {
+      this.anims.create({
+        key: "raccoonFeedback",
+        frames: this.anims.generateFrameNumbers("raccoon", {
+          start: 20,
+          end: 27,
+        }),
+        frameRate: 7,
+        repeat: -1,
+      });
+    }
+
+    this.raccoonGroup = this.trashCans.map((can) =>
+      this.add
+        .sprite(can.x, can.y, "raccoon", 20)
+        .setScale(4)
+        .setDepth(999)
+        .setVisible(false)
+        .play("raccoonFeedback")
+    );
+    // -----------------------------
 
     this.trashItems.forEach((trash, index) => {
       trash.problemData = trashOrder[index];
@@ -199,10 +215,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     const found = this.numGuessesPerAnswer.find(
       (entry) => entry.guessedAnswer === trash
     );
-
-    if (found) {
-      found.numGuess++;
-    }
+    if (found) found.numGuess++;
   }
 
   putInTrash(trash, trashCan) {
@@ -210,9 +223,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     if (!trash?.active || !trashCan?.active) return;
     if (trashCan._disabled) return;
 
-    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) {
-      return;
-    }
+    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) return;
 
     trash._lockedOnCan = true;
     trash._dragging = false;
@@ -225,7 +236,11 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       this.playFeedbackSound?.(true);
       this.clearCenteredFeedback?.();
       this.showCenteredFeedback?.("That is Correct!", true);
-      this.showRaccoonFeedback?.(trashCan, true);
+
+      const trashCanIndex = trashCan.index;
+      if (this.raccoonGroup && this.raccoonGroup[trashCanIndex]) {
+        this.raccoonGroup[trashCanIndex].setVisible(true);
+      }
 
       trashCan.markCorrect?.();
       this.popTrashCanConfetti?.(trashCan);
@@ -261,7 +276,6 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.playFeedbackSound?.(false);
     this.clearCenteredFeedback?.();
     this.showCenteredFeedback?.("Try again!", false);
-    this.showRaccoonFeedback?.(trashCan, false);
 
     if (typeof trash.snapHome === "function") {
       trash.snapHome();

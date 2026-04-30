@@ -45,51 +45,71 @@ export class Game_2nd_grade_subtraction extends BaseMathGameScene {
     }
 
     const cloverSpots = [
-  { x: 80, y: 70 },
-  { x: 220, y: 140 },
-  { x: 420, y: 90 },
-  { x: 620, y: 180 },
-  { x: 820, y: 70 },
-  { x: 1020, y: 160 },
-  { x: 1220, y: 100 },
-  { x: 1420, y: 180 },
+      { x: 80, y: 70 }, { x: 220, y: 140 }, { x: 420, y: 90 },
+      { x: 620, y: 180 }, { x: 820, y: 70 }, { x: 1020, y: 160 },
+      { x: 1220, y: 100 }, { x: 1420, y: 180 },
+      { x: 150, y: 320 }, { x: 350, y: 420 }, { x: 550, y: 300 },
+      { x: 760, y: 430 }, { x: 980, y: 340 }, { x: 1180, y: 420 },
+      { x: 1380, y: 350 },
+      { x: 100, y: 560 }, { x: 280, y: 650 }, { x: 500, y: 580 },
+      { x: 700, y: 670 }, { x: 930, y: 590 }, { x: 1160, y: 660 },
+      { x: 1380, y: 600 }
+    ];
 
-  { x: 150, y: 320 },
-  { x: 350, y: 420 },
-  { x: 550, y: 300 },
-  { x: 760, y: 430 },
-  { x: 980, y: 340 },
-  { x: 1180, y: 420 },
-  { x: 1380, y: 350 },
+    cloverSpots.forEach(spot => {
+      this.add.image(spot.x, spot.y, "clovers").setScale(3);
+    });
 
-  { x: 100, y: 560 },
-  { x: 280, y: 650 },
-  { x: 500, y: 580 },
-  { x: 700, y: 670 },
-  { x: 930, y: 590 },
-  { x: 1160, y: 660 },
-  { x: 1380, y: 600 }
-];
-
-cloverSpots.forEach(spot => {
-  this.add.image(spot.x, spot.y, "clovers").setScale(3);
-});
-
-
-     this.add.image(1250, 100, "greenTent", 0).setScale(3);
+    this.add.image(1250, 100, "greenTent", 0).setScale(3);
     this.add.image(200, 100, "greenTent", 1).setScale(3);
     this.add.image(100, 300, "campFire", 3).setScale(3);
     this.add.image(1400, 200, "campChairGreen", 0).setScale(2);
     this.add.image(1480, 280, "campChairGreen", 2).setScale(2);
 
-    // CANS = PROBLEMS
     this.trashCan1 = new TrashCan(this, 100, 700, this.question1).setScale(1);
     this.trashCan2 = new TrashCan(this, 440, 700, this.question2).setScale(1);
     this.trashCan3 = new TrashCan(this, 740, 700, this.question3).setScale(1);
     this.trashCan4 = new TrashCan(this, 1040, 700, this.question4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.question5).setScale(1);
 
-    // TRASH = ANSWERS
+    // -----------------------------
+    // RACCOONS ADDED
+    // -----------------------------
+    this.trashCan1.index = 0;
+    this.trashCan2.index = 1;
+    this.trashCan3.index = 2;
+    this.trashCan4.index = 3;
+    this.trashCan5.index = 4;
+
+    if (!this.anims.exists("raccoonFeedback")) {
+      this.anims.create({
+        key: "raccoonFeedback",
+        frames: this.anims.generateFrameNumbers("raccoon", {
+          start: 20,
+          end: 27,
+        }),
+        frameRate: 7,
+        repeat: -1,
+      });
+    }
+
+    this.raccoonGroup = [
+      this.add.sprite(this.trashCan1.x, this.trashCan1.y, "raccoon", 20),
+      this.add.sprite(this.trashCan2.x, this.trashCan2.y, "raccoon", 20),
+      this.add.sprite(this.trashCan3.x, this.trashCan3.y, "raccoon", 20),
+      this.add.sprite(this.trashCan4.x, this.trashCan4.y, "raccoon", 20),
+      this.add.sprite(this.trashCan5.x, this.trashCan5.y, "raccoon", 20),
+    ];
+
+    this.raccoonGroup.forEach((raccoon) => {
+      raccoon
+        .setScale(4)
+        .setDepth(999)
+        .setVisible(false)
+        .play("raccoonFeedback");
+    });
+    // -----------------------------
+
     this.trash1 = new Trash(this, 550, 280, {
       question: String(this.answer1.answer),
       answer: this.answer1.answer,
@@ -192,12 +212,15 @@ cloverSpots.forEach(spot => {
       trash.body.setVelocity(0, 0);
     }
 
-    // ✅ CORRECT
     if (trash.answer === trashCan.answer) {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
-      this.showRaccoonFeedback(trashCan, true);
+
+      const trashCanIndex = trashCan.index;
+      if (this.raccoonGroup && this.raccoonGroup[trashCanIndex]) {
+        this.raccoonGroup[trashCanIndex].setVisible(true);
+      }
 
       trashCan.markCorrect?.();
       this.popTrashCanConfetti(trashCan);
@@ -221,7 +244,6 @@ cloverSpots.forEach(spot => {
       return;
     }
 
-    // ❌ WRONG
     this.numWrong += 1;
     this.triesUsed += 1;
     this.incrementWrongGuess(trash);
@@ -232,7 +254,6 @@ cloverSpots.forEach(spot => {
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
-    this.showRaccoonFeedback(trashCan, false);
 
     trash._lockedOnCan = false;
 

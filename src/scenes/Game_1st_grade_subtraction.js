@@ -34,15 +34,8 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
       this[`campGroundRow${i}`] = this.add.group({
         key: "dirtGround",
         repeat: 11,
-        setXY: {
-          x: 90,
-          y,
-          stepX: 180,
-        },
-        setScale: {
-          x: 3,
-          y: 6,
-        },
+        setXY: { x: 90, y, stepX: 180 },
+        setScale: { x: 3, y: 6 },
       });
     }
 
@@ -57,6 +50,40 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.trashCan3 = new TrashCan(this, 740, 700, this.question3).setScale(1);
     this.trashCan4 = new TrashCan(this, 1040, 700, this.question4).setScale(1);
     this.trashCan5 = new TrashCan(this, 1340, 700, this.question5).setScale(1);
+
+    this.trashCan1.index = 0;
+    this.trashCan2.index = 1;
+    this.trashCan3.index = 2;
+    this.trashCan4.index = 3;
+    this.trashCan5.index = 4;
+
+    if (!this.anims.exists("raccoonFeedback")) {
+      this.anims.create({
+        key: "raccoonFeedback",
+        frames: this.anims.generateFrameNumbers("raccoon", {
+          start: 20,
+          end: 27,
+        }),
+        frameRate: 7,
+        repeat: -1,
+      });
+    }
+
+    this.raccoonGroup = [
+      this.add.sprite(this.trashCan1.x, this.trashCan1.y, "raccoon", 20),
+      this.add.sprite(this.trashCan2.x, this.trashCan2.y, "raccoon", 20),
+      this.add.sprite(this.trashCan3.x, this.trashCan3.y, "raccoon", 20),
+      this.add.sprite(this.trashCan4.x, this.trashCan4.y, "raccoon", 20),
+      this.add.sprite(this.trashCan5.x, this.trashCan5.y, "raccoon", 20),
+    ];
+
+    this.raccoonGroup.forEach((raccoon) => {
+      raccoon
+        .setScale(4)
+        .setDepth(999)
+        .setVisible(false)
+        .play("raccoonFeedback");
+    });
 
     this.trash1 = new Trash(this, 550, 280, {
       question: String(this.answer1.answer),
@@ -115,19 +142,21 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.trashGroup = this.physics.add.group();
-    this.trashGroup.add(this.trash1);
-    this.trashGroup.add(this.trash2);
-    this.trashGroup.add(this.trash3);
-    this.trashGroup.add(this.trash4);
-    this.trashGroup.add(this.trash5);
+    this.trashGroup = this.physics.add.group([
+      this.trash1,
+      this.trash2,
+      this.trash3,
+      this.trash4,
+      this.trash5,
+    ]);
 
-    this.trashCanGroup = this.physics.add.group();
-    this.trashCanGroup.add(this.trashCan1);
-    this.trashCanGroup.add(this.trashCan2);
-    this.trashCanGroup.add(this.trashCan3);
-    this.trashCanGroup.add(this.trashCan4);
-    this.trashCanGroup.add(this.trashCan5);
+    this.trashCanGroup = this.physics.add.group([
+      this.trashCan1,
+      this.trashCan2,
+      this.trashCan3,
+      this.trashCan4,
+      this.trashCan5,
+    ]);
 
     this.physics.add.overlap(
       this.trashGroup,
@@ -137,17 +166,18 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
       this
     );
   }
+
   makeTrashEasyToGrab(trash) {
-  if (!trash || !trash.active) return;
+    if (!trash || !trash.active) return;
 
-  if (typeof trash.makeTrashInteractive === "function") {
-    trash.makeTrashInteractive();
-    return;
+    if (typeof trash.makeTrashInteractive === "function") {
+      trash.makeTrashInteractive();
+      return;
+    }
+
+    trash.setInteractive();
+    this.input.setDraggable(trash);
   }
-
-  trash.setInteractive();
-  this.input.setDraggable(trash);
-}
 
   incrementWrongGuess(trash) {
     if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess += 1;
@@ -235,7 +265,12 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
       this.playFeedbackSound(true);
       this.clearCenteredFeedback();
       this.showCenteredFeedback("That is Correct!", true);
-      this.showRaccoonFeedback?.(trashCan, true);
+
+      const trashCanIndex = trashCan.index;
+
+      if (this.raccoonGroup && this.raccoonGroup[trashCanIndex]) {
+        this.raccoonGroup[trashCanIndex].setVisible(true);
+      }
 
       trashCan.markCorrect?.();
       this.popTrashCanConfetti?.(trashCan);
@@ -266,7 +301,6 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.playFeedbackSound(false);
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
-    this.showRaccoonFeedback?.(trashCan, false);
 
     this.smoothResetTrash(trash);
 

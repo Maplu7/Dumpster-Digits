@@ -1117,7 +1117,7 @@ export class BaseMathGameScene extends Phaser.Scene {
     });
   }
 
-  /*createCampgroundBackground(textureKey = "campDirtCartoon") {
+  createCampgroundBackground(textureKey = "campDirtCartoon") {
     const width = this.scale.width;
     const height = this.scale.height;
 
@@ -1140,7 +1140,7 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.scale.on("resize", resize);
 
     return bg;
-  }*/
+  }
 
   async onFinish() {
     let coinsEarned = 0;

@@ -190,7 +190,7 @@
   display: none;
 }
 
-.layered-scene--assignments-grade1 .layered-scene__string-light--2 { left: 1.2%; top: 7%; }
+.layered-scene--assignments-grade1 .layered-scene__string-light--2 { left: 1.2%; top: 7.5%; }
 .layered-scene--assignments-grade1 .layered-scene__string-light--3 { left: 4.7%; top: 7.9%; }
 .layered-scene--assignments-grade1 .layered-scene__string-light--4 { left: 10%; top: 8.1%; }
 .layered-scene--assignments-grade1 .layered-scene__string-light--5 { left: 16.8%; top: 6.4%; }
@@ -198,10 +198,12 @@
 .layered-scene--assignments-grade1 .layered-scene__string-light--7 { left: 29.4%; top: 4%; }
 .layered-scene--assignments-grade1 .layered-scene__string-light--8 { left: 36%; top: 0%; }
 .layered-scene--assignments-grade1 .layered-scene__string-light--9 { left: 57%; top: 3.4%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--10 { left: 63.5%; top: 4.6%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--11 { left: 72.9%; top: 6.8%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--12 { left: 80.7%; top: 8%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--13 { left: 87.3%; top: 5.2%; }
+
+/* 🔥 your corrected right-side curve */
+.layered-scene--assignments-grade1 .layered-scene__string-light--10 { left: 80.4%; top: 8.0%; }
+.layered-scene--assignments-grade1 .layered-scene__string-light--11 { left: 87.1%; top: 4.9%; }
+.layered-scene--assignments-grade1 .layered-scene__string-light--12 { left: 93.4%; top: 1.2%; }
+.layered-scene--assignments-grade1 .layered-scene__string-light--13 { left: 1.2%; top: 7.5%; }
 .layered-scene--assignments-grade1 .layered-scene__string-light--14 { left: 93.4%; top: 1.6%; }
 
 /* ---------------- GRADE 2 FINAL POSITIONS ---------------- */
@@ -234,8 +236,8 @@
 .layered-scene--shop .layered-scene__string-light--8 { left: 54.4%; top: 2.8%; }
 .layered-scene--shop .layered-scene__string-light--9 { left: 64.3%; top: 7.6%; }
 .layered-scene--shop .layered-scene__string-light--10 { left: 74.1%; top: 9.6%; }
-.layered-scene--shop .layered-scene__string-light--11 { left: 82.3%; top: 10.7%; }
-.layered-scene--shop .layered-scene__string-light--12 { left: 89.3%; top: 7.7%; }
+.layered-scene--shop .layered-scene__string-light--11 { left: 82.5%; top: 10.4%; }
+.layered-scene--shop .layered-scene__string-light--12 { left: 89.4%; top: 7.7%; }
 
 @keyframes stringLightFlicker {
   0% {
