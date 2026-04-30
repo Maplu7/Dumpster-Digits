@@ -467,7 +467,7 @@ function StudentAssignmentView({
 
               <div className="tdash-results__summary-block">
                 <div className="tdash-results__summary-line">
-                  <span>Overwall class score: {progress.percent} / 100</span>
+                  <span>Overall class score: {progress.percent} / 100</span>
                   <span>•</span>
                   <span>{progress.wrongTries} wrong</span>
                   <span>•</span>
@@ -791,7 +791,7 @@ function ClassAssignmentView({
 
                 <div className="tdash-results__summary-block">
                   <div className="tdash-results__summary-line">
-                    <span>Overwall class score: {classPercent} / 100</span>
+                    <span>Overall class score: {classPercent} / 100</span>
                     <span>•</span>
                     <span>{failingCount} need attention</span>
                     <span>•</span>
