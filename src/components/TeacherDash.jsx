@@ -1832,23 +1832,51 @@ export default function TeacherDash({ teacher, onLogout }) {
   }
 
   async function toggleBuiltInProblem(problem) {
-    const current = Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
+  const current = Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
+    ? editorAssignmentConfig.selectedBuiltInProblems
+    : [];
+
+  const key = problemKey(problem);
+  const exists = current.some((item) => problemKey(item) === key);
+
+  const next = exists
+    ? current.filter((item) => problemKey(item) !== key)
+    : [...current, normalizeProblem(problem)];
+
+  await saveAssignmentEditorConfig({
+    liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+    selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
+      ? editorAssignmentConfig.selectedPresetIds
+      : [],
+    selectedBuiltInProblems: next,
+    customProblems: Array.isArray(editorAssignmentConfig.customProblems)
+      ? editorAssignmentConfig.customProblems
+      : [],
+  });
+}
+
+async function selectAllPresets() {
+  await saveAssignmentEditorConfig({
+    liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+    selectedPresetIds: availablePresets.map((preset) => preset.id),
+    selectedBuiltInProblems: Array.isArray(
+      editorAssignmentConfig.selectedBuiltInProblems
+    )
       ? editorAssignmentConfig.selectedBuiltInProblems
-      : [];
+      : [],
+    customProblems: Array.isArray(editorAssignmentConfig.customProblems)
+      ? editorAssignmentConfig.customProblems
+      : [],
+  });
+}
 
-    const key = problemKey(problem);
-    const exists = current.some((item) => problemKey(item) === key);
-
-    const next = exists
-      ? current.filter((item) => problemKey(item) !== key)
-      : [...current, normalizeProblem(problem)];
-
+  async function selectAllBuiltInProblems() {
     await saveAssignmentEditorConfig({
       liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
       selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
         ? editorAssignmentConfig.selectedPresetIds
         : [],
-      selectedBuiltInProblems: next,
+      selectedBuiltInProblems: availableBuiltInProblems,
       customProblems: Array.isArray(editorAssignmentConfig.customProblems)
         ? editorAssignmentConfig.customProblems
         : [],
@@ -2445,6 +2473,8 @@ export default function TeacherDash({ teacher, onLogout }) {
           problemKey={problemKey}
           weakFamilyStats={weakFamiliesByStudent[selectedStudentId] || {}}
           adaptiveProblems={adaptiveAssignmentsByStudent[selectedStudentId] || []}
+          selectAllPresets={selectAllPresets}
+          selectAllBuiltInProblems={selectAllBuiltInProblems}
         />
 
         <section className="tdash__card">

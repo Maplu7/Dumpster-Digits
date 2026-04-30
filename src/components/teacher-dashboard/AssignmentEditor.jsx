@@ -111,6 +111,8 @@ export default function AssignmentEditor({
   clearEditorForGame,
   togglePreset,
   toggleBuiltInProblem,
+  selectAllPresets,
+  selectAllBuiltInProblems,
   handleAddCustomProblem,
   handleRemoveCustomProblem,
   problemKey,
@@ -495,8 +497,12 @@ export default function AssignmentEditor({
                     : "Recommended"}
                 </button>
 
-                <button type="button" onClick={assignRecommendedToWholeClass}>
-                  1-Click Assign Recommended
+                <button type="button" onClick={selectAllPresets}>
+                  1-Click Assignment
+                </button>
+
+                <button type="button" onClick={selectAllBuiltInProblems}>
+                  Pick Family
                 </button>
 
                 <button type="button" onClick={selectWeakFamilies}>

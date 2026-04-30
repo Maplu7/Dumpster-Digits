@@ -80,7 +80,7 @@ function ProgressBar({
   return (
     <div
       className="tdash-results__bar-wrap"
-      aria-label={`${label}: ${progress.percent}%`}
+      aria-label={`${label}: ${progress.percent} / 100`}
       role="progressbar"
       aria-valuemin="0"
       aria-valuemax="100"
@@ -88,7 +88,7 @@ function ProgressBar({
     >
       <div
         className={`tdash-results__bar-fill ${progress.fillClass}`}
-        style={{ width: `${progress.percent}%` }}
+        style={{ width: `${progress.percent} / 100` }}
       />
     </div>
   );
@@ -277,7 +277,7 @@ function AttemptDetails({
         </div>
 
         <div className="tdash-results__attempt-score">
-          <span>{percent}%</span>
+          <span>{percent} / 100</span>
           <span>•</span>
           <span>{wrongTries} wrong</span>
           {perfect && <span className="tdash-results__badge">Perfect</span>}
@@ -336,7 +336,7 @@ function AttemptDetails({
                     <div className="tdash-results__answer-meta">
                       <span>Wrong tries: {wrong}</span>
                       <span>Correct: {String(answer?.correctAnswer ?? "—")}</span>
-                      <span>{answerPercent}%</span>
+                      <span>{answerPercent} / 100</span>
                     </div>
                   </div>
                 );
@@ -381,7 +381,7 @@ function AttemptDetails({
 
                     <div className="tdash-results__answer-meta">
                       <span>Wrong tries: {wrong}</span>
-                      <span>{answerPercent}%</span>
+                      <span>{answerPercent} / 100</span>
                     </div>
                   </div>
                 );
@@ -456,7 +456,7 @@ function StudentAssignmentView({
                   {assignment.latestAttempt && (
                     <>
                       {" "}
-                      • Latest {clampPercent(assignment.latestPercent)}% •{" "}
+                      • Latest {clampPercent(assignment.latestPercent)} / 100 •{" "}
                       {formatAttemptTime(
                         getAttemptDateValue(assignment.latestAttempt)
                       )}
@@ -467,7 +467,7 @@ function StudentAssignmentView({
 
               <div className="tdash-results__summary-block">
                 <div className="tdash-results__summary-line">
-                  <span>{progress.percent}%</span>
+                  <span>{progress.percent} / 100</span>
                   <span>•</span>
                   <span>{progress.wrongTries} wrong</span>
                   <span>•</span>
@@ -699,7 +699,7 @@ function ClassAssignmentView({
         />
         <StatPill
           icon="📊"
-          value={`${summary.average}%`}
+          value={`${summary.average} / 100`}
           label="median"
           variant="tdash-results__pill--median"
           active={classFilter === "all"}
@@ -779,7 +779,7 @@ function ClassAssignmentView({
                   </div>
 
                   <div className="tdash-results__muted">
-                    {completedCount} of {totalStudents} completed
+                    {completedCount} of {totalStudents} students have completed this assignment
                     {classFilter !== "all" && (
                       <>
                         {" "}
@@ -791,9 +791,9 @@ function ClassAssignmentView({
 
                 <div className="tdash-results__summary-block">
                   <div className="tdash-results__summary-line">
-                    <span>{classPercent}%</span>
+                    <span>Class median score: {classPercent} / 100</span>
                     <span>•</span>
-                    <span>{failingCount} needs attention</span>
+                    <span>{failingCount} need attention</span>
                     <span>•</span>
                     <span>⭐ {perfectCount}</span>
                   </div>
@@ -900,7 +900,7 @@ function ClassAssignmentView({
                                     <>
                                       {plural(studentAttempts.length, "attempt")}
                                       {" • "}
-                                      Latest {clampPercent(row.latestPercent)}%
+                                      Latest {clampPercent(row.latestPercent)} / 100
                                       {latestAttempt && (
                                         <>
                                           {" • "}
@@ -919,7 +919,7 @@ function ClassAssignmentView({
 
                             <div className="tdash-results__student-side">
                               <div className="tdash-results__summary-line">
-                                <span>{progress.percent}%</span>
+                                <span>Student score: {progress.percent} / 100</span>
                                 <span>•</span>
                                 <span>{progress.wrongTries} wrong</span>
                                 <span>•</span>
