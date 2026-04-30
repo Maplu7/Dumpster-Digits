@@ -1883,6 +1883,42 @@ async function selectAllPresets() {
     });
   }
 
+  async function selectFamilyBuiltInProblems(problems = []) {
+    const current = Array.isArray(editorAssignmentConfig.selectedBuiltInProblems)
+      ? [...editorAssignmentConfig.selectedBuiltInProblems]
+      : [];
+
+    const familyProblems = dedupeProblems(problems);
+    const familyKeys = new Set(familyProblems.map((p) => problemKey(p)));
+
+    const currentKeys = new Set(current.map((p) => problemKey(p)));
+
+    const allFamilySelected = familyProblems.every((p) =>
+      currentKeys.has(problemKey(p))
+    );
+
+    let next;
+
+    if (allFamilySelected) {
+      // remove family
+      next = current.filter((p) => !familyKeys.has(problemKey(p)));
+    } else {
+      // add ALL family problems (no overwriting)
+      next = dedupeProblems([...current, ...familyProblems]);
+    }
+
+    await saveAssignmentEditorConfig({
+      liveSyncEnabled: editorAssignmentConfig.liveSyncEnabled !== false,
+      selectedPresetIds: Array.isArray(editorAssignmentConfig.selectedPresetIds)
+        ? editorAssignmentConfig.selectedPresetIds
+        : [],
+      selectedBuiltInProblems: next,
+      customProblems: Array.isArray(editorAssignmentConfig.customProblems)
+        ? editorAssignmentConfig.customProblems
+        : [],
+    });
+  }
+
   async function handleAddCustomProblem() {
     const trimmedQuestion = editorCustomQuestion.trim();
     const parsedAnswer = Number(editorCustomAnswer);
@@ -2475,6 +2511,7 @@ async function selectAllPresets() {
           adaptiveProblems={adaptiveAssignmentsByStudent[selectedStudentId] || []}
           selectAllPresets={selectAllPresets}
           selectAllBuiltInProblems={selectAllBuiltInProblems}
+          selectFamilyBuiltInProblems={selectFamilyBuiltInProblems}
         />
 
         <section className="tdash__card">

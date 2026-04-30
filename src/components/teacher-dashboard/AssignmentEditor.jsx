@@ -113,6 +113,7 @@ export default function AssignmentEditor({
   toggleBuiltInProblem,
   selectAllPresets,
   selectAllBuiltInProblems,
+  selectFamilyBuiltInProblems,
   handleAddCustomProblem,
   handleRemoveCustomProblem,
   problemKey,
@@ -267,35 +268,28 @@ export default function AssignmentEditor({
   }
 
   function selectWeakFamilies() {
+    const weakProblems = [];
+
     groupedByDifficulty.forEach(({ families }) => {
       families.forEach(([family, problems]) => {
         const stats = weakFamilyStats?.[family];
+
         const isWeak =
           !!stats ||
           safeNumber(stats?.wrong) > 5 ||
           /7s|8s|9s|challenge|hundreds/i.test(family);
 
-        if (!isWeak) return;
-
-        problems.forEach((problem) => {
-          const key = safeProblemKey(problem);
-          if (!selectedBuiltInKeys.has(key)) toggleBuiltInProblem?.(problem);
-        });
+        if (isWeak) {
+          weakProblems.push(...problems);
+        }
       });
     });
+
+    selectFamilyBuiltInProblems?.(weakProblems);
   }
 
   function toggleWholeFamily(problems = []) {
-    if (!Array.isArray(problems) || problems.length === 0) return;
-
-    const allSelected =
-      problems.length > 0 &&
-      problems.every((problem) => selectedBuiltInKeys.has(safeProblemKey(problem)));
-
-    problems.forEach((problem) => {
-      const selected = selectedBuiltInKeys.has(safeProblemKey(problem));
-      if (selected === allSelected) toggleBuiltInProblem?.(problem);
-    });
+    selectFamilyBuiltInProblems?.(problems);
   }
 
   function setProblemSelected(problem, shouldSelect) {
