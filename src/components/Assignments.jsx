@@ -12,6 +12,7 @@ const PREVIEW_PROBLEMS = {
   "1st_addition": "1 + 5",
   "1st_subtraction": "5 - 1",
   "2nd_addition": "8 + 7",
+  "2nd_division": "12 ÷ 4",
   "2nd_subtraction": "15 - 6",
   "2nd_fill_blank": "4 + _ = 10",
   "2nd_place_value": "42 → 4 tens",
@@ -22,6 +23,7 @@ const GAME_LABELS = {
   "1st_addition": "Addition",
   "1st_subtraction": "Subtraction",
   "2nd_addition": "2nd Grade Addition",
+  "2nd_division": "2nd Grade Division",
   "2nd_subtraction": "2nd Grade Subtraction",
   "2nd_fill_blank": "Fill in the Blank",
   "2nd_place_value": "Place Value",
@@ -32,11 +34,39 @@ const ASSIGNMENT_ORDER = {
   "1st_addition": 0,
   "1st_subtraction": 1,
   "2nd_addition": 2,
-  "2nd_subtraction": 3,
-  "2nd_fill_blank": 4,
-  "2nd_place_value": 5,
-  "2nd_multiplication": 6,
+  "2nd_division": 3,
+  "2nd_subtraction": 4,
+  "2nd_fill_blank": 5,
+  "2nd_place_value": 6,
+  "2nd_multiplication": 7,
 };
+
+const ALL_GAME_KEYS = [
+  "1st_addition",
+  "1st_subtraction",
+  "2nd_addition",
+  "2nd_subtraction",
+  "2nd_division",
+  "2nd_fill_blank",
+  "2nd_place_value",
+  "2nd_multiplication",
+];
+
+function ensureStudentAssignments(map = {}) {
+  const updated = {};
+
+  for (const studentId in map) {
+    updated[studentId] = { ...map[studentId] };
+
+    for (const key of ALL_GAME_KEYS) {
+      if (!(key in updated[studentId])) {
+        updated[studentId][key] = false;
+      }
+    }
+  }
+
+  return updated;
+}
 
 function getPreviewProblem(gameKey) {
   return PREVIEW_PROBLEMS[gameKey] || "1 + 5";
@@ -186,7 +216,11 @@ export default function Assignments({
       (snapshot) => {
         if (!snapshot.empty) {
           const classData = snapshot.docs[0].data();
-          setLockMap(classData?.studentAssignments?.[studentId] || {});
+          const safeAssignments = ensureStudentAssignments(
+            classData?.studentAssignments || {}
+          );
+
+          setLockMap(safeAssignments?.[studentId] || {});
         } else {
           setLockMap({});
         }
@@ -256,9 +290,8 @@ export default function Assignments({
 
               return (
                 <div
-                  className={`assignment-polaroid ${
-                    index % 2 === 0 ? "tilt-left" : "tilt-right"
-                  } ${isLocked ? "assignment-polaroid--locked" : ""}`}
+                  className={`assignment-polaroid ${index % 2 === 0 ? "tilt-left" : "tilt-right"
+                    } ${isLocked ? "assignment-polaroid--locked" : ""}`}
                   key={assignment?.id || gameKey || index}
                   role="button"
                   tabIndex={isLocked ? -1 : 0}
@@ -299,17 +332,15 @@ export default function Assignments({
 
                     <div className="assignment-status-wrap">
                       <div
-                        className={`assignment-status ${
-                          isCompleted ? "done" : "todo"
-                        }`}
+                        className={`assignment-status ${isCompleted ? "done" : "todo"
+                          }`}
                       >
                         {isCompleted ? "Completed ✅" : "Not completed yet"}
                       </div>
 
                       <div
-                        className={`assignment-status ${
-                          isLocked ? "locked" : "unlocked"
-                        }`}
+                        className={`assignment-status ${isLocked ? "locked" : "unlocked"
+                          }`}
                       >
                         {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
                       </div>

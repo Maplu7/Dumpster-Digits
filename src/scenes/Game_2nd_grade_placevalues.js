@@ -16,11 +16,14 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       const tens = Math.floor(n / 10) % 10;
       const hundreds = Math.floor(n / 100);
 
-      allProblems.push({ answer: n, question: `${ones} → 1s` });
-      allProblems.push({ answer: n, question: `${tens} → 10s` });
+      allProblems.push({ answer: String(n), question: `${ones} → 1s` });
+      allProblems.push({ answer: String(n), question: `${tens} → 10s` });
 
-      if (hundreds > 0) {
-        allProblems.push({ answer: n, question: `${hundreds} → 100s` });
+      if (hundreds !== 0) {
+        allProblems.push({
+          answer: String(n),
+          question: `${hundreds} → 100s`,
+        });
       }
     }
 
@@ -28,28 +31,25 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
   }
 
   pickFiveProblemsAllowingDuplicateLabels(problemPool) {
-    const safePool = Array.isArray(problemPool) ? problemPool : [];
-    const shuffled = Phaser.Utils.Array.Shuffle([...safePool]);
+    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
     const selected = [];
-    const usedExactProblems = new Set();
+    const usedLabels = new Set();
 
     for (const problem of shuffled) {
-      if (!problem) continue;
+      if (!problem?.question || problem?.answer === undefined) continue;
 
-      const key = `${problem.question}::${problem.answer}`;
-      if (usedExactProblems.has(key)) continue;
+      const question = String(problem.question).trim();
+      const answer = String(problem.answer).trim();
 
-      usedExactProblems.add(key);
-      selected.push(problem);
+      if (usedLabels.has(question)) continue;
+
+      usedLabels.add(question);
+      selected.push({ question, answer });
 
       if (selected.length === 5) break;
     }
 
-    while (selected.length < 5 && selected.length > 0) {
-      selected.push({ ...selected[selected.length % selected.length] });
-    }
-
-    return selected.slice(0, 5);
+    return selected;
   }
 
   create() {
@@ -67,7 +67,10 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
           y: 50 + (i - 1) * 100,
           stepX: 180,
         },
-        setScale: { x: 3, y: 6 },
+        setScale: {
+          x: 3,
+          y: 6,
+        },
       });
     }
 
@@ -80,7 +83,6 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       { x: 1020, y: 160 },
       { x: 1220, y: 100 },
       { x: 1420, y: 180 },
-
       { x: 150, y: 320 },
       { x: 350, y: 420 },
       { x: 550, y: 300 },
@@ -88,17 +90,16 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       { x: 980, y: 340 },
       { x: 1180, y: 420 },
       { x: 1380, y: 350 },
-
       { x: 100, y: 560 },
       { x: 280, y: 650 },
       { x: 500, y: 580 },
       { x: 700, y: 670 },
       { x: 930, y: 590 },
       { x: 1160, y: 660 },
-      { x: 1380, y: 600 }
+      { x: 1380, y: 600 },
     ];
 
-    cloverSpots.forEach(spot => {
+    cloverSpots.forEach((spot) => {
       this.add.image(spot.x, spot.y, "clovers").setScale(3);
     });
 
@@ -107,16 +108,19 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.add.image(100, 300, "campBags", 3).setScale(3);
     this.add.image(1400, 200, "campChairStriped", 0).setScale(2);
     this.add.image(1480, 280, "campChairStriped", 2).setScale(2);
-    this.add.image(100, 300, "campBags", 3).setScale(3);
-    this.add.image(1400, 200, "campChairStriped", 0).setScale(2);
-    this.add.image(1480, 280, "campChairStriped", 2).setScale(2);
 
     this.problemsPlaceValues = this.buildPlaceValueProblems();
     this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);
 
-    const selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
+    let selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
       this.configuredProblems
     );
+
+    if (selectedProblems.length < 5) {
+      selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
+        this.problemsPlaceValues
+      );
+    }
 
     const trashOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
     const canOrder = Phaser.Utils.Array.Shuffle([...selectedProblems]);
@@ -138,7 +142,6 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     ];
 
     this.trashItems.forEach((trash, index) => {
-      // IMPORTANT: use trashOrder[index], not selectedProblems[index]
       trash.problemData = trashOrder[index];
 
       trash.startX = trash.x;
@@ -147,15 +150,14 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       trash.originalY = trash.y;
 
       trash._lockedOnCan = false;
-      trash._dragging = false;
       trash._wrongCooldown = false;
       trash._resettingHome = false;
+      trash._dragging = false;
     });
 
     this.trashCans.forEach((can, index) => {
-      // IMPORTANT: use canOrder[index], not selectedProblems[index]
       can.problemData = canOrder[index];
-      can.setTextScale?.(20);
+      can.setTextScale?.(32);
     });
 
     this.numGuessesPerAnswer = this.trashItems.map((trash) => ({
@@ -167,8 +169,8 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.numWrong = 0;
     this.triesUsed = 0;
 
-    this.setupGamePolish(this.trashItems, this.trashCans);
-    this.setupUnifiedDragSystem(this.trashItems);
+    this.setupGamePolish?.(this.trashItems, this.trashCans);
+    this.setupUnifiedDragSystem?.(this.trashItems);
 
     this.trashGroup = this.physics.add.group(this.trashItems);
     this.trashCanGroup = this.physics.add.group(this.trashCans);
@@ -182,19 +184,24 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     );
   }
 
-  problemKey(problem) {
-    return `${String(problem?.question || "").trim()}::${Number(problem?.answer)}`;
+  labelKey(problem) {
+    return String(problem?.question || "").trim();
   }
 
-  problemMatches(trash, trashCan) {
-    return this.problemKey(trash?.problemData) === this.problemKey(trashCan?.problemData);
+  placeValueMatches(trash, trashCan) {
+    return (
+      this.labelKey(trash?.problemData) ===
+      this.labelKey(trashCan?.problemData)
+    );
   }
 
   incrementWrongGuess(trash) {
-    const index = this.trashItems.findIndex((item) => item === trash);
+    const found = this.numGuessesPerAnswer.find(
+      (entry) => entry.guessedAnswer === trash
+    );
 
-    if (index >= 0 && this.numGuessesPerAnswer[index]) {
-      this.numGuessesPerAnswer[index].numGuess += 1;
+    if (found) {
+      found.numGuess++;
     }
   }
 
@@ -203,9 +210,9 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     if (!trash?.active || !trashCan?.active) return;
     if (trashCan._disabled) return;
 
-    if (trash._lockedOnCan) return;
-    if (trash._wrongCooldown) return;
-    if (trash._resettingHome) return;
+    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) {
+      return;
+    }
 
     trash._lockedOnCan = true;
     trash._dragging = false;
@@ -214,20 +221,20 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       trash.body.setVelocity(0, 0);
     }
 
-    if (this.problemMatches(trash, trashCan)) {
-      this.playFeedbackSound(true);
-      this.clearCenteredFeedback();
-      this.showCenteredFeedback("That is Correct!", true);
-      this.showRaccoonFeedback(trashCan, true);
+    if (this.placeValueMatches(trash, trashCan)) {
+      this.playFeedbackSound?.(true);
+      this.clearCenteredFeedback?.();
+      this.showCenteredFeedback?.("That is Correct!", true);
+      this.showRaccoonFeedback?.(trashCan, true);
 
       trashCan.markCorrect?.();
-      this.popTrashCanConfetti(trashCan);
-      this.polishCorrectAnswer(trashCan);
+      this.popTrashCanConfetti?.(trashCan);
+      this.polishCorrectAnswer?.(trashCan);
 
       trash.destroy();
       trashCan.destroy();
 
-      this.numCorrect += 1;
+      this.numCorrect++;
 
       this.time.delayedCall(this.feedbackDuration, this.onCorrect, [], this);
 
@@ -243,31 +250,39 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       return;
     }
 
-    this.numWrong += 1;
-    this.triesUsed += 1;
+    this.numWrong++;
+    this.triesUsed++;
     this.incrementWrongGuess(trash);
 
+    trash._lockedOnCan = false;
     trash._wrongCooldown = true;
     trash._resettingHome = true;
 
-    this.playFeedbackSound(false);
-    this.clearCenteredFeedback();
-    this.showCenteredFeedback("Try again!", false);
-    this.showRaccoonFeedback(trashCan, false);
-
-    trash._lockedOnCan = false;
+    this.playFeedbackSound?.(false);
+    this.clearCenteredFeedback?.();
+    this.showCenteredFeedback?.("Try again!", false);
+    this.showRaccoonFeedback?.(trashCan, false);
 
     if (typeof trash.snapHome === "function") {
       trash.snapHome();
-    } else {
+    } else if (typeof this.resetDraggedTrash === "function") {
       this.resetDraggedTrash(trash);
+    } else {
+      this.tweens.add({
+        targets: trash,
+        x: trash.startX,
+        y: trash.startY,
+        duration: 350,
+        ease: "Back.easeOut",
+      });
     }
 
     this.time.delayedCall(500, () => {
-      if (!trash || !trash.active) return;
+      if (!trash?.active) return;
 
       trash._wrongCooldown = false;
       trash._resettingHome = false;
+      trash._lockedOnCan = false;
 
       if (trash.body) {
         trash.body.enable = true;
@@ -276,7 +291,7 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     });
 
     this.time.delayedCall(this.feedbackDuration, () => {
-      this.clearCenteredFeedback();
+      this.clearCenteredFeedback?.();
     });
   }
 }

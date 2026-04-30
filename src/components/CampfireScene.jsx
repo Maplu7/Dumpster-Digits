@@ -11,33 +11,31 @@ export default function CampfireScene({ boost = 0 }) {
     return localStorage.getItem(SOUND_PREF_KEY) === "true";
   });
 
-  const startAudio = useCallback(async (forceMutedValue = muted) => {
-    const ambience = ambienceRef.current;
-    const fire = fireRef.current;
+  const startAudio = useCallback(
+    async (forceMutedValue = muted) => {
+      const ambience = ambienceRef.current;
+      const fire = fireRef.current;
 
-    if (!ambience || !fire) return;
+      if (!ambience || !fire) return;
 
-    try {
-      ambience.loop = true;
-      fire.loop = true;
+      try {
+        ambience.loop = true;
+        fire.loop = true;
 
-      ambience.volume = 0.12;
-      fire.volume = 0.18;
+        ambience.volume = 0.12;
+        fire.volume = 0.18;
 
-      ambience.muted = forceMutedValue;
-      fire.muted = forceMutedValue;
+        ambience.muted = forceMutedValue;
+        fire.muted = forceMutedValue;
 
-      if (ambience.paused) {
-        await ambience.play();
+        if (ambience.paused) await ambience.play();
+        if (fire.paused) await fire.play();
+      } catch (err) {
+        console.log("Audio autoplay blocked until interaction.", err);
       }
-
-      if (fire.paused) {
-        await fire.play();
-      }
-    } catch (err) {
-      console.log("Audio autoplay blocked until interaction.", err);
-    }
-  }, [muted]);
+    },
+    [muted]
+  );
 
   useEffect(() => {
     localStorage.setItem(SOUND_PREF_KEY, String(muted));
@@ -61,6 +59,7 @@ export default function CampfireScene({ boost = 0 }) {
     };
 
     window.addEventListener("dumpster-digits-sound", syncMuted);
+
     return () => {
       window.removeEventListener("dumpster-digits-sound", syncMuted);
     };
@@ -153,6 +152,15 @@ export default function CampfireScene({ boost = 0 }) {
 
         <div className="fire-ground-glow" />
         <div className="fire-shell" />
+
+        <div className="smoke smoke-soft">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+
         <div className="flame flame-back" />
         <div className="flame flame-left" />
         <div className="flame flame-center" />

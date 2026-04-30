@@ -13,6 +13,8 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
       assignmentTitle: "1st Grade Addition",
     });
 
+    /*this.createCampgroundBackground("campDirtCarton");*/
+   
     function additionProblems() {
       const allProblems = [];
 
@@ -97,8 +99,6 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
       trash._dragging = false;
       trash._wrongCooldown = false;
       trash._resettingHome = false;
-
-      this.makeTrashEasyToGrab(trash);
     });
 
     this.numGuessesPerAnswer = [
@@ -136,17 +136,6 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     );
   }
 
-  makeTrashEasyToGrab(trash) {
-    if (!trash || !trash.active) return;
-
-    trash.setInteractive(
-      new Phaser.Geom.Rectangle(-90, -90, 180, 180),
-      Phaser.Geom.Rectangle.Contains
-    );
-
-    this.input.setDraggable(trash);
-  }
-
   incrementWrongGuess(trash) {
     if (trash === this.trash1) this.numGuessesPerAnswer[0].numGuess += 1;
     else if (trash === this.trash2) this.numGuessesPerAnswer[1].numGuess += 1;
@@ -155,71 +144,12 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     else if (trash === this.trash5) this.numGuessesPerAnswer[4].numGuess += 1;
   }
 
-  smoothResetTrash(trash) {
-    if (!trash || !trash.active) return;
-
-    const resetX = trash.startX ?? trash.originalX ?? trash.x;
-    const resetY = trash.startY ?? trash.originalY ?? trash.y;
-
-    trash._lockedOnCan = false;
-    trash._dragging = false;
-    trash._wrongCooldown = true;
-    trash._resettingHome = true;
-
-    this.tweens.killTweensOf(trash);
-
-    if (trash.body) {
-      trash.body.enable = false;
-      trash.body.setVelocity(0, 0);
-    }
-
-    trash.disableInteractive();
-
-    this.tweens.add({
-      targets: trash,
-      x: resetX,
-      y: resetY,
-      angle: 0,
-      duration: 320,
-      ease: "Back.easeOut",
-      onComplete: () => {
-        if (!trash || !trash.active) return;
-
-        trash.setPosition(resetX, resetY);
-        trash.setAngle?.(0);
-        trash.setAlpha?.(1);
-
-        if (trash.trashMath) {
-          trash.trashMath.clearTint?.();
-        }
-
-        if (trash.body) {
-          trash.body.enable = true;
-          trash.body.reset(resetX, resetY);
-          trash.body.setVelocity(0, 0);
-        }
-
-        trash._lockedOnCan = false;
-        trash._dragging = false;
-
-        this.time.delayedCall(120, () => {
-          if (!trash || !trash.active) return;
-
-          trash._wrongCooldown = false;
-          trash._resettingHome = false;
-          this.makeTrashEasyToGrab(trash);
-        });
-      },
-    });
-  }
-
   putInTrash(trash, trashCan) {
     if (this.introActive) return;
     if (!trash || !trash.active) return;
     if (!trashCan || !trashCan.active) return;
     if (trashCan._disabled) return;
 
-    // Prevent double wrong-count while the piece is returning home.
     if (trash._lockedOnCan) return;
     if (trash._wrongCooldown) return;
     if (trash._resettingHome) return;
@@ -269,7 +199,7 @@ export class Game_1st_grade_addition extends BaseMathGameScene {
     this.showCenteredFeedback("Try again!", false);
     this.showRaccoonFeedback(trashCan, false);
 
-    this.smoothResetTrash(trash);
+    trash.snapHome();
 
     this.time.delayedCall(this.feedbackDuration, () => {
       this.clearCenteredFeedback();

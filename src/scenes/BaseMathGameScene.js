@@ -24,6 +24,8 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.activeFeedbackRaccoon = null;
     this.activeFeedbackEmote = null;
 
+    this.feedbackContainer = null;
+
     this.gameMusicVolume = 0.025;
     this.gameMusicDuckedVolume = 0.012;
     this.correctSfxVolume = 0.25;
@@ -35,6 +37,7 @@ export class BaseMathGameScene extends Phaser.Scene {
     const fromDataProblems = Array.isArray(data?.assignedProblems)
       ? data.assignedProblems
       : [];
+
     const fromRegistryProblems = this.registry.get("assignedProblems");
 
     this.assignedProblems =
@@ -102,6 +105,14 @@ export class BaseMathGameScene extends Phaser.Scene {
     this.assignedProblems = this.dedupeProblems(newProblems);
     this.registry.set("assignedProblems", this.assignedProblems);
 
+    console.log("🔄 Scene assigned problems updated", {
+      scene: this.scene.key,
+      gameKey: this.gameKey,
+      classId: this.classId,
+      count: this.assignedProblems.length,
+      assignedProblems: this.assignedProblems,
+    });
+
     if (typeof this.onAssignedProblemsUpdated === "function") {
       this.onAssignedProblemsUpdated(this.assignedProblems);
     }
@@ -153,6 +164,8 @@ export class BaseMathGameScene extends Phaser.Scene {
           : [],
       };
 
+      console.log("💾 saveResults payload", payload);
+
       if (!payload.studentId) {
         throw new Error(`[${this.scene.key}] save blocked: missing studentId`);
       }
@@ -161,7 +174,9 @@ export class BaseMathGameScene extends Phaser.Scene {
         throw new Error(`[${this.scene.key}] save blocked: missing gameKey`);
       }
 
-      return await saveAssignmentResult(payload);
+      const result = await saveAssignmentResult(payload);
+      console.log("✅ saveAssignmentResult result", result);
+      return result;
     };
 
     this.time.delayedCall(0, () => this.showGameIntroOverlay());
@@ -185,15 +200,14 @@ export class BaseMathGameScene extends Phaser.Scene {
     trashItems.forEach((trash) => {
       if (!trash) return;
 
-      trash.startX ??= trash.x;
-      trash.startY ??= trash.y;
-      trash.originalX ??= trash.x;
-      trash.originalY ??= trash.y;
+      trash.startX = trash.x;
+      trash.startY = trash.y;
+      trash.originalX = trash.x;
+      trash.originalY = trash.y;
       trash._lockedOnCan = false;
       trash._dragging = false;
 
       this.applyGameFont(trash);
-      this.makeTrashEasyToGrab(trash);
     });
 
     trashCans.forEach((can) => {
@@ -212,24 +226,13 @@ export class BaseMathGameScene extends Phaser.Scene {
     // Compatibility only. Do not add drag behavior here.
   }
 
-  makeTrashEasyToGrab(trash) {
-    if (!trash || !trash.active) return;
-
-    trash.setInteractive(
-      new Phaser.Geom.Rectangle(-90, -90, 180, 180),
-      Phaser.Geom.Rectangle.Contains
-    );
-
-    this.input.setDraggable(trash);
-  }
-
   getTextObjectsFromGameObject(gameObject) {
     return [
-      gameObject?.text,
       gameObject?.trashMath,
       gameObject?.answerText,
       gameObject?.questionText,
       gameObject?.labelText,
+      gameObject?.text,
     ].filter(Boolean);
   }
 
@@ -285,6 +288,7 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     const removeGlow = () => {
       if (!can._hoverGlow) return;
+
       this.tweens.killTweensOf(can._hoverGlow);
       can._hoverGlow.destroy();
       can._hoverGlow = null;
@@ -336,56 +340,22 @@ export class BaseMathGameScene extends Phaser.Scene {
 
   polishWrongAnswer(trash) {
     if (!trash || !trash.active) return;
-    this.resetDraggedTrash(trash);
-  }
 
-  resetDraggedTrash(trashItem) {
-    if (!trashItem || !trashItem.active) return;
+    trash._lockedOnCan = false;
 
-    if (typeof trashItem.snapHome === "function") {
-      trashItem.snapHome();
-      this.makeTrashEasyToGrab(trashItem);
-      return;
-    }
-
-    const padding = 90;
-
-    const resetX = Phaser.Math.Clamp(
-      trashItem.startX ?? trashItem.originalX ?? trashItem.x,
-      padding,
-      this.scale.width - padding
-    );
-
-    const resetY = Phaser.Math.Clamp(
-      trashItem.startY ?? trashItem.originalY ?? trashItem.y,
-      padding,
-      this.scale.height - padding
-    );
-
-    this.tweens.killTweensOf(trashItem);
-    this.getTextObjectsFromGameObject(trashItem).forEach((obj) =>
-      this.tweens.killTweensOf(obj)
-    );
-
-    trashItem._lockedOnCan = false;
-    trashItem._dragging = false;
-
-    trashItem.setPosition(resetX, resetY);
-    trashItem.setAngle?.(0);
-    trashItem.setAlpha?.(1);
-
-    this.getTextObjectsFromGameObject(trashItem).forEach((textObj) => {
-      textObj.clearTint?.();
-      textObj.setAlpha?.(1);
+    this.tweens.add({
+      targets: trash,
+      x: trash.x + 12,
+      duration: 55,
+      yoyo: true,
+      repeat: 3,
+      ease: "Sine.easeInOut",
+      onComplete: () => {
+        if (trash?.active && typeof trash.snapHome === "function") {
+          trash.snapHome();
+        }
+      },
     });
-
-    if (trashItem.body) {
-      trashItem.body.enable = true;
-      trashItem.body.reset(resetX, resetY);
-      trashItem.body.setVelocity(0, 0);
-    }
-
-    this.makeTrashEasyToGrab(trashItem);
   }
 
   pickUniqueProblemsByAnswer(problemPool, count = 5) {
@@ -447,7 +417,12 @@ export class BaseMathGameScene extends Phaser.Scene {
   }
 
   createRaccoonAnimation() {
-    if (!this.textures.exists("raccoon")) return false;
+    if (!this.textures.exists("raccoon")) {
+      console.warn(
+        `[${this.scene.key}] Missing raccoon texture. Make sure Preloader loads "raccoon".`
+      );
+      return false;
+    }
 
     if (!this.anims.exists("raccoonFeedback")) {
       this.anims.create({
@@ -469,7 +444,10 @@ export class BaseMathGameScene extends Phaser.Scene {
     if (!this.createRaccoonAnimation()) return;
 
     if (isCorrect) {
-      const key = `${Math.round(trashCan.x)}_${Math.round(trashCan.y)}_correct`;
+      const key = `${Math.round(trashCan.x)}_${Math.round(
+        trashCan.y
+      )}_correct`;
+
       if (this.raccoonSpots.has(key)) return;
 
       const raccoon = this.add
@@ -487,7 +465,12 @@ export class BaseMathGameScene extends Phaser.Scene {
       }
 
       raccoon.play("raccoonFeedback");
-      this.raccoonSpots.set(key, { raccoon, emote });
+
+      this.raccoonSpots.set(key, {
+        raccoon,
+        emote,
+      });
+
       return;
     }
 
@@ -525,6 +508,7 @@ export class BaseMathGameScene extends Phaser.Scene {
         onComplete: () => {
           raccoon?.destroy();
           emote?.destroy();
+
           if (this.activeFeedbackRaccoon === raccoon) {
             this.activeFeedbackRaccoon = null;
             this.activeFeedbackEmote = null;
@@ -537,15 +521,18 @@ export class BaseMathGameScene extends Phaser.Scene {
   destroyRaccoonFeedback() {
     this.activeFeedbackRaccoon?.destroy();
     this.activeFeedbackEmote?.destroy();
+
     this.activeFeedbackRaccoon = null;
     this.activeFeedbackEmote = null;
 
-    this.raccoonSpots?.forEach((entry) => {
+    if (!this.raccoonSpots) return;
+
+    this.raccoonSpots.forEach((entry) => {
       entry?.raccoon?.destroy();
       entry?.emote?.destroy();
     });
 
-    this.raccoonSpots?.clear();
+    this.raccoonSpots.clear();
   }
 
   createConfettiSystem() {
@@ -571,12 +558,23 @@ export class BaseMathGameScene extends Phaser.Scene {
       "trashConfettiFishBone",
       "trashConfettiPurple",
     ].filter((key) => this.textures.exists(key));
+
+    if (this.trashConfettiKeys.length === 0) {
+      console.warn(
+        `[${this.scene.key}] No trash confetti textures loaded. Check Preloader file names and /public/confetti paths.`
+      );
+    }
   }
 
   popTrashCanConfetti(trashCan) {
     if (!trashCan) return;
 
-    if (!this.trashConfettiKeys?.length) this.createConfettiSystem();
+    if (
+      !Array.isArray(this.trashConfettiKeys) ||
+      this.trashConfettiKeys.length === 0
+    ) {
+      this.createConfettiSystem();
+    }
 
     const keys = this.trashConfettiKeys || [];
     if (keys.length === 0) return;
@@ -617,6 +615,20 @@ export class BaseMathGameScene extends Phaser.Scene {
         },
       });
     }
+
+    const glow = this.add
+      .circle(startX, startY, 34, 0xfff0a8, 0.35)
+      .setDepth(1999);
+
+    this.tweens.add({
+      targets: glow,
+      scaleX: 2.1,
+      scaleY: 2.1,
+      alpha: 0,
+      duration: 220,
+      ease: "Quad.easeOut",
+      onComplete: () => glow.destroy(),
+    });
   }
 
   destroyConfettiEmitter() {
@@ -639,6 +651,11 @@ export class BaseMathGameScene extends Phaser.Scene {
   startBackgroundMusic() {
     if (!this.cache.audio.exists("gameMusic")) return;
 
+    this.gameMusicVolume = this.gameMusicVolume ?? 0.025;
+    this.gameMusicDuckedVolume = this.gameMusicDuckedVolume ?? 0.012;
+    this.correctSfxVolume = this.correctSfxVolume ?? 0.25;
+    this.wrongSfxVolume = this.wrongSfxVolume ?? 0.22;
+
     const existing = this.sound.get("gameMusic");
 
     if (existing && existing.isPlaying) {
@@ -658,17 +675,20 @@ export class BaseMathGameScene extends Phaser.Scene {
   duckBackgroundMusic() {
     if (!this.bgMusic || !this.bgMusic.isPlaying) return;
 
+    const normalVolume = this.gameMusicVolume ?? 0.025;
+    const duckedVolume = this.gameMusicDuckedVolume ?? 0.012;
+
     this.tweens.killTweensOf(this.bgMusic);
 
     this.tweens.add({
       targets: this.bgMusic,
-      volume: this.gameMusicDuckedVolume,
+      volume: duckedVolume,
       duration: 120,
       ease: "Sine.easeOut",
       onComplete: () => {
         this.tweens.add({
           targets: this.bgMusic,
-          volume: this.gameMusicVolume,
+          volume: normalVolume,
           duration: 280,
           delay: 120,
           ease: "Sine.easeOut",
@@ -688,7 +708,10 @@ export class BaseMathGameScene extends Phaser.Scene {
       duration: 500,
       ease: "Sine.easeOut",
       onComplete: () => {
-        if (this.bgMusic?.isPlaying) this.bgMusic.stop();
+        if (this.bgMusic && this.bgMusic.isPlaying) {
+          this.bgMusic.stop();
+        }
+
         this.bgMusic = null;
       },
     });
@@ -698,7 +721,9 @@ export class BaseMathGameScene extends Phaser.Scene {
     if (!this.bgMusic) return;
 
     try {
-      if (this.bgMusic.isPlaying) this.bgMusic.stop();
+      if (this.bgMusic.isPlaying) {
+        this.bgMusic.stop();
+      }
     } catch (error) {
       console.error("Error stopping background music:", error);
     }
@@ -709,17 +734,22 @@ export class BaseMathGameScene extends Phaser.Scene {
   playFeedbackSound(isCorrect) {
     const key = isCorrect ? this.correctSoundKey : this.wrongSoundKey;
 
-    if (!key || !this.cache.audio.exists(key)) return;
+    if (!key) return;
+    if (!this.cache.audio.exists(key)) return;
 
     this.duckBackgroundMusic();
 
     this.sound.play(key, {
-      volume: isCorrect ? this.correctSfxVolume : this.wrongSfxVolume,
+      volume: isCorrect
+        ? this.correctSfxVolume ?? 0.25
+        : this.wrongSfxVolume ?? 0.22,
     });
   }
 
   showCenteredFeedback(message, isCorrect) {
     this.feedbackContainer?.destroy();
+    this.correct = null;
+    this.wrongText = null;
 
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height * 0.15;
@@ -772,7 +802,9 @@ export class BaseMathGameScene extends Phaser.Scene {
       ease: "Sine.easeOut",
     });
 
-    if (isCorrect) this.createCorrectSparkles(centerX, centerY);
+    if (isCorrect) {
+      this.createCorrectSparkles(centerX, centerY);
+    }
   }
 
   createCorrectSparkles(x, y) {
@@ -813,6 +845,8 @@ export class BaseMathGameScene extends Phaser.Scene {
   clearCenteredFeedback() {
     this.feedbackContainer?.destroy();
     this.feedbackContainer = null;
+    this.correct = null;
+    this.wrongText = null;
   }
 
   onCorrect() {
@@ -828,6 +862,10 @@ export class BaseMathGameScene extends Phaser.Scene {
         (entry) => Number(entry?.numGuess || 0) === 0
       )
     );
+  }
+
+  getCelebrationMessage() {
+    return this.isPerfectRun() ? "Perfect run!" : "";
   }
 
   getFinishSubtitle(coinsEarned) {
@@ -850,6 +888,7 @@ export class BaseMathGameScene extends Phaser.Scene {
 
       if (!snapshot.empty) {
         const data = snapshot.docs[0].data();
+
         return (
           data?.description ||
           `Get ready for ${this.assignmentTitle}. Have fun playing the game!`
@@ -886,7 +925,13 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     const cardShadow = this.add.graphics().setDepth(902).setScrollFactor(0);
     cardShadow.fillStyle(0x000000, 0.28);
-    cardShadow.fillRoundedRect(cardX + 10, cardY + 14, cardWidth, cardHeight, 40);
+    cardShadow.fillRoundedRect(
+      cardX + 10,
+      cardY + 14,
+      cardWidth,
+      cardHeight,
+      40
+    );
 
     const cardBg = this.add.graphics().setDepth(903).setScrollFactor(0);
     cardBg.fillStyle(0xf7ecd8, 0.985);
@@ -965,14 +1010,12 @@ export class BaseMathGameScene extends Phaser.Scene {
         30
       );
 
-      buttonBg.fillGradientStyle(
-        hover ? 0xffb35b : 0xffa04f,
-        hover ? 0xffd86c : 0xffcb6b,
-        hover ? 0x4fdc87 : 0x39c774,
-        hover ? 0x38c0ff : 0x2ea5ff,
-        1
-      );
+      const topLeft = hover ? 0xffb35b : 0xffa04f;
+      const topRight = hover ? 0xffd86c : 0xffcb6b;
+      const bottomLeft = hover ? 0x4fdc87 : 0x39c774;
+      const bottomRight = hover ? 0x38c0ff : 0x2ea5ff;
 
+      buttonBg.fillGradientStyle(topLeft, topRight, bottomLeft, bottomRight, 1);
       buttonBg.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 30);
       buttonBg.lineStyle(5, 0xfff9ef, 0.98);
       buttonBg.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 30);
@@ -1026,18 +1069,30 @@ export class BaseMathGameScene extends Phaser.Scene {
 
     buttonHit.on("pointerover", () => {
       drawButton(true);
-      this.tweens.add({ targets: buttonText, scale: 1.07, duration: 120 });
+      this.tweens.add({
+        targets: buttonText,
+        scale: 1.07,
+        duration: 120,
+      });
     });
 
     buttonHit.on("pointerout", () => {
       drawButton(false);
-      this.tweens.add({ targets: buttonText, scale: 1, duration: 120 });
+      this.tweens.add({
+        targets: buttonText,
+        scale: 1,
+        duration: 120,
+      });
     });
 
-    buttonHit.on("pointerdown", () => this.closeGameIntroOverlay());
+    buttonHit.on("pointerdown", () => {
+      this.closeGameIntroOverlay();
+    });
 
     const description = await this.fetchGameDescription();
-    if (descriptionText?.active) descriptionText.setText(description);
+    if (descriptionText?.active) {
+      descriptionText.setText(description);
+    }
   }
 
   closeGameIntroOverlay() {
@@ -1062,12 +1117,46 @@ export class BaseMathGameScene extends Phaser.Scene {
     });
   }
 
+  /*createCampgroundBackground(textureKey = "campDirtCartoon") {
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    // 🔥 use tileSprite so it ALWAYS fills (no gaps ever)
+    const bg = this.add
+      .tileSprite(0, 0, width, height, textureKey)
+      .setOrigin(0)
+      .setDepth(-100);
+
+    // make it cozy scale
+    bg.setTileScale(2, 2);
+
+    const resize = (gameSize) => {
+      const w = gameSize.width;
+      const h = gameSize.height;
+
+      bg.setSize(w, h);
+    };
+
+    this.scale.on("resize", resize);
+
+    return bg;
+  }*/
+
   async onFinish() {
     let coinsEarned = 0;
     const perfectRun = this.isPerfectRun();
 
     try {
+      if (typeof this.saveResults !== "function") {
+        throw new Error(
+          `[${this.scene.key}] saveResults is missing. Make sure this scene calls initSharedGameConfig(...).`
+        );
+      }
+
       const rewardResult = await this.saveResults();
+
+      console.log("rewardResult:", rewardResult);
+
       coinsEarned =
         rewardResult?.coinReward ??
         rewardResult?.coinsEarned ??
@@ -1092,7 +1181,9 @@ export class BaseMathGameScene extends Phaser.Scene {
     });
 
     this.time.delayedCall(300, () => {
-      window.onPhaserGameFinished?.();
+      if (window.onPhaserGameFinished) {
+        window.onPhaserGameFinished();
+      }
     });
   }
 }

@@ -44,22 +44,20 @@ export class Trash extends Phaser.GameObjects.Container {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setSize(110, 110);
+    this.setSize(50, 20);
 
-    this.body.setSize(110, 110);
-    this.body.setOffset(-55, -55);
-    this.body.setAllowGravity(false);
-    this.body.setVelocity(0, 0);
+    if (this.body) {
+      this.body.setSize(50, 20);
+      this.body.setOffset(-10, -10);
+      this.body.setAllowGravity(false);
+      this.body.setVelocity(0, 0);
+    }
 
-    // ✅ Make the WHOLE trash container draggable, not just the image.
-    this.setInteractive(
-      new Phaser.Geom.Rectangle(-70, -70, 140, 140),
-      Phaser.Geom.Rectangle.Contains
-    );
+    // Keep pickup on the trash image like your old version.
+    this.trashMath.setInteractive({ draggable: true });
+    scene.input.setDraggable(this.trashMath);
 
-    scene.input.setDraggable(this);
-
-    this.on("dragstart", () => {
+    this.trashMath.on("dragstart", () => {
       if (this._wrongCooldown || this._resettingHome) return;
 
       this._dragging = true;
@@ -68,18 +66,18 @@ export class Trash extends Phaser.GameObjects.Container {
       this.trashMath.setTint(0x00e6e6);
     });
 
-    this.on("drag", (pointer, dragX, dragY) => {
+    this.trashMath.on("drag", (pointer) => {
       if (this._wrongCooldown || this._resettingHome) return;
 
-      this.setPosition(dragX, dragY);
+      this.setPosition(pointer.worldX, pointer.worldY);
 
       if (this.body) {
-        this.body.reset(dragX, dragY);
+        this.body.reset(pointer.worldX, pointer.worldY);
         this.body.setVelocity(0, 0);
       }
     });
 
-    this.on("dragend", () => {
+    this.trashMath.on("dragend", () => {
       this._dragging = false;
       this.trashMath.clearTint();
     });
@@ -94,14 +92,18 @@ export class Trash extends Phaser.GameObjects.Container {
     this._wrongCooldown = true;
     this._resettingHome = true;
 
-    this.disableInteractive();
-
     this.scene.tweens.killTweensOf(this);
+
+    if (this.body) {
+      this.body.enable = false;
+      this.body.setVelocity(0, 0);
+    }
 
     this.scene.tweens.add({
       targets: this,
       x,
       y,
+      angle: 0,
       duration: 300,
       ease: "Back.easeOut",
       onComplete: () => {
@@ -119,18 +121,11 @@ export class Trash extends Phaser.GameObjects.Container {
         this._lockedOnCan = false;
         this._dragging = false;
 
-        this.scene.time.delayedCall(150, () => {
+        this.scene.time.delayedCall(120, () => {
           if (!this.active) return;
 
           this._wrongCooldown = false;
           this._resettingHome = false;
-
-          this.setInteractive(
-            new Phaser.Geom.Rectangle(-70, -70, 140, 140),
-            Phaser.Geom.Rectangle.Contains
-          );
-
-          this.scene.input.setDraggable(this);
         });
       },
     });
