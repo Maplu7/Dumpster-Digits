@@ -129,7 +129,7 @@ export class Preloader extends Phaser.Scene {
         });
 
         this.load.spritesheet('trees', 'campTrees.png', {
-            frameWidth: 43,
+            frameWidth: 50,
             frameHeight: 102
         });
 
