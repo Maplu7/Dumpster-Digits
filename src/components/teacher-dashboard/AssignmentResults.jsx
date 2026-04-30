@@ -277,7 +277,7 @@ function AttemptDetails({
         </div>
 
         <div className="tdash-results__attempt-score">
-          <span>{percent} / 100</span>
+          <span>Score: {percent} / 100</span>
           <span>•</span>
           <span>{wrongTries} wrong</span>
           {perfect && <span className="tdash-results__badge">Perfect</span>}
@@ -336,7 +336,7 @@ function AttemptDetails({
                     <div className="tdash-results__answer-meta">
                       <span>Wrong tries: {wrong}</span>
                       <span>Correct: {String(answer?.correctAnswer ?? "—")}</span>
-                      <span>{answerPercent} / 100</span>
+                      <span>Score: {answerPercent} / 100</span>
                     </div>
                   </div>
                 );
@@ -381,7 +381,7 @@ function AttemptDetails({
 
                     <div className="tdash-results__answer-meta">
                       <span>Wrong tries: {wrong}</span>
-                      <span>{answerPercent} / 100</span>
+                      <span>Score: {answerPercent} / 100</span>
                     </div>
                   </div>
                 );
@@ -467,7 +467,7 @@ function StudentAssignmentView({
 
               <div className="tdash-results__summary-block">
                 <div className="tdash-results__summary-line">
-                  <span>{progress.percent} / 100</span>
+                  <span>Overwall class score: {progress.percent} / 100</span>
                   <span>•</span>
                   <span>{progress.wrongTries} wrong</span>
                   <span>•</span>
@@ -791,7 +791,7 @@ function ClassAssignmentView({
 
                 <div className="tdash-results__summary-block">
                   <div className="tdash-results__summary-line">
-                    <span>Class median score: {classPercent} / 100</span>
+                    <span>Overwall class score: {classPercent} / 100</span>
                     <span>•</span>
                     <span>{failingCount} need attention</span>
                     <span>•</span>
