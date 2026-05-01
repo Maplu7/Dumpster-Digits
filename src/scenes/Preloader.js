@@ -56,6 +56,7 @@ export class Preloader extends Phaser.Scene {
     this.load.image("dirtLeaf", "/backgroundCamps/dirtLeaf.jpeg");
     this.load.image("dirtLef", "/backgroundCamps/dirtLef.jpeg");
     this.load.image("dirtMushroom", "/backgroundCamps/dirtMushroom.jpeg");
+    this.load.image("campMushroom", "/backgroundCamps/campMushroom.jpeg");
 
     // SINGLE IMAGES
     this.load.image("camp", "campGround.png");
@@ -68,6 +69,7 @@ export class Preloader extends Phaser.Scene {
     this.load.image("fenceHorizontal", "campFenceHorizontal.png");
     this.load.image("fenceVertical", "campFenceVertical.png");
     this.load.image("campDirtCartoon", "campDirtCartoon.png");
+    this.load.image("xsmallRaccacoin", "/ui-assets/xsmallRaccacoin.png");
 
     // EMOTES
     this.load.image("wrongEmote", "emote_cross.png");

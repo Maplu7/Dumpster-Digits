@@ -8,6 +8,10 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     super("Game");
   }
 
+  preload() {
+    this.load.image("dirtMushroom", "/backgroundCamps/dirtMushroom.jpeg");
+  }
+
   buildPlaceValueProblems() {
     const allProblems = [];
 
@@ -30,27 +34,55 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     return allProblems;
   }
 
-  pickFiveProblemsAllowingDuplicateLabels(problemPool) {
-    const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
-    const selected = [];
-    const usedLabels = new Set();
+pickFiveCleanPlaceValueProblems(problemPool) {
+  const shuffled = Phaser.Utils.Array.Shuffle([...(problemPool || [])]);
+  const selected = [];
 
-    for (const problem of shuffled) {
-      if (!problem?.question || problem?.answer === undefined) continue;
+  const usedAnswers = new Set();
+  const usedCanLabels = new Set();
+  const usedVisiblePlaceKeys = new Set();
 
-      const question = String(problem.question).trim();
-      const answer = String(problem.answer).trim();
+  const getDigitsForAnswer = (answer) => {
+    const n = Number(answer);
 
-      if (usedLabels.has(question)) continue;
+    return [
+      `${n % 10}->1s`,
+      `${Math.floor(n / 10) % 10}->10s`,
+      `${Math.floor(n / 100)}->100s`,
+    ];
+  };
 
-      usedLabels.add(question);
-      selected.push({ question, answer });
+  for (const problem of shuffled) {
+    if (!problem?.question || problem?.answer === undefined) continue;
 
-      if (selected.length === 5) break;
-    }
+    const question = String(problem.question).trim();
+    const answer = String(problem.answer).trim();
 
-    return selected;
+    if (usedAnswers.has(answer)) continue;
+    if (usedCanLabels.has(question)) continue;
+
+    const visibleKeys = getDigitsForAnswer(answer);
+
+    // This is the important fairness check:
+    // If this trash number contains ANY digit/place combo already used
+    // by another can/trash, skip it.
+    const wouldCreateConfusingDuplicate = visibleKeys.some((key) =>
+      usedVisiblePlaceKeys.has(key)
+    );
+
+    if (wouldCreateConfusingDuplicate) continue;
+
+    usedAnswers.add(answer);
+    usedCanLabels.add(question);
+    visibleKeys.forEach((key) => usedVisiblePlaceKeys.add(key));
+
+    selected.push({ question, answer });
+
+    if (selected.length === 5) break;
   }
+
+  return selected;
+}
 
   create() {
     this.initSharedGameConfig({
@@ -58,37 +90,10 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       assignmentTitle: "2nd Grade Place Value",
     });
 
-    for (let i = 1; i <= 7; i++) {
-      this.add.group({
-        key: "camp",
-        repeat: 11,
-        setXY: {
-          x: 90,
-          y: 50 + (i - 1) * 100,
-          stepX: 180,
-        },
-        setScale: {
-          x: 3,
-          y: 6,
-        },
-      });
-    }
-
-    const cloverSpots = [
-      { x: 80, y: 70 }, { x: 220, y: 140 }, { x: 420, y: 90 },
-      { x: 620, y: 180 }, { x: 820, y: 70 }, { x: 1020, y: 160 },
-      { x: 1220, y: 100 }, { x: 1420, y: 180 },
-      { x: 150, y: 320 }, { x: 350, y: 420 }, { x: 550, y: 300 },
-      { x: 760, y: 430 }, { x: 980, y: 340 }, { x: 1180, y: 420 },
-      { x: 1380, y: 350 },
-      { x: 100, y: 560 }, { x: 280, y: 650 }, { x: 500, y: 580 },
-      { x: 700, y: 670 }, { x: 930, y: 590 }, { x: 1160, y: 660 },
-      { x: 1380, y: 600 },
-    ];
-
-    cloverSpots.forEach((spot) => {
-      this.add.image(spot.x, spot.y, "clovers").setScale(3);
-    });
+    this.add
+      .image(this.scale.width / 2, this.scale.height / 2, "dirtMushroom")
+      .setDisplaySize(this.scale.width, this.scale.height)
+      .setDepth(-100);
 
     this.add.image(1250, 100, "yellowTent", 0).setScale(3);
     this.add.image(200, 100, "yellowTent", 1).setScale(3);
@@ -99,12 +104,12 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.problemsPlaceValues = this.buildPlaceValueProblems();
     this.configuredProblems = this.getConfiguredProblems(this.problemsPlaceValues);
 
-    let selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
+    let selectedProblems = this.pickFiveCleanPlaceValueProblems(
       this.configuredProblems
     );
 
     if (selectedProblems.length < 5) {
-      selectedProblems = this.pickFiveProblemsAllowingDuplicateLabels(
+      selectedProblems = this.pickFiveCleanPlaceValueProblems(
         this.problemsPlaceValues
       );
     }
@@ -128,9 +133,6 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       new TrashCan(this, 1340, 700, canOrder[4]).setScale(1),
     ];
 
-    // -----------------------------
-    // RACCOONS ADDED (array-safe)
-    // -----------------------------
     this.trashCans.forEach((can, i) => {
       can.index = i;
     });
@@ -155,7 +157,14 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
         .setVisible(false)
         .play("raccoonFeedback")
     );
-    // -----------------------------
+
+    this.raccoonEmoteGroup = this.trashCans.map((can) =>
+      this.add
+        .sprite(can.x, can.y - 70, "heartEmote")
+        .setScale(3)
+        .setDepth(1000)
+        .setVisible(false)
+    );
 
     this.trashItems.forEach((trash, index) => {
       trash.problemData = trashOrder[index];
@@ -215,7 +224,10 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     const found = this.numGuessesPerAnswer.find(
       (entry) => entry.guessedAnswer === trash
     );
-    if (found) found.numGuess++;
+
+    if (found) {
+      found.numGuess++;
+    }
   }
 
   putInTrash(trash, trashCan) {
@@ -223,7 +235,9 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     if (!trash?.active || !trashCan?.active) return;
     if (trashCan._disabled) return;
 
-    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) return;
+    if (trash._lockedOnCan || trash._wrongCooldown || trash._resettingHome) {
+      return;
+    }
 
     trash._lockedOnCan = true;
     trash._dragging = false;
@@ -238,8 +252,13 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
       this.showCenteredFeedback?.("That is Correct!", true);
 
       const trashCanIndex = trashCan.index;
-      if (this.raccoonGroup && this.raccoonGroup[trashCanIndex]) {
+
+      if (this.raccoonGroup?.[trashCanIndex]) {
         this.raccoonGroup[trashCanIndex].setVisible(true);
+      }
+
+      if (this.raccoonEmoteGroup?.[trashCanIndex]) {
+        this.raccoonEmoteGroup[trashCanIndex].setVisible(true);
       }
 
       trashCan.markCorrect?.();
@@ -277,6 +296,20 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     this.clearCenteredFeedback?.();
     this.showCenteredFeedback?.("Try again!", false);
 
+    this.raccoonWrong?.destroy();
+    this.raccoonWrong = this.add
+      .sprite(trashCan.x, trashCan.y, "raccoon", 20)
+      .setScale(4)
+      .setDepth(999);
+
+    this.raccoonWrong.play("raccoonFeedback");
+
+    this.wrongEmote?.destroy();
+    this.wrongEmote = this.add
+      .sprite(trashCan.x, trashCan.y - 70, "brokenHeartEmote")
+      .setScale(3)
+      .setDepth(1000);
+
     if (typeof trash.snapHome === "function") {
       trash.snapHome();
     } else if (typeof this.resetDraggedTrash === "function") {
@@ -305,6 +338,8 @@ export class Game_2nd_grade_placevalues extends BaseMathGameScene {
     });
 
     this.time.delayedCall(this.feedbackDuration, () => {
+      this.raccoonWrong?.destroy();
+      this.wrongEmote?.destroy();
       this.clearCenteredFeedback?.();
     });
   }

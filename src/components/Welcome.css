@@ -47,6 +47,7 @@
   0% {
     filter: hue-rotate(0deg);
   }
+
   100% {
     filter: hue-rotate(360deg);
   }
@@ -65,6 +66,7 @@
   0% {
     transform: translateY(0px);
   }
+
   100% {
     transform: translateY(-8px);
   }
@@ -163,11 +165,18 @@
   padding: 0;
 }
 
-.profile-circle--customize {
+.profile-circle--outfit {
   width: 154px;
   height: 118px;
   border-radius: 30px;
   padding: 7px;
+}
+
+.profile-circle--emote {
+  width: 120px;
+  height: 120px;
+  border-radius: 32px;
+  padding: 10px;
 }
 
 .profile-image {
@@ -188,7 +197,7 @@
   border-radius: 50%;
 }
 
-.profile-image--customize {
+.profile-image--outfit {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -196,13 +205,22 @@
   transform: scale(0.98);
 }
 
+.profile-image--emote {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  border-radius: 20px;
+}
+
 @keyframes profileFloat {
   0% {
     transform: translateY(0px) rotate(-1.2deg);
   }
+
   50% {
     transform: translateY(-5px) rotate(0.8deg);
   }
+
   100% {
     transform: translateY(0px) rotate(-1.2deg);
   }
@@ -228,10 +246,22 @@
     height: 95px;
   }
 
-  .profile-circle--customize {
+  .profile-circle--outfit {
     width: 124px;
     height: 96px;
     border-radius: 24px;
+  }
+
+  .profile-circle--emote {
+    width: 100px;
+    height: 100px;
+    border-radius: 28px;
+    padding: 8px;
+  }
+
+  .profile-image--emote {
+    width: 88%;
+    height: 88%;
   }
 }
 
@@ -265,9 +295,21 @@
     height: 80px;
   }
 
-  .profile-circle--customize {
+  .profile-circle--outfit {
     width: 108px;
     height: 84px;
     border-radius: 20px;
+  }
+
+  .profile-circle--emote {
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    padding: 6px;
+  }
+
+  .profile-image--emote {
+    width: 86%;
+    height: 86%;
   }
 }

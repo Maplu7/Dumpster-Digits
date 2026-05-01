@@ -8,6 +8,41 @@ import { subscribeAssignedProblemsForGame } from "../getAssignedProblemsForGame"
 const ASSIGNMENTS_TITLE_COLOR = "#ffe7b4";
 const DEFAULT_PROFILE_IMAGE = "/raccacoonies/what.jpeg";
 
+const outfitImages = {
+  "outfit-chef": "/raccacoonies/CHEF_RACCO.png",
+  "outfit-argg": "/raccacoonies/ARGG.png",
+  knight: "/raccacoonies/knight.png",
+  fairy: "/raccacoonies/fairy.png",
+  princess: "/raccacoonies/princess.png",
+  sleepy: "/raccacoonies/eppy.png",
+  wizard: "/raccacoonies/wizard.png",
+  sable: "/raccacoonies/sable.png",
+  dragon: "/raccacoonies/dragon.png",
+};
+
+const pfpImages = {
+  1: "/raccacoonies/happy.png",
+  2: "/raccacoonies/angy.png",
+  3: "/raccacoonies/crying.jpeg",
+  4: "/raccacoonies/woah.png",
+  5: "/raccacoonies/bleh.jpeg",
+  6: "/raccacoonies/thinking.jpeg",
+  7: "/raccacoonies/confused.jpeg",
+  8: "/raccacoonies/bleh_2.jpeg",
+  9: "/raccacoonies/what.jpeg",
+  10: "/raccacoonies/playing_dead.png",
+  11: "/raccacoonies/furious.png",
+  12: "/raccacoonies/blush.jpeg",
+};
+
+const emoteImages = {
+  heart: "/emotes/heart.png",
+  brokenHeart: "/emotes/brokenHeart.png",
+  angry: "/emotes/angry.png",
+  sleepy: "/emotes/sleepy.png",
+  cry: "/emotes/cry.png",
+};
+
 const fallbackProblemBanks = {
   "1st_addition": [
     { question: "1+0", answer: 1 },
@@ -34,6 +69,7 @@ const fallbackProblemBanks = {
   "2nd_fill_blank": [],
   "2nd_place_value": [],
   "2nd_multiplication": [],
+  "2nd_division": [],
 };
 
 function resolveStudentClassId(student) {
@@ -372,14 +408,40 @@ export default function GamePage({ gameKey, onFinishReturn, student }) {
 
         const data = snap.data();
 
-        setEquippedImage(
+        const equippedItemImage =
           typeof data.equippedItemImage === "string" &&
-            data.equippedItemImage.trim()
+          data.equippedItemImage.trim()
             ? data.equippedItemImage.trim()
-            : DEFAULT_PROFILE_IMAGE
-        );
+            : "";
 
-        setEquippedCategory(data.equippedItemCategory || "pfp");
+        const equippedItemCategory =
+          typeof data.equippedItemCategory === "string"
+            ? data.equippedItemCategory.trim()
+            : "";
+
+        if (equippedItemImage) {
+          setEquippedImage(equippedItemImage);
+          setEquippedCategory(equippedItemCategory || "pfp");
+          return;
+        }
+
+        const equippedOutfit = data.equippedOutfit || "";
+        const equippedPfp = data.equippedPfp || "";
+        const equippedEmote = data.equippedEmote || "";
+
+        if (equippedOutfit && outfitImages[equippedOutfit]) {
+          setEquippedImage(outfitImages[equippedOutfit]);
+          setEquippedCategory("outfit");
+        } else if (equippedPfp && pfpImages[equippedPfp]) {
+          setEquippedImage(pfpImages[equippedPfp]);
+          setEquippedCategory("pfp");
+        } else if (equippedEmote && emoteImages[equippedEmote]) {
+          setEquippedImage(emoteImages[equippedEmote]);
+          setEquippedCategory("emote");
+        } else {
+          setEquippedImage(DEFAULT_PROFILE_IMAGE);
+          setEquippedCategory("pfp");
+        }
       },
       (error) => {
         console.error("Error syncing equipped profile item:", error);
@@ -389,16 +451,15 @@ export default function GamePage({ gameKey, onFinishReturn, student }) {
     return () => unsubscribe();
   }, [student?.id]);
 
-  const isCustomize = equippedCategory === "customize";
+  const safeCategory =
+    equippedCategory === "outfit" || equippedCategory === "emote"
+      ? equippedCategory
+      : "pfp";
 
   return (
     <div className={`game-page ${isReturning ? "game-page--returning" : ""}`}>
       <div
-        className={`game-profile-shell ${
-          isCustomize
-            ? "game-profile-shell--customize"
-            : "game-profile-shell--pfp"
-        }`}
+        className={`game-profile-shell game-profile-shell--${safeCategory}`}
         style={{
           border: `6px solid ${ASSIGNMENTS_TITLE_COLOR}`,
           boxShadow: `
@@ -410,13 +471,9 @@ export default function GamePage({ gameKey, onFinishReturn, student }) {
       >
         <img
           key={equippedImage}
-          src={equippedImage}
+          src={equippedImage || DEFAULT_PROFILE_IMAGE}
           alt="Raccacoonie Profile"
-          className={`game-profile-image ${
-            isCustomize
-              ? "game-profile-image--customize"
-              : "game-profile-image--pfp"
-          }`}
+          className={`game-profile-image game-profile-image--${safeCategory}`}
           onError={(event) => {
             event.currentTarget.onerror = null;
             event.currentTarget.src = DEFAULT_PROFILE_IMAGE;

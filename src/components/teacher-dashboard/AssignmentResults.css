@@ -822,4 +822,8 @@
   border-radius: 999px;
 }
 
+.tdash-results__missed-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 231, 180, 0.35);
+}
+
 }

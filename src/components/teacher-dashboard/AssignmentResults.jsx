@@ -88,7 +88,7 @@ function ProgressBar({
     >
       <div
         className={`tdash-results__bar-fill ${progress.fillClass}`}
-        style={{ width: `${progress.percent} / 100` }}
+        style={{ width: `${progress.percent}%` }}
       />
     </div>
   );
@@ -131,7 +131,7 @@ function collectMissedProblemStats(
 ) {
   const missed = new Map();
 
-  function addMiss(problem, wrong, studentName) {
+  function addMiss(problem, wrong, studentName, assignmentTitle = "") {
     const safeProblem = String(problem || "").trim();
     const safeWrong = safeNumber(wrong);
 
@@ -139,6 +139,7 @@ function collectMissedProblemStats(
 
     const current = missed.get(safeProblem) || {
       problem: safeProblem,
+      assignmentTitle,
       misses: 0,
       students: new Map(),
     };
@@ -149,12 +150,22 @@ function collectMissedProblemStats(
       (current.students.get(studentName) || 0) + safeWrong
     );
 
+    if (!current.assignmentTitle && assignmentTitle) {
+      current.assignmentTitle = assignmentTitle;
+    }
+
     missed.set(safeProblem, current);
   }
 
   classAssignmentProgress.forEach((assignmentProgress) => {
     const gameKey =
       assignmentProgress?.assignment?.gameKey || assignmentProgress?.gameKey;
+
+    const assignmentTitle =
+      assignmentProgress?.assignment?.title ||
+      assignmentProgress?.assignmentTitle ||
+      gameKey ||
+      "Unknown game";
 
     (assignmentProgress?.rows || []).forEach((row) => {
       const studentId = row?.student?.id;
@@ -167,7 +178,7 @@ function collectMissedProblemStats(
       attempts.forEach((attempt) => {
         if (attempt?.problemBreakdown && typeof attempt.problemBreakdown === "object") {
           Object.entries(attempt.problemBreakdown).forEach(([problem, tries]) => {
-            addMiss(problem, tries, studentName);
+            addMiss(problem, tries, studentName, assignmentTitle);
           });
         }
 
@@ -176,7 +187,8 @@ function collectMissedProblemStats(
             addMiss(
               getProblemLabelFromAnswer(answer),
               answer?.wrongTries,
-              studentName
+              studentName,
+              assignmentTitle
             );
           });
         }
@@ -636,6 +648,12 @@ function ClassAssignmentView({
           <div className="tdash-results__insight-card">
             <span>🧠</span>
             <strong>{mostMissed ? mostMissed.problem : "—"}</strong>
+
+            {mostMissed?.assignmentTitle && (
+              <p className="tdash-results__insight-game">
+                From: {mostMissed.assignmentTitle}
+              </p>
+            )}
 
             {mostMissed ? (
               <>

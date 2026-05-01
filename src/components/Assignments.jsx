@@ -113,22 +113,24 @@ export default function Assignments({
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const scrollRef = useRef(null);
   const lastResetVersionRef = useRef(0);
 
-  const studentId = useMemo(() => String(student?.id || "").trim(), [student?.id]);
+  const studentId = useMemo(
+    () => String(student?.id || "").trim(),
+    [student?.id]
+  );
 
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
 
   useEffect(() => {
-    function handleScroll() {
-      setShowScrollTop(window.scrollY > 200);
+    setShowScrollTop(false);
+
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
     }
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [studentId, student?.grade]);
 
   useEffect(() => {
     let unsubscribeAssignments = null;
@@ -178,13 +180,8 @@ export default function Assignments({
         const data = snap.data();
         const resetVersion = Number(data?.resetVersion || 0);
 
-        if (
-          resetVersion &&
-          resetVersion !== lastResetVersionRef.current
-        ) {
+        if (resetVersion && resetVersion !== lastResetVersionRef.current) {
           lastResetVersionRef.current = resetVersion;
-
-          // Instant reset across the student assignments page
           setCompletedMap({});
         }
       },
@@ -248,8 +245,12 @@ export default function Assignments({
     }
   }, [externalLockMap]);
 
+  function handleAssignmentsScroll(event) {
+    setShowScrollTop(event.currentTarget.scrollTop > 200);
+  }
+
   function scrollToTop() {
-    window.scrollTo({
+    scrollRef.current?.scrollTo({
       top: 0,
       behavior: "smooth",
     });
@@ -257,123 +258,154 @@ export default function Assignments({
 
   return (
     <div className="assignments-page">
-      <LayeredSkyScene variant="assignments" />
+      <div className="assignments-fixed-sky" aria-hidden="true">
+        <LayeredSkyScene
+          variant={
+            String(student?.grade) === "1"
+              ? "assignments-grade1"
+              : "assignments-grade2"
+          }
+        />
+      </div>
 
-      <div className="assignments-shell">
-        <div className="assignments-header">
-          <div>
-            <h1 className="assignments-title">Games</h1>
-            <p className="assignments-subtitle">
-              {student?.name || "Student"} — Grade {student?.grade ?? "?"}
-            </p>
+      <div
+        className="assignments-scroll"
+        ref={scrollRef}
+        onScroll={handleAssignmentsScroll}
+      >
+        <div className="assignments-shell">
+          <div className="assignments-header">
+            <div>
+              <h1 className="assignments-title">Games</h1>
+
+              <div className="assignments-student-meta">
+                <p className="assignments-subtitle">
+                  {student?.name || "Student"} — Grade {student?.grade ?? "?"}
+                </p>
+
+                <div className="assignments-coins-mini">
+                  <img
+                    src="/ui-assets/xsmallRaccacoin.png"
+                    alt="Coin"
+                    className="assignments-coins-icon"
+                  />
+
+                  <span>{student?.coins ?? 0}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="assignments-back-btn"
+              type="button"
+              onClick={onBack}
+            >
+              Back
+            </button>
           </div>
 
-          <button className="assignments-back-btn" type="button" onClick={onBack}>
-            Back
-          </button>
-        </div>
+          {loading ? (
+            <div className="assignments-empty">Loading assignments...</div>
+          ) : assignments.length === 0 ? (
+            <div className="assignments-empty">
+              No assignments found for this grade yet.
+            </div>
+          ) : (
+            <div className="assignments-grid">
+              {assignments.map((assignment, index) => {
+                const gameKey = assignment?.gameKey;
+                const isCompleted = completedMap[gameKey] === true;
+                const isLocked = lockMap[gameKey] === true;
+                const theme = getAssignmentTheme(gameKey);
+                const previewProblem = getPreviewProblem(gameKey);
 
-        {loading ? (
-          <div className="assignments-empty">Loading assignments...</div>
-        ) : assignments.length === 0 ? (
-          <div className="assignments-empty">
-            No assignments found for this grade yet.
-          </div>
-        ) : (
-          <div className="assignments-grid">
-            {assignments.map((assignment, index) => {
-              const gameKey = assignment?.gameKey;
-              const isCompleted = completedMap[gameKey] === true;
-              const isLocked = lockMap[gameKey] === true;
-              const theme = getAssignmentTheme(gameKey);
-              const previewProblem = getPreviewProblem(gameKey);
-
-              return (
-                <div
-                  className={`assignment-polaroid ${index % 2 === 0 ? "tilt-left" : "tilt-right"
-                    } ${isLocked ? "assignment-polaroid--locked" : ""}`}
-                  key={assignment?.id || gameKey || index}
-                  role="button"
-                  tabIndex={isLocked ? -1 : 0}
-                  onClick={() => {
-                    if (!isLocked && gameKey) {
-                      onOpenGame(gameKey);
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (
-                      !isLocked &&
-                      gameKey &&
-                      (event.key === "Enter" || event.key === " ")
-                    ) {
-                      event.preventDefault();
-                      onOpenGame(gameKey);
-                    }
-                  }}
-                >
-                  <div className="assignment-grade-pill">
-                    Grade {assignment?.grade ?? "?"}
-                  </div>
-
-                  <div className="assignment-polaroid-photo">
-                    <StarTwinkleOverlay
-                      image={theme.preview}
-                      alt={`${getGameLabel(gameKey)} preview`}
-                      problem={previewProblem}
-                    />
-                  </div>
-
-                  <div className="assignment-polaroid-caption">
-                    <h2>{getGameLabel(gameKey)}</h2>
-
-                    <p className="assignment-description">
-                      {assignment?.description || ""}
-                    </p>
-
-                    <div className="assignment-status-wrap">
-                      <div
-                        className={`assignment-status ${isCompleted ? "done" : "todo"
-                          }`}
-                      >
-                        {isCompleted ? "Completed ✅" : "Not completed yet"}
-                      </div>
-
-                      <div
-                        className={`assignment-status ${isLocked ? "locked" : "unlocked"
-                          }`}
-                      >
-                        {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
-                      </div>
+                return (
+                  <div
+                    className={`assignment-polaroid ${index % 2 === 0 ? "tilt-left" : "tilt-right"
+                      } ${isLocked ? "assignment-polaroid--locked" : ""}`}
+                    key={assignment?.id || gameKey || index}
+                    role="button"
+                    tabIndex={isLocked ? -1 : 0}
+                    onClick={() => {
+                      if (!isLocked && gameKey) {
+                        onOpenGame(gameKey);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        !isLocked &&
+                        gameKey &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        onOpenGame(gameKey);
+                      }
+                    }}
+                  >
+                    <div className="assignment-grade-pill">
+                      Grade {assignment?.grade ?? "?"}
                     </div>
 
-                    <button
-                      className="assignment-play-btn"
-                      type="button"
-                      disabled={isLocked}
-                      style={{
-                        background: theme.accent,
-                        "--btn-glow": `${theme.accent}99`,
-                      }}
-                      onClick={(event) => {
-                        event.stopPropagation();
+                    <div className="assignment-polaroid-photo">
+                      <StarTwinkleOverlay
+                        image={theme.preview}
+                        alt={`${getGameLabel(gameKey)} preview`}
+                        problem={previewProblem}
+                      />
+                    </div>
 
-                        if (!isLocked && gameKey) {
-                          onOpenGame(gameKey);
-                        }
-                      }}
-                    >
-                      {isLocked
-                        ? "Locked"
-                        : isCompleted
-                          ? "Play Again"
-                          : "Start Game"}
-                    </button>
+                    <div className="assignment-polaroid-caption">
+                      <h2>{getGameLabel(gameKey)}</h2>
+
+                      <p className="assignment-description">
+                        {assignment?.description || ""}
+                      </p>
+
+                      <div className="assignment-status-wrap">
+                        <div
+                          className={`assignment-status ${isCompleted ? "done" : "todo"
+                            }`}
+                        >
+                          {isCompleted ? "Completed ✅" : "Not completed yet"}
+                        </div>
+
+                        <div
+                          className={`assignment-status ${isLocked ? "locked" : "unlocked"
+                            }`}
+                        >
+                          {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
+                        </div>
+                      </div>
+
+                      <button
+                        className="assignment-play-btn"
+                        type="button"
+                        disabled={isLocked}
+                        style={{
+                          background: theme.accent,
+                          "--btn-glow": `${theme.accent}99`,
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+
+                          if (!isLocked && gameKey) {
+                            onOpenGame(gameKey);
+                          }
+                        }}
+                      >
+                        {isLocked
+                          ? "Locked"
+                          : isCompleted
+                            ? "Play Again"
+                            : "Start Game"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {showScrollTop && (

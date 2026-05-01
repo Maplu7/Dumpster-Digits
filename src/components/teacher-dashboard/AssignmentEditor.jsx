@@ -492,7 +492,7 @@ export default function AssignmentEditor({
                 </button>
 
                 <button type="button" onClick={selectAllPresets}>
-                  1-Click Assignment
+                  1-Click Assign All
                 </button>
 
                 <button type="button" onClick={selectAllBuiltInProblems}>

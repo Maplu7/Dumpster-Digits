@@ -7,13 +7,22 @@ export default function LayeredSkyScene({
 }) {
   const isGrade1 = variant === "assignments-grade1";
   const isGrade2 = variant === "assignments-grade2";
-  const isShop = variant === "shop";
 
-  const defaultLightCount = isGrade1 ? 15 : isGrade2 ? 10 : isShop ? 10 : 9;
+  const isShop =
+    variant === "shop" ||
+    variant === "shop-outfits" ||
+    variant === "shop-emotes";
+
+  const defaultLightCount = isGrade1 ? 19 : isGrade2 ? 10 : isShop ? 14 : 9;
 
   const [extraLights, setExtraLights] = useState([]);
+  const [deletedLights, setDeletedLights] = useState([]);
   const [draggingLight, setDraggingLight] = useState(null);
   const [draggingLantern, setDraggingLantern] = useState(null);
+
+  const [lightSize, setLightSize] = useState(42);
+  const [lanternSize, setLanternSize] = useState(150);
+  const [floorLanternSize, setFloorLanternSize] = useState(220);
 
   const stringLights = useMemo(() => {
     const base = Array.from({ length: defaultLightCount }, (_, i) => ({
@@ -21,13 +30,16 @@ export default function LayeredSkyScene({
       isExtra: false,
     }));
 
-    return [...base, ...extraLights];
-  }, [defaultLightCount, extraLights]);
+    return [...base, ...extraLights].filter(
+      (light) => !deletedLights.includes(light.id)
+    );
+  }, [defaultLightCount, extraLights, deletedLights]);
 
   const stars = useMemo(() => {
     let count = 54;
     if (isGrade1) count = 38;
     if (isGrade2) count = 50;
+    if (isShop) count = 46;
 
     return Array.from({ length: count }, (_, i) => ({
       id: i,
@@ -37,7 +49,7 @@ export default function LayeredSkyScene({
       delay: `${Math.random() * 7}s`,
       duration: `${Math.random() * 4 + 4}s`,
     }));
-  }, [isGrade1, isGrade2]);
+  }, [isGrade1, isGrade2, isShop]);
 
   const fireflies = useMemo(() => {
     let count = 18;
@@ -59,9 +71,21 @@ export default function LayeredSkyScene({
     const rect = e.currentTarget.getBoundingClientRect();
 
     return {
-      x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)),
-      y: Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)),
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
     };
+  }
+
+  function deleteLight(id) {
+    if (!editLights) return;
+
+    setDeletedLights((prev) => [...new Set([...prev, id])]);
+    setExtraLights((prev) => prev.filter((light) => light.id !== id));
+    setDraggingLight(null);
+
+    console.log(
+      `.layered-scene--${variant} .layered-scene__string-light--${id} {\n  display: none;\n}`
+    );
   }
 
   function onMove(e) {
@@ -99,11 +123,26 @@ export default function LayeredSkyScene({
     const { x, y } = getPercent(e);
 
     if (draggingLantern) {
-      console.log(
-        `.layered-scene--${variant} {\n  --${draggingLantern}-x: ${x.toFixed(
-          1
-        )}%;\n  --${draggingLantern}-y: ${y.toFixed(1)}%;\n}`
-      );
+      if (draggingLantern === "lantern") {
+        console.log(
+          `.layered-scene--${variant} {\n  --lantern-x: ${x.toFixed(
+            1
+          )}%;\n  --lantern-y: ${y.toFixed(
+            1
+          )}%;\n  --lantern-size: ${lanternSize}px;\n}`
+        );
+      }
+
+      if (draggingLantern === "floor-lantern") {
+        console.log(
+          `.layered-scene--${variant} {\n  --floor-lantern-x: ${x.toFixed(
+            1
+          )}%;\n  --floor-lantern-y: ${y.toFixed(
+            1
+          )}%;\n  --floor-lantern-size: ${floorLanternSize}px;\n}`
+        );
+      }
+
       setDraggingLantern(null);
     }
 
@@ -111,8 +150,11 @@ export default function LayeredSkyScene({
       console.log(
         `.layered-scene--${variant} .layered-scene__string-light--${draggingLight} {\n  left: ${x.toFixed(
           1
-        )}%;\n  top: ${y.toFixed(1)}%;\n}`
+        )}%;\n  top: ${y.toFixed(
+          1
+        )}%;\n  width: ${lightSize}px;\n  height: ${lightSize}px;\n}`
       );
+
       setDraggingLight(null);
     }
   }
@@ -121,9 +163,15 @@ export default function LayeredSkyScene({
     if (!editLights) return;
     if (e.target.closest(".layered-scene__string-light")) return;
     if (e.target.closest(".lantern-drag")) return;
+    if (e.target.closest(".layered-scene__edit-help")) return;
 
     const { x, y } = getPercent(e);
-    const id = stringLights.length + 1;
+    const id =
+      Math.max(
+        0,
+        ...stringLights.map((light) => light.id),
+        ...extraLights.map((light) => light.id)
+      ) + 1;
 
     setExtraLights((prev) => [
       ...prev,
@@ -138,7 +186,9 @@ export default function LayeredSkyScene({
     console.log(
       `.layered-scene--${variant} .layered-scene__string-light--${id} {\n  left: ${x.toFixed(
         1
-      )}%;\n  top: ${y.toFixed(1)}%;\n}`
+      )}%;\n  top: ${y.toFixed(
+        1
+      )}%;\n  width: ${lightSize}px;\n  height: ${lightSize}px;\n}`
     );
   }
 
@@ -155,7 +205,46 @@ export default function LayeredSkyScene({
     >
       {editLights && (
         <div className="layered-scene__edit-help">
-          Drag lights. Double-click empty spots to add lights. Drag 🔥 and 🪵 to move lantern glows.
+          <span>
+            Drag lights. Double-click empty spots to add. Right-click or
+            double-click a light to delete.
+          </span>
+
+          <label className="layered-scene__size-control">
+            Lights
+            <input
+              type="range"
+              min="18"
+              max="100"
+              value={lightSize}
+              onChange={(e) => setLightSize(Number(e.target.value))}
+            />
+            <strong>{lightSize}px</strong>
+          </label>
+
+          <label className="layered-scene__size-control">
+            🔥 Lantern
+            <input
+              type="range"
+              min="80"
+              max="320"
+              value={lanternSize}
+              onChange={(e) => setLanternSize(Number(e.target.value))}
+            />
+            <strong>{lanternSize}px</strong>
+          </label>
+
+          <label className="layered-scene__size-control">
+            🪵 Floor
+            <input
+              type="range"
+              min="120"
+              max="440"
+              value={floorLanternSize}
+              onChange={(e) => setFloorLanternSize(Number(e.target.value))}
+            />
+            <strong>{floorLanternSize}px</strong>
+          </label>
         </div>
       )}
 
@@ -186,7 +275,6 @@ export default function LayeredSkyScene({
       )}
 
       <div className="layered-scene__sky-glow" />
-
       <div className="layered-scene__aurora layered-scene__aurora--one" />
       <div className="layered-scene__aurora layered-scene__aurora--two" />
 
@@ -195,19 +283,33 @@ export default function LayeredSkyScene({
           <span
             key={`string-light-${light.id}`}
             className={`layered-scene__string-light layered-scene__string-light--${light.id}`}
-            style={
-              light.isExtra
+            style={{
+              ...(light.isExtra
                 ? {
                     left: light.left,
                     top: light.top,
                   }
-                : undefined
-            }
+                : {}),
+              width: `${lightSize}px`,
+              height: `${lightSize}px`,
+            }}
             onMouseDown={(e) => {
               if (!editLights) return;
               e.preventDefault();
               e.stopPropagation();
               setDraggingLight(light.id);
+            }}
+            onDoubleClick={(e) => {
+              if (!editLights) return;
+              e.preventDefault();
+              e.stopPropagation();
+              deleteLight(light.id);
+            }}
+            onContextMenu={(e) => {
+              if (!editLights) return;
+              e.preventDefault();
+              e.stopPropagation();
+              deleteLight(light.id);
             }}
           >
             {editLights && (
@@ -269,11 +371,35 @@ export default function LayeredSkyScene({
         ))}
       </div>
 
-      <div className="layered-scene__lantern-glow" />
-      <div className="layered-scene__lantern-core" />
+      <div
+        className="layered-scene__lantern-glow"
+        style={{
+          width: `${lanternSize}px`,
+          height: `${lanternSize}px`,
+        }}
+      />
+      <div
+        className="layered-scene__lantern-core"
+        style={{
+          width: `${lanternSize * 0.24}px`,
+          height: `${lanternSize * 0.27}px`,
+        }}
+      />
 
-      <div className="layered-scene__floor-lantern-glow" />
-      <div className="layered-scene__floor-lantern-core" />
+      <div
+        className="layered-scene__floor-lantern-glow"
+        style={{
+          width: `${floorLanternSize}px`,
+          height: `${floorLanternSize}px`,
+        }}
+      />
+      <div
+        className="layered-scene__floor-lantern-core"
+        style={{
+          width: `${floorLanternSize * 0.24}px`,
+          height: `${floorLanternSize * 0.26}px`,
+        }}
+      />
 
       <div className="layered-scene__fog layered-scene__fog--one" />
       <div className="layered-scene__fog layered-scene__fog--two" />

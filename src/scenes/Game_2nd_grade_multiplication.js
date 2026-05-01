@@ -7,11 +7,20 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     super("Game");
   }
 
+  preload() {
+    this.load.image("campClover", "/backgroundCamps/campClover.jpeg");
+  }
+
   create() {
     this.initSharedGameConfig({
       gameKey: "2nd_multiplication",
       assignmentTitle: "2nd Grade Multiplication",
     });
+
+    this.add
+      .image(this.scale.width / 2, this.scale.height / 2, "campClover")
+      .setDisplaySize(this.scale.width, this.scale.height)
+      .setDepth(-100);
 
     const problems = [];
 
@@ -28,35 +37,6 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     this.configuredProblems = this.getConfiguredProblems(this.problems);
     this.assignFiveQuestionAndAnswerSlots(this.configuredProblems);
 
-    for (let i = 1; i <= 7; i++) {
-      this.add.group({
-        key: "dirtGround",
-        repeat: 11,
-        setXY: {
-          x: 90,
-          y: 50 + (i - 1) * 100,
-          stepX: 180,
-        },
-        setScale: { x: 3, y: 6 },
-      });
-    }
-
-    const mushroomSpots = [
-      { x: 80, y: 70 }, { x: 220, y: 140 }, { x: 420, y: 90 },
-      { x: 620, y: 180 }, { x: 820, y: 70 }, { x: 1020, y: 160 },
-      { x: 1220, y: 100 }, { x: 1420, y: 180 },
-      { x: 150, y: 320 }, { x: 350, y: 420 }, { x: 550, y: 300 },
-      { x: 760, y: 430 }, { x: 980, y: 340 }, { x: 1180, y: 420 },
-      { x: 1380, y: 350 },
-      { x: 100, y: 560 }, { x: 280, y: 650 }, { x: 500, y: 580 },
-      { x: 700, y: 670 }, { x: 930, y: 590 }, { x: 1160, y: 660 },
-      { x: 1380, y: 600 },
-    ];
-
-    mushroomSpots.forEach((spot) => {
-      this.add.image(spot.x, spot.y, "mushrooms").setScale(3);
-    });
-
     this.add.image(1250, 100, "greenTent", 0).setScale(3);
     this.add.image(200, 100, "greenTent", 1).setScale(3);
     this.add.image(100, 300, "campFire", 3).setScale(3);
@@ -70,7 +50,7 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     this.trashCan5 = new TrashCan(this, 1340, 700, this.question5);
 
     // -----------------------------
-    // RACCOONS ADDED
+    // RACCOONS + EMOTES
     // -----------------------------
     this.trashCan1.index = 0;
     this.trashCan2.index = 1;
@@ -104,6 +84,18 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
         .setDepth(999)
         .setVisible(false)
         .play("raccoonFeedback");
+    });
+
+    this.raccoonEmoteGroup = [
+      this.add.sprite(this.trashCan1.x, this.trashCan1.y - 70, "heartEmote"),
+      this.add.sprite(this.trashCan2.x, this.trashCan2.y - 70, "heartEmote"),
+      this.add.sprite(this.trashCan3.x, this.trashCan3.y - 70, "heartEmote"),
+      this.add.sprite(this.trashCan4.x, this.trashCan4.y - 70, "heartEmote"),
+      this.add.sprite(this.trashCan5.x, this.trashCan5.y - 70, "heartEmote"),
+    ];
+
+    this.raccoonEmoteGroup.forEach((emote) => {
+      emote.setScale(3).setDepth(1000).setVisible(false);
     });
     // -----------------------------
 
@@ -212,8 +204,13 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
       this.showCenteredFeedback("That is Correct!", true);
 
       const trashCanIndex = trashCan.index;
-      if (this.raccoonGroup && this.raccoonGroup[trashCanIndex]) {
+
+      if (this.raccoonGroup?.[trashCanIndex]) {
         this.raccoonGroup[trashCanIndex].setVisible(true);
+      }
+
+      if (this.raccoonEmoteGroup?.[trashCanIndex]) {
+        this.raccoonEmoteGroup[trashCanIndex].setVisible(true);
       }
 
       trashCan.markCorrect?.();
@@ -250,6 +247,20 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
 
+    this.raccoonWrong?.destroy();
+    this.raccoonWrong = this.add
+      .sprite(trashCan.x, trashCan.y, "raccoon", 20)
+      .setScale(4)
+      .setDepth(999);
+
+    this.raccoonWrong.play("raccoonFeedback");
+
+    this.wrongEmote?.destroy();
+    this.wrongEmote = this.add
+      .sprite(trashCan.x, trashCan.y - 70, "brokenHeartEmote")
+      .setScale(3)
+      .setDepth(1000);
+
     trash.snapHome?.() || this.resetDraggedTrash?.(trash);
 
     this.time.delayedCall(500, () => {
@@ -265,6 +276,8 @@ export class Game_2nd_grade_multiplication extends BaseMathGameScene {
     });
 
     this.time.delayedCall(this.feedbackDuration, () => {
+      this.raccoonWrong?.destroy();
+      this.wrongEmote?.destroy();
       this.clearCenteredFeedback();
     });
   }

@@ -126,6 +126,11 @@ export default function Shop({ student, onBack }) {
   const [activeTab, setActiveTab] = useState("outfits");
   const [previewItem, setPreviewItem] = useState(null);
 
+  const editLights = false;
+
+  const shopLightingVariant =
+    activeTab === "emotes" ? "shop-emotes" : "shop-outfits";
+
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
 
   const defaultPfp =
@@ -216,170 +221,176 @@ export default function Shop({ student, onBack }) {
   }
 
   return (
-    <div className="shop-page">
-      <LayeredSkyScene variant="shop" />
+    <div className="shop-shell">
+      <LayeredSkyScene variant={shopLightingVariant} editLights={editLights} />
 
-      <div className="shop-header">
-        <div>
-          <h1>Shop</h1>
-          <p>
-            <img
-              src="/ui-assets/raccacoin.png"
-              alt="coin"
-              className="shop-coin"
-              style={{ width: 22, verticalAlign: "middle", marginRight: 8 }}
-            />
-            Coins: {coins}
-          </p>
-        </div>
-
-        <button className="shop-back-btn" onClick={onBack} type="button">
-          Back
-        </button>
-      </div>
-
-      <div className="shop-layout">
-        <div className="shop-left">
-          <div className="shop-tabs">
-            <button
-              className={`shop-tab ${activeTab === "outfits" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("outfits");
-                setPreviewItem(null);
-              }}
-              type="button"
-            >
-              Outfits
-            </button>
-
-            <button
-              className={`shop-tab ${activeTab === "emotes" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("emotes");
-                setPreviewItem(null);
-              }}
-              type="button"
-            >
-              Emotes
-            </button>
+      <div className="shop-page">
+        <div className="shop-header">
+          <div>
+            <h1>Shop</h1>
+            <p>
+              <img
+                src="/ui-assets/raccacoin.png"
+                alt="coin"
+                className="shop-coin"
+                style={{ width: 22, verticalAlign: "middle", marginRight: 8 }}
+              />
+              Coins: {coins}
+            </p>
           </div>
 
-          <div
-            className={`shop-grid ${
-              activeTab === "outfits" ? "shop-grid--outfits" : ""
-            }`}
-          >
-            {activeItems.map((item) => {
-              const owned = isOwned(item);
-              const equipped = isEquipped(item);
-              const isNew = newUnlockedItems.includes(item.id);
-
-              return (
-                <div
-                  key={item.id}
-                  className={`shop-card ${
-                    item.category === "outfit" ? "shop-card--outfit" : ""
-                  } ${isNew ? "shop-card--new" : ""} ${
-                    equipped ? "shop-card--equipped" : ""
-                  }`}
-                  onMouseEnter={() => setPreviewItem(item)}
-                  onMouseLeave={() => setPreviewItem(null)}
-                  onFocus={() => setPreviewItem(item)}
-                  onBlur={() => setPreviewItem(null)}
-                >
-                  <div
-                    className={`shop-item-art shop-item-art--image ${
-                      item.category === "outfit"
-                        ? "shop-item-art--outfit"
-                        : ""
-                    }`}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = FALLBACK_IMAGE;
-                      }}
-                    />
-                  </div>
-
-                  <h3>{item.name}</h3>
-
-                  <p>
-                    {item.price === 0 ? (
-                      "Free"
-                    ) : (
-                      <>
-                        <img
-                          src="/ui-assets/raccacoin.png"
-                          alt="coin"
-                          className="shop-coin"
-                          style={{
-                            width: 18,
-                            verticalAlign: "middle",
-                            marginRight: 6,
-                          }}
-                        />
-                        {item.price}
-                      </>
-                    )}
-                  </p>
-
-                  <button
-                    disabled={
-                      busyItemId === item.id ||
-                      (!owned && coins < item.price) ||
-                      equipped
-                    }
-                    onClick={() => handleItemClick(item)}
-                    type="button"
-                  >
-                    {getButtonLabel(item)}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+          <button className="shop-back-btn" onClick={onBack} type="button">
+            Back
+          </button>
         </div>
 
-        <div className="shop-right">
-          <div className="mirror-frame">
-            <div className="mirror-glow" />
-
-            <div className="stand-area">
-              <div className="stand-base" />
-
-              <div
-                className={`preview-character ${
-                  activeTab === "outfits"
-                    ? "preview-character--customize"
-                    : "preview-character--pfp"
+        <div className="shop-layout">
+          <div className="shop-left">
+            <div className="shop-tabs">
+              <button
+                className={`shop-tab ${
+                  activeTab === "outfits" ? "active" : ""
                 }`}
+                onClick={() => {
+                  setActiveTab("outfits");
+                  setPreviewItem(null);
+                }}
+                type="button"
               >
-                <img
-                  src={previewDisplayItem?.image || FALLBACK_IMAGE}
-                  alt="Preview"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = FALLBACK_IMAGE;
-                  }}
-                />
-              </div>
+                Outfits
+              </button>
 
-              <div className="equipped-label">
-                {previewItem
-                  ? `Preview: ${previewItem.name}`
-                  : activeTab === "outfits"
-                  ? `Outfit: ${equippedOutfitItem.name}`
-                  : `Wearing: ${equippedPfpItem.name}`}
-              </div>
+              <button
+                className={`shop-tab ${
+                  activeTab === "emotes" ? "active" : ""
+                }`}
+                onClick={() => {
+                  setActiveTab("emotes");
+                  setPreviewItem(null);
+                }}
+                type="button"
+              >
+                Emotes
+              </button>
+            </div>
 
-              {previewItem && !isEquipped(previewItem) && (
-                <div className="equipped-label equipped-label--hint">
-                  Click {isOwned(previewItem) ? "Wear" : "Buy + Wear"} to save it.
+            <div
+              className={`shop-grid ${
+                activeTab === "outfits" ? "shop-grid--outfits" : ""
+              }`}
+            >
+              {activeItems.map((item) => {
+                const owned = isOwned(item);
+                const equipped = isEquipped(item);
+                const isNew = newUnlockedItems.includes(item.id);
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`shop-card ${
+                      item.category === "outfit" ? "shop-card--outfit" : ""
+                    } ${isNew ? "shop-card--new" : ""} ${
+                      equipped ? "shop-card--equipped" : ""
+                    }`}
+                    onMouseEnter={() => setPreviewItem(item)}
+                    onMouseLeave={() => setPreviewItem(null)}
+                    onFocus={() => setPreviewItem(item)}
+                    onBlur={() => setPreviewItem(null)}
+                  >
+                    <div
+                      className={`shop-item-art shop-item-art--image ${
+                        item.category === "outfit"
+                          ? "shop-item-art--outfit"
+                          : ""
+                      }`}
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_IMAGE;
+                        }}
+                      />
+                    </div>
+
+                    <h3>{item.name}</h3>
+
+                    <p>
+                      {item.price === 0 ? (
+                        "Free"
+                      ) : (
+                        <>
+                          <img
+                            src="/ui-assets/raccacoin.png"
+                            alt="coin"
+                            className="shop-coin"
+                            style={{
+                              width: 18,
+                              verticalAlign: "middle",
+                              marginRight: 6,
+                            }}
+                          />
+                          {item.price}
+                        </>
+                      )}
+                    </p>
+
+                    <button
+                      disabled={
+                        busyItemId === item.id ||
+                        (!owned && coins < item.price) ||
+                        equipped
+                      }
+                      onClick={() => handleItemClick(item)}
+                      type="button"
+                    >
+                      {getButtonLabel(item)}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="shop-right">
+            <div className="mirror-frame">
+              <div className="mirror-glow" />
+
+              <div className="stand-area">
+                <div className="stand-base" />
+
+                <div
+                  className={`preview-character ${
+                    activeTab === "outfits"
+                      ? "preview-character--customize"
+                      : "preview-character--pfp"
+                  }`}
+                >
+                  <img
+                    src={previewDisplayItem?.image || FALLBACK_IMAGE}
+                    alt="Preview"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = FALLBACK_IMAGE;
+                    }}
+                  />
                 </div>
-              )}
+
+                <div className="equipped-label">
+                  {previewItem
+                    ? `Preview: ${previewItem.name}`
+                    : activeTab === "outfits"
+                    ? `Outfit: ${equippedOutfitItem.name}`
+                    : `Wearing: ${equippedPfpItem.name}`}
+                </div>
+
+                {previewItem && !isEquipped(previewItem) && (
+                  <div className="equipped-label equipped-label--hint">
+                    Click {isOwned(previewItem) ? "Wear" : "Buy + Wear"} to save it.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

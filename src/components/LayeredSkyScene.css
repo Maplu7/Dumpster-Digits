@@ -1,7 +1,7 @@
 .layered-scene {
-  position: absolute;
+  position: fixed; /* 🔥 FIXED */
   inset: 0;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: none;
   z-index: 0;
 
@@ -173,71 +173,485 @@
 }
 
 /* DEFAULT FALLBACK */
-.layered-scene__string-light--1 { left: 50%; top: 50%; }
-.layered-scene__string-light--2 { left: 10.7%; top: 13.5%; }
-.layered-scene__string-light--3 { left: 18.1%; top: 11.7%; }
-.layered-scene__string-light--4 { left: 37.3%; top: 6.3%; }
-.layered-scene__string-light--5 { left: 56.2%; top: 6.2%; }
-.layered-scene__string-light--6 { left: 65.7%; top: 9.7%; }
-.layered-scene__string-light--7 { left: 74.9%; top: 14.1%; }
-.layered-scene__string-light--8 { left: 84.1%; top: 13.2%; }
-.layered-scene__string-light--9 { left: 95.1%; top: 8.2%; }
+.layered-scene__string-light--1 {
+  left: 50%;
+  top: 50%;
+}
+
+.layered-scene__string-light--2 {
+  left: 10.7%;
+  top: 13.5%;
+}
+
+.layered-scene__string-light--3 {
+  left: 18.1%;
+  top: 11.7%;
+}
+
+.layered-scene__string-light--4 {
+  left: 37.3%;
+  top: 6.3%;
+}
+
+.layered-scene__string-light--5 {
+  left: 56.2%;
+  top: 6.2%;
+}
+
+.layered-scene__string-light--6 {
+  left: 65.7%;
+  top: 9.7%;
+}
+
+.layered-scene__string-light--7 {
+  left: 74.9%;
+  top: 14.1%;
+}
+
+.layered-scene__string-light--8 {
+  left: 84.1%;
+  top: 13.2%;
+}
+
+.layered-scene__string-light--9 {
+  left: 95.1%;
+  top: 8.2%;
+}
 
 /* ---------------- GRADE 1 FINAL POSITIONS ---------------- */
 
+.layered-scene--assignments-grade1 {
+  --lantern-x: 12.2%;
+  --lantern-y: 64.5%;
+  --lantern-size: 245px;
+
+  --floor-lantern-x: 24.1%;
+  --floor-lantern-y: 87.9%;
+  --floor-lantern-size: 260px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light {
+  width: 42px;
+  height: 42px;
+}
+
 .layered-scene--assignments-grade1 .layered-scene__string-light--1,
-.layered-scene--assignments-grade1 .layered-scene__string-light--15 {
+.layered-scene--assignments-grade1 .layered-scene__string-light--15,
+.layered-scene--assignments-grade1 .layered-scene__string-light--16,
+.layered-scene--assignments-grade1 .layered-scene__string-light--17,
+.layered-scene--assignments-grade1 .layered-scene__string-light--18 {
   display: none;
 }
 
-.layered-scene--assignments-grade1 .layered-scene__string-light--2 { left: 1.2%; top: 7.5%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--3 { left: 4.7%; top: 7.9%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--4 { left: 10%; top: 8.1%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--5 { left: 16.8%; top: 6.4%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--6 { left: 23.1%; top: 6.1%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--7 { left: 29.4%; top: 4%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--8 { left: 36%; top: 0%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--9 { left: 57%; top: 3.4%; }
+.layered-scene--assignments-grade1 .layered-scene__string-light--2 {
+  left: 1.2%;
+  top: 7.5%;
+}
 
-/* 🔥 your corrected right-side curve */
-.layered-scene--assignments-grade1 .layered-scene__string-light--10 { left: 80.4%; top: 8.0%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--11 { left: 87.1%; top: 4.9%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--12 { left: 93.4%; top: 1.2%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--13 { left: 1.2%; top: 7.5%; }
-.layered-scene--assignments-grade1 .layered-scene__string-light--14 { left: 93.4%; top: 1.6%; }
+.layered-scene--assignments-grade1 .layered-scene__string-light--3 {
+  left: 4.7%;
+  top: 7.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--4 {
+  left: 10%;
+  top: 8.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--5 {
+  left: 16.8%;
+  top: 6.4%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--6 {
+  left: 23.1%;
+  top: 6.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--7 {
+  left: 30.4%;
+  top: 3.8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--8 {
+  left: 36%;
+  top: 0%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--9 {
+  left: 54.3%;
+  top: 0.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--10 {
+  left: 80.4%;
+  top: 8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--11 {
+  left: 87.1%;
+  top: 4.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--12 {
+  left: 93.4%;
+  top: 1.2%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--13 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--14 {
+  left: 64.1%;
+  top: 4.7%;
+}
+/* ---------------- GRADE 1 FINAL POSITIONS ---------------- */
+
+.layered-scene--assignments-grade1 {
+  --lantern-x: 12.2%;
+  --lantern-y: 64.5%;
+  --lantern-size: 245px;
+
+  --floor-lantern-x: 24.1%;
+  --floor-lantern-y: 87.9%;
+  --floor-lantern-size: 260px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light {
+  width: 42px;
+  height: 42px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--1,
+.layered-scene--assignments-grade1 .layered-scene__string-light--16,
+.layered-scene--assignments-grade1 .layered-scene__string-light--17 {
+  display: none;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--2 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--3 {
+  left: 4.7%;
+  top: 7.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--4 {
+  left: 10%;
+  top: 8.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--5 {
+  left: 16.8%;
+  top: 6.4%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--6 {
+  left: 23.1%;
+  top: 6.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--7 {
+  left: 30.4%;
+  top: 3.8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--8 {
+  left: 36%;
+  top: 0%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--9 {
+  left: 54.3%;
+  top: 0.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--10 {
+  left: 80.4%;
+  top: 8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--11 {
+  left: 87.1%;
+  top: 4.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--12 {
+  left: 93.4%;
+  top: 1.2%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--13 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--14 {
+  left: 64.1%;
+  top: 4.7%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--19 {
+  left: 73.2%;
+  top: 6.6%
+}
 
 /* ---------------- GRADE 2 FINAL POSITIONS ---------------- */
 
-.layered-scene--assignments-grade2 .layered-scene__string-light--1 {
+.layered-scene--assignments-grade2 {
+  --lantern-x: -12%;
+  --lantern-y: 68.5%;
+  --lantern-size: 320px;
+
+  --floor-lantern-x: 11.9%;
+  --floor-lantern-y: 90.1%;
+  --floor-lantern-size: 365px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--1,
+.layered-scene--assignments-grade2 .layered-scene__string-light--10 {
   display: none;
 }
 
-.layered-scene--assignments-grade2 .layered-scene__string-light--2 { left: 1.7%; top: 9.5%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--3 { left: 10.6%; top: 9.6%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--4 { left: 19.7%; top: 7.3%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--5 { left: 29.9%; top: 3.6%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--6 { left: 56.7%; top: 3.8%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--7 { left: 70.1%; top: 8.3%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--8 { left: 84.3%; top: 10.4%; }
-.layered-scene--assignments-grade2 .layered-scene__string-light--9 { left: 95.6%; top: 11.6%; }
+.layered-scene--assignments-grade2 .layered-scene__string-light--2 {
+  left: 1.2%;
+  top: 8.7%;
+  width: 60px;
+  height: 60px;
+}
 
-/* ---------------- SHOP FINAL POSITIONS ---------------- */
+.layered-scene--assignments-grade2 .layered-scene__string-light--3 {
+  left: 10.2%;
+  top: 8.7%;
+  width: 60px;
+  height: 60px;
+}
 
-.layered-scene--shop .layered-scene__string-light--1 {
+.layered-scene--assignments-grade2 .layered-scene__string-light--4 {
+  left: 19.2%;
+  top: 6.6%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--5 {
+  left: 29.5%;
+  top: 2.9%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--6 {
+  left: 56.4%;
+  top: 3.2%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--7 {
+  left: 69.6%;
+  top: 7.5%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--8 {
+  left: 83.8%;
+  top: 9.7%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--9 {
+  left: 95.2%;
+  top: 11.0%;
+  width: 60px;
+  height: 60px;
+}
+
+/* ---------------- SHOP OUTFITS FINAL ---------------- */
+
+.layered-scene--shop-outfits {
+  --lantern-x: 12.0%;
+  --lantern-y: 65.1%;
+  --lantern-size: 150px;
+
+  --floor-lantern-x: 23.6%;
+  --floor-lantern-y: 88.2%;
+  --floor-lantern-size: 220px;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light {
+  width: 36px;
+  height: 36px;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--1 {
   display: none;
 }
 
-.layered-scene--shop .layered-scene__string-light--2 { left: 2.5%; top: 11.1%; }
-.layered-scene--shop .layered-scene__string-light--3 { left: 7.9%; top: 10.6%; }
-.layered-scene--shop .layered-scene__string-light--4 { left: 15.1%; top: 8.9%; }
-.layered-scene--shop .layered-scene__string-light--5 { left: 21.4%; top: 8.7%; }
-.layered-scene--shop .layered-scene__string-light--6 { left: 28%; top: 6.3%; }
-.layered-scene--shop .layered-scene__string-light--7 { left: 35.3%; top: 3%; }
-.layered-scene--shop .layered-scene__string-light--8 { left: 54.4%; top: 2.8%; }
-.layered-scene--shop .layered-scene__string-light--9 { left: 64.3%; top: 7.6%; }
-.layered-scene--shop .layered-scene__string-light--10 { left: 74.1%; top: 9.6%; }
-.layered-scene--shop .layered-scene__string-light--11 { left: 82.5%; top: 10.4%; }
-.layered-scene--shop .layered-scene__string-light--12 { left: 89.4%; top: 7.7%; }
+.layered-scene--shop-outfits .layered-scene__string-light--2 {
+  left: 1.5%;
+  top: 7.6%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--3 {
+  left: 5.1%;
+  top: 7.8%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--4 {
+  left: 10.3%;
+  top: 8.1%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--5 {
+  left: 17.2%;
+  top: 6%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--6 {
+  left: 23.1%;
+  top: 6%;
+}
+
+/* LEFT CENTER */
+
+.layered-scene--shop-outfits .layered-scene__string-light--7 {
+  left: 29.6%;
+  top: 3.6%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--8 {
+  left: 36.2%;
+  top: 0%;
+}
+
+/* RIGHT SIDE */
+
+.layered-scene--shop-outfits .layered-scene__string-light--9 {
+  left: 63.7%;
+  top: 5.4%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--10 {
+  left: 72.8%;
+  top: 6.7%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--11 {
+  left: 80.7%;
+  top: 8.4%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--12 {
+  left: 87.4%;
+  top: 5.4%;
+}
+
+/* NEW RIGHT TOP LIGHTS */
+
+.layered-scene--shop-outfits .layered-scene__string-light--13 {
+  left: 54.3%;
+  top: 0%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--14 {
+  left: 93.1%;
+  top: 1.5%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--15 {
+  display: none;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--16 {
+  display: none;
+}
+
+/* ---------------- SHOP EMOTES ---------------- */
+
+/* SHOP EMOTES STRING LIGHTS */
+
+.layered-scene--shop-emotes .layered-scene__string-light {
+  width: 42px;
+  height: 42px;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--1,
+.layered-scene--shop-emotes .layered-scene__string-light--7,
+.layered-scene--shop-emotes .layered-scene__string-light--8 {
+  display: none;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--2 {
+  left: 1.6%;
+  top: 7.2%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--3 {
+  left: 4.8%;
+  top: 7.6%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--4 {
+  left: 10.1%;
+  top: 8%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--5 {
+  left: 16.5%;
+  top: 6%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--6 {
+  left: 22.8%;
+  top: 6.2%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--9 {
+  left: 63.4%;
+  top: 4.5%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--10 {
+  left: 72.9%;
+  top: 7.1%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--11 {
+  left: 80.7%;
+  top: 8.3%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--12 {
+  left: 87.2%;
+  top: 5.3%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--13 {
+  left: 28.8%;
+  top: 3.8%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--14 {
+  left: 36.2%;
+  top: 0%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--15 {
+  left: 54.3%;
+  top: 0%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--16 {
+  left: 93.3%;
+  top: 1.6%;
+}
 
 @keyframes stringLightFlicker {
   0% {
@@ -623,6 +1037,41 @@
 
 .layered-scene--edit .layered-scene__string-light:active {
   cursor: grabbing;
+}
+
+.layered-scene__edit-help {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.layered-scene__size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.layered-scene__size-control input {
+  width: 130px;
+}
+
+.layered-scene__edit-help {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.layered-scene__size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.layered-scene__size-control input {
+  width: 130px;
 }
 
 .layered-scene__string-light-label {

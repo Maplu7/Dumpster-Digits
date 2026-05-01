@@ -85,6 +85,42 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
         .play("raccoonFeedback");
     });
 
+    // ---------------------------------------------------
+    // Heart emotes above raccoons
+    // ---------------------------------------------------
+
+    this.raccoonEmoteGroup = [
+      this.add
+        .sprite(this.trashCan1.x, this.trashCan1.y - 70, "heartEmote")
+        .setScale(3)
+        .setDepth(1000)
+        .setVisible(false),
+
+      this.add
+        .sprite(this.trashCan2.x, this.trashCan2.y - 70, "heartEmote")
+        .setScale(3)
+        .setDepth(1000)
+        .setVisible(false),
+
+      this.add
+        .sprite(this.trashCan3.x, this.trashCan3.y - 70, "heartEmote")
+        .setScale(3)
+        .setDepth(1000)
+        .setVisible(false),
+
+      this.add
+        .sprite(this.trashCan4.x, this.trashCan4.y - 70, "heartEmote")
+        .setScale(3)
+        .setDepth(1000)
+        .setVisible(false),
+
+      this.add
+        .sprite(this.trashCan5.x, this.trashCan5.y - 70, "heartEmote")
+        .setScale(3)
+        .setDepth(1000)
+        .setVisible(false),
+    ];
+
     this.trash1 = new Trash(this, 550, 280, {
       question: String(this.answer1.answer),
       answer: this.answer1.answer,
@@ -272,6 +308,10 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
         this.raccoonGroup[trashCanIndex].setVisible(true);
       }
 
+      if (this.raccoonEmoteGroup?.[trashCanIndex]) {
+        this.raccoonEmoteGroup[trashCanIndex].setVisible(true);
+      }
+
       trashCan.markCorrect?.();
       this.popTrashCanConfetti?.(trashCan);
 
@@ -302,9 +342,25 @@ export class Game_1st_grade_subtraction extends BaseMathGameScene {
     this.clearCenteredFeedback();
     this.showCenteredFeedback("Try again!", false);
 
+    this.raccoonWrong?.destroy();
+    this.raccoonWrong = this.add
+      .sprite(trashCan.x, trashCan.y, "raccoon", 20)
+      .setScale(4)
+      .setDepth(999);
+
+    this.raccoonWrong.play("raccoonFeedback");
+
+    this.wrongEmote?.destroy();
+    this.wrongEmote = this.add
+      .sprite(trashCan.x, trashCan.y - 70, "brokenHeartEmote")
+      .setScale(3)
+      .setDepth(1000);
+
     this.smoothResetTrash(trash);
 
     this.time.delayedCall(this.feedbackDuration, () => {
+      this.raccoonWrong?.destroy();
+      this.wrongEmote?.destroy();
       this.clearCenteredFeedback();
     });
   }
