@@ -39,6 +39,7 @@ export const assignmentCatalog = [
   { gameKey: "2nd_fill_blank", title: "2nd Grade Fill in the Blank", grade: 2 },
   { gameKey: "2nd_place_value", title: "2nd Grade Place Value", grade: 2 },
   { gameKey: "2nd_multiplication", title: "2nd Grade Multiplication", grade: 2 },
+  { gameKey: "2nd_division", title: "2nd Grade Division", grade: 2 },
 ];
 
 /* -----------------------------
@@ -80,6 +81,27 @@ function makeMultiplicationFamilies(maxFamily = 10, maxOther = 10) {
         question: `${family}×${other}`,
         answer: family * other,
       }))
+    ),
+  }));
+}
+
+function makeDivisionFamilies(maxFamily = 10, maxOther = 10) {
+  return Array.from({ length: maxFamily + 1 }, (_, family) => ({
+    family,
+    problems: cleanProblems(
+      Array.from({ length: maxOther + 1 }, (_, other) => {
+        if (family === 0) {
+          return {
+            question: `${other}÷1`,
+            answer: other,
+          };
+        }
+
+        return {
+          question: `${family * other}÷${family}`,
+          answer: other,
+        };
+      })
     ),
   }));
 }
@@ -295,6 +317,13 @@ const multiplicationPresets = buildFamilyPresets({
   practiceMax: 7,
 });
 
+const divisionPresets = buildFamilyPresets({
+  families: makeDivisionFamilies(10, 10),
+  descriptionVerb: "Practice dividing by",
+  easyMax: 3,
+  practiceMax: 7,
+});
+
 const placeValuePresets = buildFamilyPresets({
   families: makePlaceValueFamilies(),
   descriptionVerb: "Practice",
@@ -338,6 +367,11 @@ export const assignmentProblemBanks = {
   "2nd_multiplication": {
     presets: multiplicationPresets,
     flatBuiltInProblems: flattenPresets(multiplicationPresets),
+  },
+
+  "2nd_division": {
+    presets: divisionPresets,
+    flatBuiltInProblems: flattenPresets(divisionPresets),
   },
 };
 
