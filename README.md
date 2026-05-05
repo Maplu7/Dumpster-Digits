@@ -26,10 +26,22 @@ The app is hosted online and connects to Firebase, which handles authentication 
 
 <img width="360" height="688" alt="Blank diagram (1)" src="https://github.com/user-attachments/assets/6387e77d-438f-4ad4-87fb-1fdf000a3f09" />
 
+## How it is Deployed
+
+Dumpster Digits is deployed as a browser-based web application. The frontend, built with React and Vite, is compiled into static files and hosted on a web hosting platform such as Firebase Hosting, Netlify, or Vercel.
+
+When a user accesses the application through a browser, these files are loaded and the Phaser game engine runs directly on the client side.
+
+The application communicates with Firebase using the Firebase SDK, which handles user authentication and stores all game-related data, including student progress, assignments, and scores, in Firestore.
+
+Firebase also enables real-time updates through listeners, allowing the teacher dashboard and student data to update instantly without requiring a custom backend server.
+
 ## How to Redeploy It
 
 To redeploy Dumpster Digits, a developer first clones the project repository and installs all required dependencies using npm. The developer must then configure Firebase by adding the project’s API keys and connecting to the correct Firebase project for authentication and Firestore database access.
+
 The application can be tested locally using the Vite development server to ensure that the React interface and Phaser game run correctly. Once verified, the project is built into a production-ready version using Vite’s build process.
+
 The built files are then deployed to a hosting platform such as Firebase Hosting, Netlify, or Vercel. After deployment, the application becomes accessible via a public URL and continues to interact with Firebase for real-time data synchronization, including student progress, assignments, and game results.
 
 ### Redeployment Steps:
