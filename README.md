@@ -22,6 +22,34 @@ The app is hosted online and connects to Firebase, which handles authentication 
 
 ---
 
+## Test the App
+
+### First Grade
+
+#### Student:
+
+Login: 1000
+Password: 0224
+
+#### Teacher:
+
+Login:T001 
+Password: 1234
+
+### Second Grade
+
+#### Student:
+
+Login: 1011
+Password: 0510
+
+#### Teacher:
+
+Login:T002
+Password: 4567 
+
+---
+
 ## Deployment Diagram
 
 <img width="360" height="688" alt="Blank diagram (1)" src="https://github.com/user-attachments/assets/6387e77d-438f-4ad4-87fb-1fdf000a3f09" />
