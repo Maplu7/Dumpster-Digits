@@ -22,6 +22,10 @@ It combines engaging gameplay with real-time data tracking for teachers using Fi
 
 ---
 
+## Deployment Diagram
+
+<img width="360" height="688" alt="Blank diagram (1)" src="https://github.com/user-attachments/assets/6387e77d-438f-4ad4-87fb-1fdf000a3f09" />
+
 ## Features
 
 ### Student Gameplay
@@ -107,7 +111,35 @@ It combines engaging gameplay with real-time data tracking for teachers using Fi
 6. UI updates instantly via listeners
 
 ---
-##Firestore Rules
+
+## Firestore Structure
+
+```plaintext
+students/
+  {studentId}/
+    coins: number
+    equippedItemImage: string
+
+    assignmentResults/
+      {attemptId}/
+        gameKey
+        totalWrongGuesses
+        answers[]
+        percentCorrect
+        perfectRun
+        completedAt
+
+    assignmentGameSummary/
+      {gameKey}/
+        playCount
+        lastCoinReward
+        totalCoinsEarnedFromGame
+        percentCorrect
+        perfectRun
+
+---
+
+## Firestore Rules
 ```plaintext
 rules_version = '2';
 service cloud.firestore {
@@ -143,28 +175,3 @@ service cloud.firestore {
   }
 }
 ```
-
-## Firestore Structure
-
-```plaintext
-students/
-  {studentId}/
-    coins: number
-    equippedItemImage: string
-
-    assignmentResults/
-      {attemptId}/
-        gameKey
-        totalWrongGuesses
-        answers[]
-        percentCorrect
-        perfectRun
-        completedAt
-
-    assignmentGameSummary/
-      {gameKey}/
-        playCount
-        lastCoinReward
-        totalCoinsEarnedFromGame
-        percentCorrect
-        perfectRun
