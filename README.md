@@ -107,6 +107,42 @@ It combines engaging gameplay with real-time data tracking for teachers using Fi
 6. UI updates instantly via listeners
 
 ---
+##Firestore Rules
+```plaintext
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /teachers/{teacherId} {
+      allow read, write: if true;
+    }
+
+    match /classrooms/{classId} {
+      allow read, write: if true;
+
+      match /{subPath=**} {
+        allow read, write: if true;
+      }
+    }
+
+    match /students/{studentId} {
+      allow read, write: if true;
+
+      match /{subPath=**} {
+        allow read, write: if true;
+      }
+    }
+
+    match /assignments/{assignmentId} {
+      allow read, write: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
 
 ## Firestore Structure
 
