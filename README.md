@@ -17,8 +17,8 @@ If you are developing a production application, we recommend using TypeScript wi
 
 # Dumpster Digits
 
-Dumpster Digits is deployed as a web application that runs in the browser using React and Phaser.
-The app is hosted online and connects to Firebase, which handles authentication and stores all game and student data in real time.
+Dumpster Digits is a raccoon-themed educational game that helps 1st and 2nd grade students practice math skills while allowing teachers to track performance and progress in real time.
+Dumpster Digits is deployed as a web application that runs in the browser using React and Phaser. The app is hosted online and connects to Firebase, which handles authentication and stores all game and student data in real time.
 
 ---
 
@@ -26,7 +26,7 @@ The app is hosted online and connects to Firebase, which handles authentication 
 
 Access it here: https://hello-kitty-b433c.web.app/
 
-### First Grade
+### First Grade Login
 
 #### Student:
 - Login: 1000
@@ -36,7 +36,7 @@ Access it here: https://hello-kitty-b433c.web.app/
 - Login:T001 
 - Password: 1234
 
-### Second Grade
+### Second Grade Login
 
 #### Student:
 - Login: 1011
