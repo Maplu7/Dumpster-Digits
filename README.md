@@ -26,7 +26,7 @@ The app is hosted online and connects to Firebase, which handles authentication 
 
 <img width="360" height="688" alt="Blank diagram (1)" src="https://github.com/user-attachments/assets/6387e77d-438f-4ad4-87fb-1fdf000a3f09" />
 
-## How it is Deployed
+## How It Is Deployed
 
 Dumpster Digits is deployed as a browser-based web application. The frontend, built with React and Vite, is compiled into static files and hosted on a web hosting platform such as Firebase Hosting, Netlify, or Vercel.
 
