@@ -33,7 +33,7 @@ Access it here: https://hello-kitty-b433c.web.app/
 - Password: 0224
 
 #### Teacher:
-- Login:T001 
+- Login: T001 
 - Password: 1234
 
 ### Second Grade Login
@@ -43,7 +43,7 @@ Access it here: https://hello-kitty-b433c.web.app/
 - Password: 0510
 
 #### Teacher:
-- Login:T002
+- Login: T002
 - Password: 4567 
 
 ---
