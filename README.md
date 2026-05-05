@@ -24,6 +24,8 @@ The app is hosted online and connects to Firebase, which handles authentication 
 
 ## Test the App
 
+Access it here: https://hello-kitty-b433c.web.app/
+
 ### First Grade
 
 #### Student:
