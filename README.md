@@ -17,14 +17,20 @@ If you are developing a production application, we recommend using TypeScript wi
 
 # Dumpster Digits
 
-Dumpster Digits is an interactive, raccoon-themed educational math game designed for 1st and 2nd grade students.  
-It combines engaging gameplay with real-time data tracking for teachers using Firebase.
+Dumpster Digits is deployed as a web application that runs in the browser using React and Phaser.
+The app is hosted online and connects to Firebase, which handles authentication and stores all game and student data in real time.
 
 ---
 
 ## Deployment Diagram
 
 <img width="360" height="688" alt="Blank diagram (1)" src="https://github.com/user-attachments/assets/6387e77d-438f-4ad4-87fb-1fdf000a3f09" />
+
+## How to Redeploy It
+
+To redeploy Dumpster Digits, a developer clones the repository, installs dependencies, and connects the project to Firebase using the configuration keys.
+The app can be tested locally and then built for production using Vite.
+It is then deployed to a hosting platform such as Firebase Hosting, Netlify, or Vercel, where it becomes accessible through a browser.
 
 ## Features
 
@@ -112,34 +118,8 @@ It combines engaging gameplay with real-time data tracking for teachers using Fi
 
 ---
 
-## Firestore Structure
-
-```plaintext
-students/
-  {studentId}/
-    coins: number
-    equippedItemImage: string
-
-    assignmentResults/
-      {attemptId}/
-        gameKey
-        totalWrongGuesses
-        answers[]
-        percentCorrect
-        perfectRun
-        completedAt
-
-    assignmentGameSummary/
-      {gameKey}/
-        playCount
-        lastCoinReward
-        totalCoinsEarnedFromGame
-        percentCorrect
-        perfectRun
-
----
-
 ## Firestore Rules
+
 ```plaintext
 rules_version = '2';
 service cloud.firestore {
@@ -175,3 +155,32 @@ service cloud.firestore {
   }
 }
 ```
+
+---
+
+## Firestore Structure
+
+```plaintext
+students/
+  {studentId}/
+    coins: number
+    equippedItemImage: string
+
+    assignmentResults/
+      {attemptId}/
+        gameKey
+        totalWrongGuesses
+        answers[]
+        percentCorrect
+        perfectRun
+        completedAt
+
+    assignmentGameSummary/
+      {gameKey}/
+        playCount
+        lastCoinReward
+        totalCoinsEarnedFromGame
+        percentCorrect
+        perfectRun
+
+---
