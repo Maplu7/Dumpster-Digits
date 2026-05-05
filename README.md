@@ -142,7 +142,7 @@ service cloud.firestore {
     }
   }
 }
-
+```
 
 ## Firestore Structure
 
