@@ -27,26 +27,22 @@ The app is hosted online and connects to Firebase, which handles authentication 
 ### First Grade
 
 #### Student:
-
-Login: 1000
-Password: 0224
+- Login: 1000
+- Password: 0224
 
 #### Teacher:
-
-Login:T001 
-Password: 1234
+- Login:T001 
+- Password: 1234
 
 ### Second Grade
 
 #### Student:
-
-Login: 1011
-Password: 0510
+- Login: 1011
+- Password: 0510
 
 #### Teacher:
-
-Login:T002
-Password: 4567 
+- Login:T002
+- Password: 4567 
 
 ---
 
