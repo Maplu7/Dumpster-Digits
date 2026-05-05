@@ -55,8 +55,6 @@ Access the live application via URL
   - wrong attempts per question
   - perfect run detection
 
----
-
 ### Coin System
 - Students earn coins after completing a game
 - Rewards decrease with repeated plays:
@@ -67,16 +65,12 @@ Access the live application via URL
 - Coins are stored in Firebase and update live
 - Used in the Shop to unlock cosmetics
 
----
-
 ### Shop System
 - Live-updating coin balance
 - Unlockable:
   - Profile pictures
   - Custom outfits
 - Equipped items sync instantly across the app
-
----
 
 ### Teacher Dashboard
 - Real-time student data from Firebase
@@ -87,8 +81,6 @@ Access the live application via URL
   - Perfect runs
 - Per-attempt history (not just latest score)
 - Class-wide performance insights
-
----
 
 ### Assignment System
 - Assignments tied to game types
