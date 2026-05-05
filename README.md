@@ -34,13 +34,15 @@ The built files are then deployed to a hosting platform such as Firebase Hosting
 
 ### Redeployment Steps:
 
-Clone the repository from GitHub
-Install dependencies (npm install)
-Configure Firebase (API keys + project setup)
-Run locally (npm run dev) to test
-Build the project (npm run build)
-Deploy to hosting (Firebase Hosting / Netlify / Vercel)
-Access the live application via URL
+- Clone the repository from GitHub
+- Install dependencies (npm install)
+- Configure Firebase (API keys + project setup)
+- Run locally (npm run dev) to test
+- Build the project (npm run build)
+- Deploy to hosting (Firebase Hosting / Netlify / Vercel)
+- Access the live application via URL
+
+To redeploy the app, you basically download the code, install everything, connect Firebase, test it locally, and then publish it again. Firebase takes care of the backend, so you don’t need to deploy your own server.
 
 ## Features
 
