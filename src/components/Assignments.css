@@ -1,14 +1,14 @@
 .assignments-page {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  height: auto;
-  padding: 34px 22px 42px;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  overflow-y: visible;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+
   font-family: "Fjalla One", sans-serif;
   color: #fff7ec;
+
   background:
     linear-gradient(
       to bottom,
@@ -16,14 +16,70 @@
       rgba(17, 28, 56, 0.5)
     ),
     url("/background9.png");
+
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
+/* FIXED SKY / LIGHTS */
+
+.assignments-fixed-sky {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.assignments-fixed-sky .layered-scene {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+
+.assignments-fixed-sky .layered-scene__sky,
+.assignments-fixed-sky .layered-scene__stars,
+.assignments-fixed-sky .layered-scene__string-lights,
+.assignments-fixed-sky .layered-scene__string-light-row,
+.assignments-fixed-sky .layered-scene__lanterns,
+.assignments-fixed-sky .layered-scene__foreground,
+.assignments-fixed-sky .layered-scene__mist,
+.assignments-fixed-sky .layered-scene__hills {
+  position: absolute !important;
+}
+
+.assignments-fixed-sky * {
+  pointer-events: none;
+}
+
+/* INNER SCROLL AREA */
+
+.assignments-scroll {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 34px 22px 42px;
+  box-sizing: border-box;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* MAIN CONTENT */
+
 .assignments-shell {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 1100px;
   margin: 0 auto;
   padding-bottom: 40px;
@@ -42,6 +98,7 @@
   margin: 0;
   font-size: clamp(42px, 6vw, 70px);
   color: #ffe7b4;
+
   text-shadow:
     0 0 12px rgba(255, 200, 120, 0.25),
     0 4px 16px rgba(0, 0, 0, 0.28);
@@ -53,32 +110,122 @@
   color: #d7deec;
 }
 
+.assignments-student-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* COINS */
+
+.assignments-coins-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  width: fit-content;
+
+  margin-top: 10px;
+  padding: 8px 14px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 231, 180, 0.08);
+
+  border: 1px solid rgba(255, 231, 180, 0.16);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  color: #ffe7b4;
+
+  font-family: "Fjalla One", sans-serif;
+  font-size: 28px;
+  line-height: 1;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.22),
+    0 0 18px rgba(255, 215, 120, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+  text-shadow:
+    0 0 12px rgba(255, 215, 120, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.assignments-coins-mini span {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.assignments-coins-icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+
+  image-rendering: auto;
+
+  filter:
+    drop-shadow(0 0 8px rgba(255, 215, 120, 0.65))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+
+  animation: assignmentsCoinFloat 3.8s ease-in-out infinite;
+}
+
+@keyframes assignmentsCoinFloat {
+  0% {
+    transform: translateY(0px) rotate(-4deg);
+  }
+
+  50% {
+    transform: translateY(-4px) rotate(4deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(-4deg);
+  }
+}
+
+/* BACK BUTTON */
+
 .assignments-back-btn {
   height: 52px;
   padding: 0 22px;
+
   border-radius: 999px;
   border: none;
+
   font-size: 18px;
   cursor: pointer;
+
   font-family: "Fjalla One", sans-serif;
+
   background: linear-gradient(
     180deg,
     rgba(110, 94, 181, 0.92),
     rgba(74, 60, 135, 0.96)
   );
+
   color: #fff;
+
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .assignments-back-btn:hover {
   transform: translateY(-2px);
+
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
+
+/* GRID */
 
 .assignments-grid {
   display: grid;
@@ -87,21 +234,33 @@
   gap: 30px;
 }
 
+/* POLAROID CARD */
+
 .assignment-polaroid {
   position: relative;
   overflow: hidden;
+
   border-radius: 22px;
   padding: 18px 18px 26px;
+
   color: #fff7ec;
+
   background: rgba(32, 36, 78, 0.26);
+
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+
   border: 1px solid rgba(255, 225, 170, 0.18);
+
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.28),
     0 0 30px rgba(255, 210, 140, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+
   cursor: pointer;
 }
 
@@ -110,6 +269,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+
   background:
     radial-gradient(circle at 20% 15%, rgba(255, 230, 180, 0.12), transparent 20%),
     radial-gradient(circle at 80% 25%, rgba(180, 200, 255, 0.1), transparent 22%),
@@ -119,11 +279,13 @@
       transparent 30%,
       rgba(255, 200, 140, 0.04)
     );
+
   z-index: 0;
 }
 
 .assignment-polaroid:hover {
   transform: translateY(-6px) scale(1.02);
+
   box-shadow:
     0 24px 46px rgba(0, 0, 0, 0.34),
     0 0 40px rgba(255, 210, 140, 0.14),
@@ -133,12 +295,17 @@
 .assignment-polaroid-photo {
   position: relative;
   z-index: 1;
+
   width: 100%;
   aspect-ratio: 4 / 3;
+
   overflow: hidden;
   border-radius: 12px;
+
   background: rgba(16, 16, 16, 0.72);
+
   border: 1px solid rgba(255, 224, 178, 0.12);
+
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     0 8px 20px rgba(0, 0, 0, 0.22);
@@ -147,15 +314,19 @@
 .assignment-polaroid-caption {
   position: relative;
   z-index: 1;
+
   padding-top: 14px;
   text-align: center;
 }
 
 .assignment-polaroid-caption h2 {
   margin: 0 0 8px;
+
   font-size: 26px;
   color: #ffe7b4;
-  text-shadow: 0 0 10px rgba(255, 200, 120, 0.25);
+
+  text-shadow:
+    0 0 10px rgba(255, 200, 120, 0.25);
 }
 
 .assignment-description {
@@ -167,19 +338,29 @@
 .assignment-grade-pill {
   position: relative;
   z-index: 1;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   margin-bottom: 12px;
   padding: 7px 12px;
+
   border-radius: 999px;
+
   font-size: 13px;
+
   background: rgba(255, 220, 170, 0.12);
+
   border: 1px solid rgba(255, 220, 170, 0.22);
+
   color: #ffe7b4;
+
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
+
+/* STATUS */
 
 .assignment-status-wrap {
   margin: 12px 0;
@@ -206,19 +387,26 @@
   color: #9bd1ff;
 }
 
+/* PLAY BUTTON */
+
 .assignment-play-btn {
   width: 100%;
   padding: 12px;
+
   border-radius: 14px;
   border: none;
+
   font-size: 18px;
   font-family: "Fjalla One", sans-serif;
+
   color: white;
   cursor: pointer;
+
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.25),
     0 0 0 rgba(0, 0, 0, 0),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -227,11 +415,13 @@
 
 .assignment-play-btn:hover {
   transform: translateY(-2px);
+
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.32),
     0 0 18px var(--btn-glow),
     0 0 30px var(--btn-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
   filter: brightness(1.05);
 }
 
@@ -245,41 +435,58 @@
   box-shadow: none;
 }
 
+/* EMPTY */
+
 .assignments-empty {
   position: relative;
   z-index: 1;
+
   max-width: 620px;
   margin: 40px auto 0;
   padding: 24px 22px;
+
   text-align: center;
+
   border-radius: 22px;
+
   background: rgba(32, 36, 78, 0.34);
+
   border: 1px solid rgba(255, 225, 170, 0.14);
+
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
   color: #fff7ec;
+
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* scroll to top */
+/* SCROLL TOP */
 
 .scroll-top-btn {
   position: fixed;
+
   right: 30px;
   bottom: 30px;
+
   width: 76px;
   height: 76px;
+
   border: none;
   border-radius: 999px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-size: 30px;
   font-family: "Fjalla One", sans-serif;
+
   color: #fff7ec;
   cursor: pointer;
+
   z-index: 30;
 
   background: linear-gradient(
@@ -287,6 +494,7 @@
     rgba(110, 94, 181, 0.94),
     rgba(74, 60, 135, 0.98)
   );
+
   border: 1px solid rgba(255, 225, 170, 0.22);
 
   backdrop-filter: blur(12px);
@@ -311,7 +519,9 @@
 
 .scroll-top-btn:hover {
   transform: scale(1.08);
+
   filter: brightness(1.06);
+
   box-shadow:
     0 18px 34px rgba(0, 0, 0, 0.42),
     0 0 28px rgba(180, 160, 255, 0.48),
@@ -327,15 +537,19 @@
   0% {
     transform: translateY(0px);
   }
+
   25% {
     transform: translateY(-4px);
   }
+
   50% {
     transform: translateY(-8px);
   }
+
   75% {
     transform: translateY(-4px);
   }
+
   100% {
     transform: translateY(0px);
   }
@@ -349,6 +563,7 @@
       0 0 34px rgba(255, 210, 140, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.16);
   }
+
   50% {
     box-shadow:
       0 16px 32px rgba(0, 0, 0, 0.38),
@@ -356,6 +571,7 @@
       0 0 54px rgba(255, 210, 140, 0.24),
       inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
+
   100% {
     box-shadow:
       0 12px 26px rgba(0, 0, 0, 0.34),
@@ -366,7 +582,7 @@
 }
 
 @media (max-width: 700px) {
-  .assignments-page {
+  .assignments-scroll {
     padding: 24px 14px 32px;
   }
 
@@ -393,8 +609,24 @@
   .scroll-top-btn {
     width: 68px;
     height: 68px;
+
     right: 18px;
     bottom: 18px;
+
     font-size: 26px;
+  }
+
+  .assignments-coins-mini {
+    font-size: 22px;
+    padding: 7px 12px;
+  }
+
+  .assignments-coins-mini span {
+    font-size: 22px;
+  }
+
+  .assignments-coins-icon {
+    width: 28px;
+    height: 28px;
   }
 }

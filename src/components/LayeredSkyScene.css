@@ -1,87 +1,672 @@
 .layered-scene {
-  position: absolute;
+  position: fixed; /* 🔥 FIXED */
   inset: 0;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: none;
   z-index: 0;
+
+  --lantern-x: 11.89%;
+  --lantern-y: 63.45%;
+  --floor-lantern-x: 23.8%;
+  --floor-lantern-y: 86%;
 }
 
-/* ---------------- SKY BACKGROUNDS ---------------- */
+.layered-scene--assignments-grade1 {
+  --lantern-x: 12.3%;
+  --lantern-y: 64.8%;
+  --floor-lantern-x: 24.1%;
+  --floor-lantern-y: 88.1%;
+}
+
+.layered-scene--assignments-grade2 {
+  --lantern-x: 0%;
+  --lantern-y: 63.8%;
+  --floor-lantern-x: 11.9%;
+  --floor-lantern-y: 85.9%;
+}
+
+.layered-scene--shop {
+  --lantern-x: 9.9%;
+  --lantern-y: 65.7%;
+  --floor-lantern-x: 22.8%;
+  --floor-lantern-y: 86%;
+}
+
+/* ---------------- LIGHT SPILL / REALISM ---------------- */
+
+.layered-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at var(--lantern-x) var(--lantern-y),
+      rgba(255, 218, 125, 0.16) 0%,
+      rgba(255, 170, 80, 0.08) 9%,
+      transparent 24%),
+    radial-gradient(circle at var(--floor-lantern-x) var(--floor-lantern-y),
+      rgba(255, 218, 125, 0.22) 0%,
+      rgba(255, 168, 70, 0.12) 10%,
+      transparent 28%);
+  mix-blend-mode: screen;
+}
+
+.layered-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom,
+      transparent 0%,
+      rgba(7, 10, 24, 0.04) 45%,
+      rgba(5, 8, 20, 0.18) 100%);
+}
+
+/* ---------------- SKY GLOW ---------------- */
 
 .layered-scene__sky-glow {
   position: absolute;
   inset: 0;
-}
-
-/* SHOP */
-.layered-scene--shop .layered-scene__sky-glow {
   background:
-    radial-gradient(circle at 50% 10%, rgba(255, 229, 186, 0.08), transparent 22%),
-    radial-gradient(circle at 14% 20%, rgba(152, 184, 255, 0.06), transparent 22%),
-    radial-gradient(circle at 84% 14%, rgba(255, 177, 122, 0.06), transparent 20%),
-    linear-gradient(to bottom, rgba(8, 10, 24, 0.04), rgba(8, 10, 24, 0.12));
-}
-
-/* GRADE 1 (softer + warmer) */
-.layered-scene--assignments-grade1 .layered-scene__sky-glow {
-  background:
-    radial-gradient(circle at 52% 10%, rgba(255, 232, 184, 0.09), transparent 22%),
-    radial-gradient(circle at 20% 16%, rgba(255, 196, 146, 0.07), transparent 18%),
-    radial-gradient(circle at 82% 18%, rgba(188, 175, 255, 0.05), transparent 20%),
-    linear-gradient(to bottom, rgba(18, 14, 34, 0.05), rgba(18, 14, 34, 0.12));
-}
-
-/* GRADE 2 (slightly brighter / cooler) */
-.layered-scene--assignments-grade2 .layered-scene__sky-glow {
-  background:
-    radial-gradient(circle at 52% 10%, rgba(205, 230, 255, 0.09), transparent 22%),
-    radial-gradient(circle at 20% 16%, rgba(255, 209, 159, 0.06), transparent 18%),
-    radial-gradient(circle at 82% 18%, rgba(170, 194, 255, 0.07), transparent 20%),
-    linear-gradient(to bottom, rgba(10, 16, 34, 0.06), rgba(10, 16, 34, 0.15));
+    radial-gradient(circle at 50% 8%, rgba(255, 230, 180, 0.12), transparent 30%),
+    radial-gradient(circle at 15% 20%, rgba(140, 180, 255, 0.1), transparent 35%),
+    radial-gradient(circle at 85% 15%, rgba(255, 160, 120, 0.08), transparent 30%),
+    linear-gradient(to bottom, rgba(10, 14, 30, 0.18), rgba(6, 10, 22, 0.34));
 }
 
 /* ---------------- AURORA ---------------- */
 
 .layered-scene__aurora {
   position: absolute;
-  filter: blur(24px);
+  filter: blur(40px);
   mix-blend-mode: screen;
-  animation: auroraFloat 14s ease-in-out infinite alternate;
-}
-
-/* grade differences */
-.layered-scene--assignments-grade1 .layered-scene__aurora {
-  opacity: 0.12;
-}
-
-.layered-scene--assignments-grade2 .layered-scene__aurora {
-  opacity: 0.2;
+  opacity: 0.22;
+  animation: auroraFlow 18s ease-in-out infinite alternate;
 }
 
 .layered-scene__aurora--one {
-  top: 4%;
-  left: -8%;
-  width: 52%;
-  height: 18%;
-  background: linear-gradient(
-    90deg,
-    rgba(124, 210, 255, 0.18),
-    rgba(190, 160, 255, 0.12),
-    rgba(255, 206, 140, 0.10)
-  );
+  top: 5%;
+  left: -10%;
+  width: 60%;
+  height: 20%;
+  background: linear-gradient(90deg,
+      rgba(120, 220, 255, 0.28),
+      rgba(190, 140, 255, 0.18),
+      rgba(255, 200, 140, 0.12));
 }
 
 .layered-scene__aurora--two {
-  top: 10%;
-  right: -10%;
-  width: 48%;
-  height: 16%;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 196, 140, 0.14),
-    rgba(255, 156, 178, 0.10),
-    rgba(125, 198, 255, 0.14)
-  );
+  top: 12%;
+  right: -12%;
+  width: 55%;
+  height: 18%;
+  background: linear-gradient(90deg,
+      rgba(255, 180, 140, 0.22),
+      rgba(255, 120, 200, 0.16),
+      rgba(120, 200, 255, 0.22));
+}
+
+/* ---------------- STRING LIGHTS ---------------- */
+
+.layered-scene__string-lights {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+}
+
+.layered-scene__string-light {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  pointer-events: none;
+}
+
+.layered-scene__string-light-bulb {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle,
+      rgba(255, 255, 230, 1) 0%,
+      rgba(255, 238, 160, 0.86) 22%,
+      rgba(255, 198, 86, 0.38) 48%,
+      rgba(255, 145, 40, 0.1) 72%,
+      transparent 90%);
+  filter: blur(1.5px);
+  box-shadow:
+    0 0 10px rgba(255, 238, 160, 0.92),
+    0 0 28px rgba(255, 195, 90, 0.58),
+    0 0 64px rgba(255, 145, 45, 0.28),
+    0 0 110px rgba(255, 120, 35, 0.1);
+  animation: stringLightFlicker 1.85s ease-in-out infinite alternate;
+}
+
+.layered-scene__string-light-bulb::before {
+  content: "";
+  position: absolute;
+  inset: -34px;
+  border-radius: 999px;
+  background: radial-gradient(circle,
+      rgba(255, 215, 120, 0.2) 0%,
+      rgba(255, 165, 70, 0.09) 42%,
+      transparent 74%);
+  filter: blur(10px);
+}
+
+.layered-scene__string-light-bulb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 51%;
+  width: 28%;
+  height: 36%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle,
+      rgba(255, 255, 235, 0.95),
+      rgba(255, 232, 150, 0.58),
+      transparent 75%);
+  filter: blur(0.4px);
+}
+
+/* DEFAULT FALLBACK */
+.layered-scene__string-light--1 {
+  left: 50%;
+  top: 50%;
+}
+
+.layered-scene__string-light--2 {
+  left: 10.7%;
+  top: 13.5%;
+}
+
+.layered-scene__string-light--3 {
+  left: 18.1%;
+  top: 11.7%;
+}
+
+.layered-scene__string-light--4 {
+  left: 37.3%;
+  top: 6.3%;
+}
+
+.layered-scene__string-light--5 {
+  left: 56.2%;
+  top: 6.2%;
+}
+
+.layered-scene__string-light--6 {
+  left: 65.7%;
+  top: 9.7%;
+}
+
+.layered-scene__string-light--7 {
+  left: 74.9%;
+  top: 14.1%;
+}
+
+.layered-scene__string-light--8 {
+  left: 84.1%;
+  top: 13.2%;
+}
+
+.layered-scene__string-light--9 {
+  left: 95.1%;
+  top: 8.2%;
+}
+
+/* ---------------- GRADE 1 FINAL POSITIONS ---------------- */
+
+.layered-scene--assignments-grade1 {
+  --lantern-x: 12.2%;
+  --lantern-y: 64.5%;
+  --lantern-size: 245px;
+
+  --floor-lantern-x: 24.1%;
+  --floor-lantern-y: 87.9%;
+  --floor-lantern-size: 260px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light {
+  width: 42px;
+  height: 42px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--1,
+.layered-scene--assignments-grade1 .layered-scene__string-light--15,
+.layered-scene--assignments-grade1 .layered-scene__string-light--16,
+.layered-scene--assignments-grade1 .layered-scene__string-light--17,
+.layered-scene--assignments-grade1 .layered-scene__string-light--18 {
+  display: none;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--2 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--3 {
+  left: 4.7%;
+  top: 7.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--4 {
+  left: 10%;
+  top: 8.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--5 {
+  left: 16.8%;
+  top: 6.4%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--6 {
+  left: 23.1%;
+  top: 6.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--7 {
+  left: 30.4%;
+  top: 3.8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--8 {
+  left: 36%;
+  top: 0%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--9 {
+  left: 54.3%;
+  top: 0.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--10 {
+  left: 80.4%;
+  top: 8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--11 {
+  left: 87.1%;
+  top: 4.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--12 {
+  left: 93.4%;
+  top: 1.2%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--13 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--14 {
+  left: 64.1%;
+  top: 4.7%;
+}
+/* ---------------- GRADE 1 FINAL POSITIONS ---------------- */
+
+.layered-scene--assignments-grade1 {
+  --lantern-x: 12.2%;
+  --lantern-y: 64.5%;
+  --lantern-size: 245px;
+
+  --floor-lantern-x: 24.1%;
+  --floor-lantern-y: 87.9%;
+  --floor-lantern-size: 260px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light {
+  width: 42px;
+  height: 42px;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--1,
+.layered-scene--assignments-grade1 .layered-scene__string-light--16,
+.layered-scene--assignments-grade1 .layered-scene__string-light--17 {
+  display: none;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--2 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--3 {
+  left: 4.7%;
+  top: 7.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--4 {
+  left: 10%;
+  top: 8.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--5 {
+  left: 16.8%;
+  top: 6.4%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--6 {
+  left: 23.1%;
+  top: 6.1%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--7 {
+  left: 30.4%;
+  top: 3.8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--8 {
+  left: 36%;
+  top: 0%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--9 {
+  left: 54.3%;
+  top: 0.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--10 {
+  left: 80.4%;
+  top: 8%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--11 {
+  left: 87.1%;
+  top: 4.9%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--12 {
+  left: 93.4%;
+  top: 1.2%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--13 {
+  left: 1.2%;
+  top: 7.5%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--14 {
+  left: 64.1%;
+  top: 4.7%;
+}
+
+.layered-scene--assignments-grade1 .layered-scene__string-light--19 {
+  left: 73.2%;
+  top: 6.6%
+}
+
+/* ---------------- GRADE 2 FINAL POSITIONS ---------------- */
+
+.layered-scene--assignments-grade2 {
+  --lantern-x: -12%;
+  --lantern-y: 68.5%;
+  --lantern-size: 320px;
+
+  --floor-lantern-x: 11.9%;
+  --floor-lantern-y: 90.1%;
+  --floor-lantern-size: 365px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--1,
+.layered-scene--assignments-grade2 .layered-scene__string-light--10 {
+  display: none;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--2 {
+  left: 1.2%;
+  top: 8.7%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--3 {
+  left: 10.2%;
+  top: 8.7%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--4 {
+  left: 19.2%;
+  top: 6.6%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--5 {
+  left: 29.5%;
+  top: 2.9%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--6 {
+  left: 56.4%;
+  top: 3.2%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--7 {
+  left: 69.6%;
+  top: 7.5%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--8 {
+  left: 83.8%;
+  top: 9.7%;
+  width: 60px;
+  height: 60px;
+}
+
+.layered-scene--assignments-grade2 .layered-scene__string-light--9 {
+  left: 95.2%;
+  top: 11.0%;
+  width: 60px;
+  height: 60px;
+}
+
+/* ---------------- SHOP OUTFITS FINAL ---------------- */
+
+.layered-scene--shop-outfits {
+  --lantern-x: 12.0%;
+  --lantern-y: 65.1%;
+  --lantern-size: 150px;
+
+  --floor-lantern-x: 23.6%;
+  --floor-lantern-y: 88.2%;
+  --floor-lantern-size: 220px;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light {
+  width: 36px;
+  height: 36px;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--1 {
+  display: none;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--2 {
+  left: 1.5%;
+  top: 7.6%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--3 {
+  left: 5.1%;
+  top: 7.8%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--4 {
+  left: 10.3%;
+  top: 8.1%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--5 {
+  left: 17.2%;
+  top: 6%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--6 {
+  left: 23.1%;
+  top: 6%;
+}
+
+/* LEFT CENTER */
+
+.layered-scene--shop-outfits .layered-scene__string-light--7 {
+  left: 29.6%;
+  top: 3.6%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--8 {
+  left: 36.2%;
+  top: 0%;
+}
+
+/* RIGHT SIDE */
+
+.layered-scene--shop-outfits .layered-scene__string-light--9 {
+  left: 63.7%;
+  top: 5.4%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--10 {
+  left: 72.8%;
+  top: 6.7%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--11 {
+  left: 80.7%;
+  top: 8.4%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--12 {
+  left: 87.4%;
+  top: 5.4%;
+}
+
+/* NEW RIGHT TOP LIGHTS */
+
+.layered-scene--shop-outfits .layered-scene__string-light--13 {
+  left: 54.3%;
+  top: 0%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--14 {
+  left: 93.1%;
+  top: 1.5%;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--15 {
+  display: none;
+}
+
+.layered-scene--shop-outfits .layered-scene__string-light--16 {
+  display: none;
+}
+
+/* ---------------- SHOP EMOTES ---------------- */
+
+/* SHOP EMOTES STRING LIGHTS */
+
+.layered-scene--shop-emotes .layered-scene__string-light {
+  width: 42px;
+  height: 42px;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--1,
+.layered-scene--shop-emotes .layered-scene__string-light--7,
+.layered-scene--shop-emotes .layered-scene__string-light--8 {
+  display: none;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--2 {
+  left: 1.6%;
+  top: 7.2%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--3 {
+  left: 4.8%;
+  top: 7.6%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--4 {
+  left: 10.1%;
+  top: 8%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--5 {
+  left: 16.5%;
+  top: 6%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--6 {
+  left: 22.8%;
+  top: 6.2%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--9 {
+  left: 63.4%;
+  top: 4.5%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--10 {
+  left: 72.9%;
+  top: 7.1%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--11 {
+  left: 80.7%;
+  top: 8.3%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--12 {
+  left: 87.2%;
+  top: 5.3%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--13 {
+  left: 28.8%;
+  top: 3.8%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--14 {
+  left: 36.2%;
+  top: 0%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--15 {
+  left: 54.3%;
+  top: 0%;
+}
+
+.layered-scene--shop-emotes .layered-scene__string-light--16 {
+  left: 93.3%;
+  top: 1.6%;
+}
+
+@keyframes stringLightFlicker {
+  0% {
+    opacity: 0.76;
+    transform: scale(0.94);
+  }
+
+  45% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
 }
 
 /* ---------------- STARS ---------------- */
@@ -95,11 +680,10 @@
   position: absolute;
   border-radius: 999px;
   opacity: 0;
-  background: radial-gradient(
-    circle,
-    rgba(255, 247, 228, 0.95),
-    rgba(255, 226, 176, 0)
-  );
+  background: radial-gradient(circle, #fffbe6, transparent);
+  box-shadow:
+    0 0 8px rgba(255, 240, 200, 0.7),
+    0 0 16px rgba(255, 220, 160, 0.25);
   animation: twinkle ease-in-out infinite;
 }
 
@@ -110,26 +694,13 @@
   border-radius: 999px;
   filter: blur(20px);
   opacity: 0.1;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.5),
-    rgba(255, 255, 255, 0)
-  );
-  animation: driftCloud 28s linear infinite;
-}
-
-/* positions differ per grade */
-.layered-scene--assignments-grade1 .layered-scene__cloud--1 {
-  top: 14%;
-  left: -20%;
-}
-
-.layered-scene--assignments-grade2 .layered-scene__cloud--1 {
-  top: 10%;
-  left: -16%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.42), transparent);
+  animation: driftCloud 30s linear infinite;
 }
 
 .layered-scene__cloud--1 {
+  top: 14%;
+  left: -20%;
   width: 260px;
   height: 90px;
 }
@@ -160,17 +731,19 @@
 .layered-scene__hills--back {
   bottom: 0;
   height: 30%;
-  background: linear-gradient(to top, rgba(18, 26, 46, 0.28), transparent);
+  background: linear-gradient(to top, rgba(10, 20, 40, 0.18), transparent);
 }
 
 .layered-scene__hills--mid {
   bottom: -2%;
-  height: 22%;
+  height: 24%;
+  background: linear-gradient(to top, rgba(16, 28, 50, 0.24), transparent);
 }
 
 .layered-scene__hills--front {
   bottom: -4%;
-  height: 16%;
+  height: 18%;
+  background: linear-gradient(to top, rgba(8, 18, 34, 0.34), transparent);
 }
 
 /* ---------------- FIREFLIES ---------------- */
@@ -178,83 +751,117 @@
 .layered-scene__fireflies {
   position: absolute;
   inset: 0;
+  z-index: 10;
 }
 
 .layered-scene__firefly {
   position: absolute;
   border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 240, 170, 1),
-    rgba(255, 204, 94, 0)
-  );
+  background: radial-gradient(circle,
+      rgba(255, 245, 185, 1),
+      rgba(255, 208, 95, 0.52),
+      transparent);
+  box-shadow:
+    0 0 6px rgba(255, 220, 120, 0.9),
+    0 0 14px rgba(255, 200, 90, 0.7),
+    0 0 28px rgba(255, 165, 65, 0.22);
   opacity: 0;
-  animation: floatBug ease-in-out infinite;
+  animation: fireflyFloat ease-in-out infinite;
 }
 
-/* ---------------- LANTERN (DIFFERENT PER GRADE) ---------------- */
-
-/* GRADE 1 (slightly lower) */
-.layered-scene--assignments-grade1 .layered-scene__lantern-glow {
-  left: 2%;
-  bottom: 18%;
-}
-
-/* GRADE 2 (slightly higher) */
-.layered-scene--assignments-grade2 .layered-scene__lantern-glow {
-  left: 1.6%;
-  bottom: 22%;
-}
+/* ---------------- TOP / TENT LANTERN ---------------- */
 
 .layered-scene__lantern-glow {
   position: absolute;
-  width: 120px;
-  height: 120px;
+  left: var(--lantern-x);
+  top: var(--lantern-y);
+  width: 150px;
+  height: 150px;
   border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 225, 146, 0.25),
-    rgba(255, 145, 52, 0)
-  );
-  filter: blur(12px);
-  animation: lanternPulse 3.5s ease-in-out infinite;
+  background:
+    radial-gradient(circle,
+      rgba(255, 247, 205, 0.48) 0%,
+      rgba(255, 217, 132, 0.3) 28%,
+      rgba(255, 170, 72, 0.13) 54%,
+      rgba(255, 125, 34, 0.04) 72%,
+      transparent 88%);
+  filter: blur(14px);
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  box-shadow:
+    0 0 42px rgba(255, 205, 120, 0.24),
+    0 0 88px rgba(255, 155, 60, 0.1);
+  animation: lanternGlowSoft 2.8s infinite alternate ease-in-out;
 }
 
 .layered-scene__lantern-core {
   position: absolute;
-  left: 5%;
-  bottom: 25%;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  background: radial-gradient(circle, #fff5d4, transparent);
+  left: var(--lantern-x);
+  top: var(--lantern-y);
+  width: 36px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 55%,
+      rgba(255, 255, 235, 0.98) 0%,
+      rgba(255, 238, 174, 0.88) 28%,
+      rgba(255, 202, 92, 0.58) 58%,
+      rgba(255, 150, 45, 0.16) 82%,
+      transparent 100%);
+  filter: blur(0.7px);
+  transform: translate(-50%, -50%);
+  z-index: 21;
+  box-shadow:
+    0 0 14px rgba(255, 230, 160, 0.78),
+    0 0 30px rgba(255, 178, 82, 0.42);
+  animation: lanternCoreSoft 0.22s infinite alternate ease-in-out;
 }
 
-/* ---------------- FLOOR LIGHT (UNCHANGED POSITION) ---------------- */
+/* ---------------- FLOOR LANTERN ---------------- */
 
-.layered-scene__flashlight-glow {
+.layered-scene__floor-lantern-glow {
   position: absolute;
-  left: 1.6%;
-  bottom: 1.8%;
-  width: 120px;
-  height: 120px;
+  left: var(--floor-lantern-x);
+  top: var(--floor-lantern-y);
+  width: 220px;
+  height: 220px;
   border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 225, 130, 0.24),
-    rgba(255, 142, 44, 0)
-  );
-  filter: blur(12px);
+  background:
+    radial-gradient(circle,
+      rgba(255, 247, 205, 0.46) 0%,
+      rgba(255, 217, 132, 0.31) 30%,
+      rgba(255, 170, 72, 0.14) 56%,
+      rgba(255, 125, 34, 0.05) 75%,
+      transparent 90%);
+  filter: blur(18px);
+  transform: translate(-50%, -50%);
+  z-index: 18;
+  box-shadow:
+    0 0 52px rgba(255, 205, 120, 0.28),
+    0 0 110px rgba(255, 155, 60, 0.12);
+  animation: floorLanternGlowSoft 3s infinite alternate ease-in-out;
 }
 
-.layered-scene__flashlight-core {
+.layered-scene__floor-lantern-core {
   position: absolute;
-  left: 3.9%;
-  bottom: 6.1%;
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  background: radial-gradient(circle, #fff7ce, transparent);
+  left: var(--floor-lantern-x);
+  top: var(--floor-lantern-y);
+  width: 52px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 55%,
+      rgba(255, 255, 235, 1) 0%,
+      rgba(255, 238, 174, 0.9) 30%,
+      rgba(255, 202, 92, 0.62) 58%,
+      rgba(255, 150, 45, 0.18) 82%,
+      transparent 100%);
+  filter: blur(0.8px);
+  transform: translate(-50%, -50%);
+  z-index: 19;
+  box-shadow:
+    0 0 18px rgba(255, 235, 170, 0.86),
+    0 0 42px rgba(255, 180, 85, 0.5),
+    0 0 72px rgba(255, 140, 55, 0.2);
+  animation: floorLanternCoreSoft 0.22s infinite alternate ease-in-out;
 }
 
 /* ---------------- FOG ---------------- */
@@ -265,39 +872,269 @@
   width: 120%;
   height: 60px;
   filter: blur(28px);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 225, 205, 0.08),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 225, 205, 0.035),
+      transparent);
+  animation: fogDrift 18s ease-in-out infinite alternate;
+  z-index: 9;
+}
+
+.layered-scene__fog--one {
+  bottom: 14%;
+}
+
+.layered-scene__fog--two {
+  bottom: 28%;
+  opacity: 0.58;
+  animation-delay: -7s;
 }
 
 /* ---------------- ANIMATIONS ---------------- */
 
 @keyframes twinkle {
-  0% { opacity: 0; }
-  50% { opacity: 0.9; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
 }
 
 @keyframes driftCloud {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(120px); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(120px);
+  }
 }
 
-@keyframes floatBug {
-  0% { opacity: 0; transform: translateY(10px); }
-  50% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-30px); }
+@keyframes fireflyFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1);
+  }
+
+  75% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.7);
+  }
 }
 
-@keyframes auroraFloat {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(10px); }
+@keyframes auroraFlow {
+  0% {
+    transform: translateY(0) scaleX(1);
+  }
+
+  100% {
+    transform: translateY(12px) scaleX(1.1);
+  }
 }
 
-@keyframes lanternPulse {
-  0% { transform: scale(0.96); }
-  100% { transform: scale(1.05); }
+@keyframes lanternGlowSoft {
+  0% {
+    transform: translate(-50%, -50%) scale(0.98);
+    opacity: 0.72;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.04);
+    opacity: 0.94;
+  }
+}
+
+@keyframes lanternCoreSoft {
+  0% {
+    transform: translate(-50%, -50%) scaleY(0.96) scaleX(0.98);
+    opacity: 0.84;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scaleY(1.04) scaleX(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes floorLanternGlowSoft {
+  0% {
+    transform: translate(-50%, -50%) scale(0.98);
+    opacity: 0.68;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.04);
+    opacity: 0.94;
+  }
+}
+
+@keyframes floorLanternCoreSoft {
+  0% {
+    transform: translate(-50%, -50%) scaleY(0.96) scaleX(0.98);
+    opacity: 0.82;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scaleY(1.04) scaleX(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes fogDrift {
+  0% {
+    transform: translateX(-2%);
+    opacity: 0.28;
+  }
+
+  100% {
+    transform: translateX(2%);
+    opacity: 0.5;
+  }
+}
+
+/* TEMP LIGHT + LANTERN EDIT MODE */
+
+.layered-scene--edit {
+  pointer-events: auto;
+  z-index: 9999;
+}
+
+.layered-scene--edit .layered-scene__string-lights,
+.layered-scene--edit .layered-scene__string-light,
+.layered-scene--edit .layered-scene__string-light-bulb,
+.layered-scene--edit .lantern-drag {
+  pointer-events: auto;
+}
+
+.layered-scene--edit .layered-scene__string-light {
+  cursor: grab;
+  outline: 2px dashed rgba(255, 255, 255, 0.55);
+  outline-offset: 5px;
+  z-index: 99999;
+  user-select: none;
+}
+
+.layered-scene--edit .layered-scene__string-light:active {
+  cursor: grabbing;
+}
+
+.layered-scene__edit-help {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.layered-scene__size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.layered-scene__size-control input {
+  width: 130px;
+}
+
+.layered-scene__edit-help {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.layered-scene__size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.layered-scene__size-control input {
+  width: 130px;
+}
+
+.layered-scene__string-light-label {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  z-index: 100000;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 900;
+  color: #3a2100;
+  background: #ffe7b4;
+  box-shadow: 0 0 10px rgba(255, 231, 180, 0.75);
+  pointer-events: none;
+}
+
+.layered-scene__edit-help {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  z-index: 100000;
+  padding: 10px 16px;
+  border-radius: 999px;
+  color: #3a2100;
+  background: rgba(255, 231, 180, 0.94);
+  box-shadow: 0 0 22px rgba(255, 231, 180, 0.5);
+  font-size: 14px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.lantern-drag {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 100000;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  cursor: grab;
+  user-select: none;
+  background: rgba(255, 231, 180, 0.55);
+  box-shadow: 0 0 18px rgba(255, 231, 180, 0.65);
+}
+
+.lantern-drag:active {
+  cursor: grabbing;
+}
+
+.lantern-drag--top {
+  left: var(--lantern-x);
+  top: var(--lantern-y);
+}
+
+.lantern-drag--floor {
+  left: var(--floor-lantern-x);
+  top: var(--floor-lantern-y);
 }

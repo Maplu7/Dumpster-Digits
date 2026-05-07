@@ -22,6 +22,7 @@ const FALLBACK_ASSIGNMENTS = {
       order: 2,
     },
   ],
+
   2: [
     {
       id: "grade2-addition",
@@ -43,6 +44,15 @@ const FALLBACK_ASSIGNMENTS = {
       order: 2,
     },
     {
+      id: "grade2-division",
+      title: "2nd Grade Division",
+      description: "Practice division by dragging trash to the correct can.",
+      grade: 2,
+      gameKey: "2nd_division",
+      enabled: true,
+      order: 3,
+    },
+    {
       id: "grade2-fill-blank",
       title: "2nd Grade Fill in the Blank",
       description:
@@ -50,7 +60,7 @@ const FALLBACK_ASSIGNMENTS = {
       grade: 2,
       gameKey: "2nd_fill_blank",
       enabled: true,
-      order: 3,
+      order: 4,
     },
     {
       id: "grade2-place-value",
@@ -59,7 +69,7 @@ const FALLBACK_ASSIGNMENTS = {
       grade: 2,
       gameKey: "2nd_place_value",
       enabled: true,
-      order: 4,
+      order: 5,
     },
     {
       id: "grade2-multiplication",
@@ -69,7 +79,7 @@ const FALLBACK_ASSIGNMENTS = {
       grade: 2,
       gameKey: "2nd_multiplication",
       enabled: true,
-      order: 5,
+      order: 6,
     },
   ],
 };
@@ -79,6 +89,7 @@ const VALID_GAME_KEYS = new Set([
   "1st_subtraction",
   "2nd_addition",
   "2nd_subtraction",
+  "2nd_division",
   "2nd_fill_blank",
   "2nd_place_value",
   "2nd_multiplication",
@@ -93,6 +104,10 @@ function getFallbackGameKey(docId, title, description, grade) {
   }
 
   if (grade === 2) {
+    if (text.includes("division")) {
+      return "2nd_division";
+    }
+
     if (
       text.includes("fill in the blank") ||
       text.includes("fill-blank") ||
@@ -100,6 +115,7 @@ function getFallbackGameKey(docId, title, description, grade) {
     ) {
       return "2nd_fill_blank";
     }
+
     if (
       text.includes("place value") ||
       text.includes("tens") ||
@@ -108,12 +124,15 @@ function getFallbackGameKey(docId, title, description, grade) {
     ) {
       return "2nd_place_value";
     }
+
     if (text.includes("multiplication")) {
       return "2nd_multiplication";
     }
+
     if (text.includes("subtraction")) {
       return "2nd_subtraction";
     }
+
     if (text.includes("addition")) {
       return "2nd_addition";
     }
@@ -127,6 +146,7 @@ function mergeAssignmentsForGrade(grade, docs = []) {
     .map((docSnap) => {
       const data = docSnap.data() || {};
       const gradeValue = Number(data.grade);
+
       const fallbackGameKey = getFallbackGameKey(
         docSnap.id,
         data.title,

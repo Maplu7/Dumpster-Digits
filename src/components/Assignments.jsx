@@ -1,11 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./Assignments.css";
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { subscribeAssignmentsForGrade } from "../assignmentService";
 import { getAssignmentTheme } from "./appTheme";
@@ -13,57 +8,97 @@ import StarTwinkleOverlay from "./StarTwinkleOverlay";
 import LayeredSkyScene from "../components/LayeredSkyScene";
 import useAmbience from "../hooks/useAmbience";
 
-function getPreviewProblem(gameKey) {
-  switch (gameKey) {
-    case "1st_addition":
-      return "1 + 5";
-    case "1st_subtraction":
-      return "5 - 1";
-    case "2nd_addition":
-      return "8 + 7";
-    case "2nd_subtraction":
-      return "15 - 6";
-    case "2nd_fill_blank":
-      return "4 + _ = 10";
-    case "2nd_place_value":
-      return "42 → 4 tens";
-    case "2nd_multiplication":
-      return "2 × 3";
-    default:
-      return "1 + 5";
+const PREVIEW_PROBLEMS = {
+  "1st_addition": "1 + 5",
+  "1st_subtraction": "5 - 1",
+  "2nd_addition": "8 + 7",
+  "2nd_division": "12 ÷ 4",
+  "2nd_subtraction": "15 - 6",
+  "2nd_fill_blank": "4 + _ = 10",
+  "2nd_place_value": "42 → 4 tens",
+  "2nd_multiplication": "2 × 3",
+};
+
+const GAME_LABELS = {
+  "1st_addition": "Addition",
+  "1st_subtraction": "Subtraction",
+  "2nd_addition": "2nd Grade Addition",
+  "2nd_division": "2nd Grade Division",
+  "2nd_subtraction": "2nd Grade Subtraction",
+  "2nd_fill_blank": "Fill in the Blank",
+  "2nd_place_value": "Place Value",
+  "2nd_multiplication": "Multiplication",
+};
+
+const ASSIGNMENT_ORDER = {
+  "1st_addition": 0,
+  "1st_subtraction": 1,
+  "2nd_addition": 2,
+  "2nd_division": 3,
+  "2nd_subtraction": 4,
+  "2nd_fill_blank": 5,
+  "2nd_place_value": 6,
+  "2nd_multiplication": 7,
+};
+
+const ALL_GAME_KEYS = [
+  "1st_addition",
+  "1st_subtraction",
+  "2nd_addition",
+  "2nd_subtraction",
+  "2nd_division",
+  "2nd_fill_blank",
+  "2nd_place_value",
+  "2nd_multiplication",
+];
+
+function ensureStudentAssignments(map = {}) {
+  const updated = {};
+
+  for (const studentId in map) {
+    updated[studentId] = { ...map[studentId] };
+
+    for (const key of ALL_GAME_KEYS) {
+      if (!(key in updated[studentId])) {
+        updated[studentId][key] = false;
+      }
+    }
   }
+
+  return updated;
 }
 
-function getAssignmentOrder(gameKey) {
-  if (gameKey === "1st_addition") return 0;
-  if (gameKey === "1st_subtraction") return 1;
-  if (gameKey === "2nd_addition") return 2;
-  if (gameKey === "2nd_subtraction") return 3;
-  if (gameKey === "2nd_fill_blank") return 4;
-  if (gameKey === "2nd_place_value") return 5;
-  if (gameKey === "2nd_multiplication") return 6;
-  return 99;
+function getPreviewProblem(gameKey) {
+  return PREVIEW_PROBLEMS[gameKey] || "1 + 5";
 }
 
 function getGameLabel(gameKey) {
-  switch (gameKey) {
-    case "1st_addition":
-      return "Addition";
-    case "1st_subtraction":
-      return "Subtraction";
-    case "2nd_addition":
-      return "2nd Grade Addition";
-    case "2nd_subtraction":
-      return "2nd Grade Subtraction";
-    case "2nd_fill_blank":
-      return "Fill in the Blank";
-    case "2nd_place_value":
-      return "Place Value";
-    case "2nd_multiplication":
-      return "Multiplication";
-    default:
-      return "Game";
-  }
+  return GAME_LABELS[gameKey] || "Game";
+}
+
+function getAssignmentOrder(gameKey) {
+  return ASSIGNMENT_ORDER[gameKey] ?? 99;
+}
+
+function sortAssignments(items = []) {
+  return [...items].sort(
+    (a, b) => getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
+  );
+}
+
+function buildCompletedMap(snapshot) {
+  const completed = {};
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const gameKey = data?.gameKey || docSnap.id;
+
+    if (gameKey) {
+      completed[gameKey] = true;
+    }
+  });
+
+  return completed;
 }
 
 export default function Assignments({
@@ -71,234 +106,312 @@ export default function Assignments({
   onBack,
   onOpenGame,
   externalAssignments,
-  externalCompletedMap,
   externalLockMap,
 }) {
-  const usingExternalData = Array.isArray(externalAssignments);
   const [assignments, setAssignments] = useState([]);
   const [completedMap, setCompletedMap] = useState({});
   const [lockMap, setLockMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  const scrollRef = useRef(null);
+  const lastResetVersionRef = useRef(0);
+
+  const studentId = useMemo(
+    () => String(student?.id || "").trim(),
+    [student?.id]
+  );
+
   useAmbience("/sounds/camp-ambience.mp3", 0.15);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 200);
-    };
+    setShowScrollTop(false);
 
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [studentId, student?.grade]);
+
+  useEffect(() => {
+    let unsubscribeAssignments = null;
+    let unsubscribeResults = null;
+    let unsubscribeClassroom = null;
+    let unsubscribeStudentReset = null;
+
+    setLoading(true);
+    setCompletedMap({});
+    setLockMap({});
+
+    if (Array.isArray(externalAssignments)) {
+      setAssignments(sortAssignments(externalAssignments));
+      setLoading(false);
+    } else {
+      unsubscribeAssignments = subscribeAssignmentsForGrade(
+        student?.grade,
+        (items) => {
+          setAssignments(sortAssignments(Array.isArray(items) ? items : []));
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Error watching assignments:", error);
+          setAssignments([]);
+          setLoading(false);
+        }
+      );
+    }
+
+    if (!studentId) {
+      setLoading(false);
+
+      return () => {
+        if (typeof unsubscribeAssignments === "function") {
+          unsubscribeAssignments();
+        }
+      };
+    }
+
+    const studentRef = doc(db, "students", studentId);
+
+    unsubscribeStudentReset = onSnapshot(
+      studentRef,
+      (snap) => {
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+        const resetVersion = Number(data?.resetVersion || 0);
+
+        if (resetVersion && resetVersion !== lastResetVersionRef.current) {
+          lastResetVersionRef.current = resetVersion;
+          setCompletedMap({});
+        }
+      },
+      (error) => {
+        console.error("Error watching student reset state:", error);
+      }
+    );
+
+    const resultsRef = collection(db, "students", studentId, "assignmentResults");
+
+    unsubscribeResults = onSnapshot(
+      resultsRef,
+      (snapshot) => {
+        setCompletedMap(buildCompletedMap(snapshot));
+      },
+      (error) => {
+        console.error("Error watching assignment results:", error);
+        setCompletedMap({});
+      }
+    );
+
+    const classQ = query(
+      collection(db, "classrooms"),
+      where("studentID", "array-contains", studentId)
+    );
+
+    unsubscribeClassroom = onSnapshot(
+      classQ,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const classData = snapshot.docs[0].data();
+          const safeAssignments = ensureStudentAssignments(
+            classData?.studentAssignments || {}
+          );
+
+          setLockMap(safeAssignments?.[studentId] || {});
+        } else {
+          setLockMap({});
+        }
+
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error watching classroom locks:", error);
+        setLockMap({});
+        setLoading(false);
+      }
+    );
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      if (typeof unsubscribeAssignments === "function") unsubscribeAssignments();
+      if (typeof unsubscribeResults === "function") unsubscribeResults();
+      if (typeof unsubscribeClassroom === "function") unsubscribeClassroom();
+      if (typeof unsubscribeStudentReset === "function") unsubscribeStudentReset();
     };
-  }, []);
+  }, [studentId, student?.grade, externalAssignments]);
+
+  useEffect(() => {
+    if (externalLockMap && Object.keys(externalLockMap).length > 0) {
+      setLockMap(externalLockMap);
+    }
+  }, [externalLockMap]);
+
+  function handleAssignmentsScroll(event) {
+    setShowScrollTop(event.currentTarget.scrollTop > 200);
+  }
 
   function scrollToTop() {
-    window.scrollTo({
+    scrollRef.current?.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   }
 
-  useEffect(() => {
-    if (usingExternalData) {
-      const safeAssignments = Array.isArray(externalAssignments)
-        ? [...externalAssignments].sort(
-            (a, b) =>
-              getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
-          )
-        : [];
-
-      setAssignments(safeAssignments);
-      setCompletedMap(externalCompletedMap || {});
-      setLockMap(externalLockMap || {});
-      setLoading(false);
-      return;
-    }
-
-    let unsubscribeAssignments = null;
-    let unsubscribeResults = null;
-    let unsubscribeClassroom = null;
-
-    setLoading(true);
-
-    unsubscribeAssignments = subscribeAssignmentsForGrade(
-      student?.grade,
-      (items) => {
-        const sortedItems = Array.isArray(items)
-          ? [...items].sort(
-              (a, b) =>
-                getAssignmentOrder(a?.gameKey) - getAssignmentOrder(b?.gameKey)
-            )
-          : [];
-
-        setAssignments(sortedItems);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error watching assignments:", error);
-        setLoading(false);
-      }
-    );
-
-    if (!student?.id) {
-      return () => {
-        if (unsubscribeAssignments) unsubscribeAssignments();
-      };
-    }
-
-    const resultsRef = collection(
-      db,
-      "students",
-      String(student.id),
-      "assignmentResults"
-    );
-
-    unsubscribeResults = onSnapshot(resultsRef, (snapshot) => {
-      const completed = {};
-      snapshot.forEach((docSnap) => {
-        const gameKey = docSnap.data()?.gameKey;
-        if (gameKey) completed[gameKey] = true;
-      });
-      setCompletedMap(completed);
-    });
-
-    const classQ = query(
-      collection(db, "classrooms"),
-      where("studentID", "array-contains", String(student.id))
-    );
-
-    unsubscribeClassroom = onSnapshot(classQ, (snapshot) => {
-      if (!snapshot.empty) {
-        const classData = snapshot.docs[0].data();
-        const studentLocks =
-          classData?.studentAssignments?.[String(student.id)] || {};
-        setLockMap(studentLocks);
-      } else {
-        setLockMap({});
-      }
-
-      setLoading(false);
-    });
-
-    return () => {
-      if (unsubscribeAssignments) unsubscribeAssignments();
-      if (unsubscribeResults) unsubscribeResults();
-      if (unsubscribeClassroom) unsubscribeClassroom();
-    };
-  }, [
-    student,
-    usingExternalData,
-    externalAssignments,
-    externalCompletedMap,
-    externalLockMap,
-  ]);
-
   return (
     <div className="assignments-page">
-      <LayeredSkyScene variant="assignments" />
+      <div className="assignments-fixed-sky" aria-hidden="true">
+        <LayeredSkyScene
+          variant={
+            String(student?.grade) === "1"
+              ? "assignments-grade1"
+              : "assignments-grade2"
+          }
+        />
+      </div>
 
-      <div className="assignments-shell">
-        <div className="assignments-header">
-          <div>
-            <h1 className="assignments-title">Games</h1>
-            <p className="assignments-subtitle">
-              {student?.name || "Student"} — Grade {student?.grade ?? "?"}
-            </p>
+      <div
+        className="assignments-scroll"
+        ref={scrollRef}
+        onScroll={handleAssignmentsScroll}
+      >
+        <div className="assignments-shell">
+          <div className="assignments-header">
+            <div>
+              <h1 className="assignments-title">Games</h1>
+
+              <div className="assignments-student-meta">
+                <p className="assignments-subtitle">
+                  {student?.name || "Student"} — Grade {student?.grade ?? "?"}
+                </p>
+
+                <div className="assignments-coins-mini">
+                  <img
+                    src="/ui-assets/xsmallRaccacoin.png"
+                    alt="Coin"
+                    className="assignments-coins-icon"
+                  />
+
+                  <span>{student?.coins ?? 0}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="assignments-back-btn"
+              type="button"
+              onClick={onBack}
+            >
+              Back
+            </button>
           </div>
 
-          <button className="assignments-back-btn" onClick={onBack}>
-            Back
-          </button>
-        </div>
+          {loading ? (
+            <div className="assignments-empty">Loading assignments...</div>
+          ) : assignments.length === 0 ? (
+            <div className="assignments-empty">
+              No assignments found for this grade yet.
+            </div>
+          ) : (
+            <div className="assignments-grid">
+              {assignments.map((assignment, index) => {
+                const gameKey = assignment?.gameKey;
+                const isCompleted = completedMap[gameKey] === true;
+                const isLocked = lockMap[gameKey] === true;
+                const theme = getAssignmentTheme(gameKey);
+                const previewProblem = getPreviewProblem(gameKey);
 
-        {loading ? (
-          <div className="assignments-empty">Loading assignments...</div>
-        ) : assignments.length === 0 ? (
-          <div className="assignments-empty">
-            No assignments found for this grade yet.
-          </div>
-        ) : (
-          <div className="assignments-grid">
-            {assignments.map((assignment, index) => {
-              const isCompleted = completedMap[assignment?.gameKey] === true;
-              const isLocked = lockMap[assignment?.gameKey] === true;
-              const theme = getAssignmentTheme(assignment?.gameKey);
-              const previewProblem = getPreviewProblem(assignment?.gameKey);
-
-              return (
-                <div
-                  className={`assignment-polaroid ${
-                    index % 2 === 0 ? "tilt-left" : "tilt-right"
-                  }`}
-                  key={assignment?.id || index}
-                  onClick={() => {
-                    if (!isLocked && assignment?.gameKey) {
-                      onOpenGame(assignment.gameKey);
-                    }
-                  }}
-                >
-                  <div className="assignment-grade-pill">
-                    Grade {assignment?.grade ?? "?"}
-                  </div>
-
-                  <div className="assignment-polaroid-photo">
-                    <StarTwinkleOverlay
-                      image={theme.preview}
-                      alt="preview"
-                      problem={previewProblem}
-                    />
-                  </div>
-
-                  <div className="assignment-polaroid-caption">
-                    <h2>{getGameLabel(assignment?.gameKey)}</h2>
-
-                    <p className="assignment-description">
-                      {assignment?.description || ""}
-                    </p>
-
-                    <div className="assignment-status-wrap">
-                      <div
-                        className={`assignment-status ${
-                          isCompleted ? "done" : "todo"
-                        }`}
-                      >
-                        {isCompleted ? "Completed ✅" : "Not completed yet"}
-                      </div>
-
-                      <div
-                        className={`assignment-status ${
-                          isLocked ? "locked" : "unlocked"
-                        }`}
-                      >
-                        {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
-                      </div>
+                return (
+                  <div
+                    className={`assignment-polaroid ${index % 2 === 0 ? "tilt-left" : "tilt-right"
+                      } ${isLocked ? "assignment-polaroid--locked" : ""}`}
+                    key={assignment?.id || gameKey || index}
+                    role="button"
+                    tabIndex={isLocked ? -1 : 0}
+                    onClick={() => {
+                      if (!isLocked && gameKey) {
+                        onOpenGame(gameKey);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        !isLocked &&
+                        gameKey &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        onOpenGame(gameKey);
+                      }
+                    }}
+                  >
+                    <div className="assignment-grade-pill">
+                      Grade {assignment?.grade ?? "?"}
                     </div>
 
-                    <button
-                      className="assignment-play-btn"
-                      disabled={isLocked}
-                      style={{
-                        background: theme.accent,
-                        "--btn-glow": `${theme.accent}99`,
-                      }}
-                    >
-                      {isCompleted ? "Play Again" : "Start Game"}
-                    </button>
+                    <div className="assignment-polaroid-photo">
+                      <StarTwinkleOverlay
+                        image={theme.preview}
+                        alt={`${getGameLabel(gameKey)} preview`}
+                        problem={previewProblem}
+                      />
+                    </div>
+
+                    <div className="assignment-polaroid-caption">
+                      <h2>{getGameLabel(gameKey)}</h2>
+
+                      <p className="assignment-description">
+                        {assignment?.description || ""}
+                      </p>
+
+                      <div className="assignment-status-wrap">
+                        <div
+                          className={`assignment-status ${isCompleted ? "done" : "todo"
+                            }`}
+                        >
+                          {isCompleted ? "Completed ✅" : "Not completed yet"}
+                        </div>
+
+                        <div
+                          className={`assignment-status ${isLocked ? "locked" : "unlocked"
+                            }`}
+                        >
+                          {isLocked ? "Locked 🔒" : "Unlocked 🔓"}
+                        </div>
+                      </div>
+
+                      <button
+                        className="assignment-play-btn"
+                        type="button"
+                        disabled={isLocked}
+                        style={{
+                          background: theme.accent,
+                          "--btn-glow": `${theme.accent}99`,
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+
+                          if (!isLocked && gameKey) {
+                            onOpenGame(gameKey);
+                          }
+                        }}
+                      >
+                        {isLocked
+                          ? "Locked"
+                          : isCompleted
+                            ? "Play Again"
+                            : "Start Game"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {showScrollTop && (
         <button
           className="scroll-top-btn"
+          type="button"
           onClick={scrollToTop}
           aria-label="Scroll to top"
           title="Scroll to top"

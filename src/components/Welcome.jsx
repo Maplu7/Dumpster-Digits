@@ -7,12 +7,42 @@ import { db } from "../firebase";
 const ASSIGNMENTS_TITLE_COLOR = "#ffe7b4";
 const DEFAULT_PROFILE_IMAGE = "/raccacoonies/what.jpeg";
 
-const Welcome = ({
-  student,
-  onOpenAssignments,
-  onOpenShop,
-  onLogout,
-}) => {
+const outfitImages = {
+  "outfit-chef": "/raccacoonies/CHEF_RACCO.png",
+  "outfit-argg": "/raccacoonies/ARGG.png",
+  knight: "/raccacoonies/knight.png",
+  fairy: "/raccacoonies/fairy.png",
+  princess: "/raccacoonies/princess.png",
+  sleepy: "/raccacoonies/eppy.png",
+  wizard: "/raccacoonies/wizard.png",
+  sable: "/raccacoonies/sable.png",
+  dragon: "/raccacoonies/dragon.png",
+};
+
+const pfpImages = {
+  1: "/raccacoonies/happy.png",
+  2: "/raccacoonies/angy.png",
+  3: "/raccacoonies/crying.jpeg",
+  4: "/raccacoonies/woah.png",
+  5: "/raccacoonies/bleh.jpeg",
+  6: "/raccacoonies/thinking.jpeg",
+  7: "/raccacoonies/confused.jpeg",
+  8: "/raccacoonies/bleh_2.jpeg",
+  9: "/raccacoonies/what.jpeg",
+  10: "/raccacoonies/playing_dead.png",
+  11: "/raccacoonies/furious.png",
+  12: "/raccacoonies/blush.jpeg",
+};
+
+const emoteImages = {
+  heart: "/emotes/heart.png",
+  brokenHeart: "/emotes/brokenHeart.png",
+  angry: "/emotes/angry.png",
+  sleepy: "/emotes/sleepy.png",
+  cry: "/emotes/cry.png",
+};
+
+const Welcome = ({ student, onOpenAssignments, onOpenShop, onLogout }) => {
   const name = student?.name;
   const [fireBoost, setFireBoost] = useState(0);
 
@@ -36,8 +66,24 @@ const Welcome = ({
       }
 
       const data = snap.data();
-      setEquippedImage(data.equippedItemImage || DEFAULT_PROFILE_IMAGE);
-      setEquippedCategory(data.equippedItemCategory || "pfp");
+
+      const equippedOutfit = data.equippedOutfit || "";
+      const equippedPfp = data.equippedPfp || "";
+      const equippedEmote = data.equippedEmote || "";
+
+      if (equippedOutfit && outfitImages[equippedOutfit]) {
+        setEquippedImage(outfitImages[equippedOutfit]);
+        setEquippedCategory("outfit");
+      } else if (equippedPfp && pfpImages[equippedPfp]) {
+        setEquippedImage(pfpImages[equippedPfp]);
+        setEquippedCategory("pfp");
+      } else if (equippedEmote && emoteImages[equippedEmote]) {
+        setEquippedImage(emoteImages[equippedEmote]);
+        setEquippedCategory("emote");
+      } else {
+        setEquippedImage(DEFAULT_PROFILE_IMAGE);
+        setEquippedCategory("pfp");
+      }
     });
 
     return () => unsubscribe();
@@ -49,13 +95,17 @@ const Welcome = ({
   }
 
   const profileCircleClass =
-    equippedCategory === "customize"
-      ? "profile-circle profile-circle--customize"
+    equippedCategory === "outfit"
+      ? "profile-circle profile-circle--outfit"
+      : equippedCategory === "emote"
+      ? "profile-circle profile-circle--emote"
       : "profile-circle profile-circle--pfp";
 
   const profileImageClass =
-    equippedCategory === "customize"
-      ? "profile-image profile-image--customize"
+    equippedCategory === "outfit"
+      ? "profile-image profile-image--outfit"
+      : equippedCategory === "emote"
+      ? "profile-image profile-image--emote"
       : "profile-image profile-image--pfp";
 
   return (
@@ -84,21 +134,13 @@ const Welcome = ({
           />
         </div>
 
-       <h1>WELCOME{name ? `, ${name} :` : ""}</h1>
+        <h1>WELCOME{name ? `, ${name} :` : ""}</h1>
         <p>Let's get started!</p>
 
         <div className="buttons">
-          <button onClick={() => pulseFire(onOpenAssignments)}>
-            GAMES
-          </button>
-
-          <button onClick={() => pulseFire(onOpenShop)}>
-            SHOP
-          </button>
-
-          <button onClick={() => pulseFire(onLogout)}>
-            LOGOUT
-          </button>
+          <button onClick={() => pulseFire(onOpenAssignments)}>GAMES</button>
+          <button onClick={() => pulseFire(onOpenShop)}>SHOP</button>
+          <button onClick={() => pulseFire(onLogout)}>LOGOUT</button>
         </div>
       </div>
     </div>

@@ -1,14 +1,7 @@
-.shop-page {
+.shop-shell {
   position: relative;
-  width: 100%;
   min-height: 100vh;
-  height: auto;
-  padding: 28px;
-  box-sizing: border-box;
   overflow-x: hidden;
-  overflow-y: auto;
-  font-family: "Fjalla One", sans-serif;
-  color: #f6efe6;
   background:
     linear-gradient(
       180deg,
@@ -20,13 +13,47 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.shop-shell .layered-scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.shop-shell .layered-scene--edit {
+  pointer-events: auto;
+  z-index: 9999;
+}
+
+.shop-page {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 100vh;
+  height: auto;
+  padding: 28px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: visible;
+  font-family: "Fjalla One", sans-serif;
+  color: #f6efe6;
+
+  /* IMPORTANT: do not cover the lights */
+  background: transparent;
 }
 
 .shop-header,
 .shop-layout {
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
+/* everything below stays exactly the same */
 
 .shop-header {
   display: flex;
